@@ -1,0 +1,3 @@
+[env]
+# Needed to get coreaudio-sys to build on macOS
+LIBCLANG_PATH = { value = "/Library/Developer/CommandLineTools/usr/lib", force = true }
