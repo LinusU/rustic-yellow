@@ -2,11 +2,12 @@ use crate::{
     cpu::{Cpu, CpuFlag},
     game::{
         constants::hardware_constants::{
-            HRAM_BEGIN, HRAM_END, R_BGP, R_IE, R_IF, R_LCDC, R_LCDC_ENABLE_MASK, R_OBP0, R_OBP1,
-            R_SB, R_SC, R_SCX, R_SCY, R_TAC, R_TMA, R_WX, R_WY, VRAM_BEGIN, VRAM_END, WRAM0_BEGIN,
-            WRAM1_END,
+            HRAM_BEGIN, HRAM_END, MBC1_ROM_BANK, R_BGP, R_IE, R_IF, R_LCDC, R_LCDC_ENABLE_MASK,
+            R_OBP0, R_OBP1, R_SB, R_SC, R_SCX, R_SCY, R_TAC, R_TMA, R_WX, R_WY, VRAM_BEGIN,
+            VRAM_END, WRAM0_BEGIN, WRAM1_END,
         },
-        ram::wram::W_STACK,
+        engine::gfx::oam_dma::{write_dma_code_to_hram, BANK_WRITE_DMA_CODE_TO_HRAM},
+        ram::{hram::H_LOADED_ROM_BANK, wram::W_STACK},
     },
 };
 
@@ -161,6 +162,28 @@ pub fn init(cpu: &mut Cpu, cycles: &mut u64) {
     *cycles += cpu.mmu.do_cycle(24) as u64;
     clear_sprites(cpu, cycles);
     cpu.pc = 0x1d53;
+
+    // ld a, BANK(WriteDMACodeToHRAM)
+    // ldh [hLoadedROMBank], a
+    // ld [MBC1RomBank], a
+    // call WriteDMACodeToHRAM
+
+    cpu.a = BANK_WRITE_DMA_CODE_TO_HRAM;
+    *cycles += cpu.mmu.do_cycle(8) as u64;
+    cpu.pc = 0x1d55;
+
+    cpu.mmu.wb(H_LOADED_ROM_BANK, cpu.a);
+    *cycles += cpu.mmu.do_cycle(12) as u64;
+    cpu.pc = 0x1d57;
+
+    cpu.mmu.wb(MBC1_ROM_BANK, cpu.a);
+    *cycles += cpu.mmu.do_cycle(16) as u64;
+    cpu.pc = 0x1d5a;
+
+    cpu.pushstack(0x1d5d);
+    *cycles += cpu.mmu.do_cycle(24) as u64;
+    write_dma_code_to_hram(cpu, cycles);
+    cpu.pc = 0x1d5d;
 }
 
 fn clear_vram(cpu: &mut Cpu, cycles: &mut u64) {

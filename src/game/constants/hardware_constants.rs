@@ -11,6 +11,12 @@ pub const WRAM1_END: u16 = 0xe000;
 pub const HRAM_BEGIN: u16 = 0xff80;
 pub const HRAM_END: u16 = 0xffff;
 
+// MBC1
+pub const MBC1_SRAM_ENABLE: u16 = 0x0000;
+pub const MBC1_ROM_BANK: u16 = 0x2000;
+pub const MBC1_SRAM_BANK: u16 = 0x4000;
+pub const MBC1_SRAM_BANKING_MODE: u16 = 0x6000;
+
 pub const LY_VBLANK: u8 = 145;
 
 /// Joypad (R/W)

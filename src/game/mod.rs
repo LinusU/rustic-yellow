@@ -3,6 +3,7 @@
 use crate::{cpu::Cpu, AudioPlayer, KeypadKey};
 
 mod constants;
+mod engine;
 mod home;
 mod ram;
 
