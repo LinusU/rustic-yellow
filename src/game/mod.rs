@@ -1,5 +1,8 @@
 use crate::{cpu::Cpu, AudioPlayer, KeypadKey};
 
+mod home;
+mod ram;
+
 pub struct Game {
     cpu: Cpu,
     cycles: u64,
@@ -7,16 +10,18 @@ pub struct Game {
 
 impl Game {
     pub fn new(player: Box<dyn AudioPlayer>) -> Self {
-        let rom = include_bytes!("../rom_file.gb").to_vec();
+        let rom = include_bytes!("../../rom_file.gb").to_vec();
 
         assert_eq!(rom[0x143], 0x80);
         assert_eq!(rom[0x147], 0x1b);
         assert_eq!(rom[0x149], 0x03);
 
-        Self {
-            cpu: Cpu::new(rom, player),
-            cycles: 0,
-        }
+        let mut cpu = Cpu::new(rom, player);
+        let mut cycles = 0;
+
+        home::start::start(&mut cpu, &mut cycles);
+
+        Self { cpu, cycles }
     }
 
     pub fn cycles(&self) -> u64 {

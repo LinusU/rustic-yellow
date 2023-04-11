@@ -10,23 +10,23 @@ pub enum CpuFlag {
 }
 
 pub struct Cpu {
-    a: u8,
-    b: u8,
-    c: u8,
-    d: u8,
-    e: u8,
-    f: u8,
-    h: u8,
-    l: u8,
-    pc: u16,
-    sp: u16,
+    pub(crate) a: u8,
+    pub(crate) b: u8,
+    pub(crate) c: u8,
+    pub(crate) d: u8,
+    pub(crate) e: u8,
+    pub(crate) f: u8,
+    pub(crate) h: u8,
+    pub(crate) l: u8,
+    pub(crate) pc: u16,
+    pub(crate) sp: u16,
 
-    mmu: Mmu,
+    pub(crate) mmu: Mmu,
 
-    halted: bool,
-    ime: bool,
-    setdi: u32,
-    setei: u32,
+    pub(crate) halted: bool,
+    pub(crate) ime: bool,
+    pub(crate) setdi: u32,
+    pub(crate) setei: u32,
 }
 
 impl Cpu {
