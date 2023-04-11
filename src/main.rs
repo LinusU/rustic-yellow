@@ -187,12 +187,12 @@ fn run_game(mut game: Game, sender: SyncSender<Vec<u8>>, receiver: Receiver<GBEv
     let periodic = timer_periodic(16);
     let mut limit_speed = true;
 
-    let waitticks = (4194304f64 / 1000.0 * 16.0).round() as u32;
-    let mut ticks = 0;
+    let waitticks = (4194304f64 / 1000.0 * 16.0).round() as u64;
+    let mut until = waitticks;
 
     'outer: loop {
-        while ticks < waitticks {
-            ticks += game.do_cycle();
+        while game.cycles() < until {
+            game.do_cycle();
             if game.check_and_reset_gpu_updated() {
                 let data = game.get_gpu_data().to_vec();
                 if let Err(TrySendError::Disconnected(..)) = sender.try_send(data) {
@@ -201,7 +201,7 @@ fn run_game(mut game: Game, sender: SyncSender<Vec<u8>>, receiver: Receiver<GBEv
             }
         }
 
-        ticks -= waitticks;
+        until += waitticks;
 
         'recv: loop {
             match receiver.try_recv() {

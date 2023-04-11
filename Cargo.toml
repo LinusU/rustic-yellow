@@ -9,3 +9,9 @@ edition = "2021"
 blip_buf = "0.1.4"
 cpal = "0.15.2"
 glium = { version = "0.32.1", default-features = false, features = ["glutin"] }
+
+[profile.test]
+opt-level = 3
+
+[dev-dependencies]
+image = { version = "0.24.6", default-features = false, features = ["png"] }
