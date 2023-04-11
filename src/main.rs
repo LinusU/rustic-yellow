@@ -1,6 +1,6 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use glium::glutin::platform::run_return::EventLoopExtRunReturn;
-use rustic_yellow::{cpu::Cpu, AudioPlayer};
+use rustic_yellow::{AudioPlayer, Game};
 use std::sync::mpsc::{self, Receiver, SyncSender, TryRecvError, TrySendError};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -41,14 +41,9 @@ fn create_window_builder() -> glium::glutin::window::WindowBuilder {
 
 fn main() {
     let scale = 4;
-    let rom = include_bytes!("../rom_file.gb").to_vec();
-
-    assert_eq!(rom[0x143], 0x80);
-    assert_eq!(rom[0x147], 0x1b);
-    assert_eq!(rom[0x149], 0x03);
 
     let (player, cpal_audio_stream) = CpalPlayer::get();
-    let cpu = Cpu::new(rom, Box::new(player));
+    let game = Game::new(Box::new(player));
 
     let (sender1, receiver1) = mpsc::channel();
     let (sender2, receiver2) = mpsc::sync_channel(1);
@@ -71,7 +66,7 @@ fn main() {
 
     let mut renderoptions = <RenderOptions as Default>::default();
 
-    let cputhread = thread::spawn(move || run_cpu(cpu, sender2, receiver1));
+    let gamethread = thread::spawn(move || run_game(game, sender2, receiver1));
 
     #[rustfmt::skip]
     eventloop.run_return(move |ev, _evtarget, controlflow| {
@@ -124,7 +119,7 @@ fn main() {
     });
 
     drop(cpal_audio_stream);
-    let _ = cputhread.join();
+    let _ = gamethread.join();
 }
 
 fn glutin_to_keypad(key: glium::glutin::event::VirtualKeyCode) -> Option<rustic_yellow::KeypadKey> {
@@ -188,7 +183,7 @@ fn recalculate_screen(
     target.finish().unwrap();
 }
 
-fn run_cpu(mut cpu: Cpu, sender: SyncSender<Vec<u8>>, receiver: Receiver<GBEvent>) {
+fn run_game(mut game: Game, sender: SyncSender<Vec<u8>>, receiver: Receiver<GBEvent>) {
     let periodic = timer_periodic(16);
     let mut limit_speed = true;
 
@@ -197,9 +192,9 @@ fn run_cpu(mut cpu: Cpu, sender: SyncSender<Vec<u8>>, receiver: Receiver<GBEvent
 
     'outer: loop {
         while ticks < waitticks {
-            ticks += cpu.do_cycle();
-            if cpu.check_and_reset_gpu_updated() {
-                let data = cpu.get_gpu_data().to_vec();
+            ticks += game.do_cycle();
+            if game.check_and_reset_gpu_updated() {
+                let data = game.get_gpu_data().to_vec();
                 if let Err(TrySendError::Disconnected(..)) = sender.try_send(data) {
                     break 'outer;
                 }
@@ -211,12 +206,12 @@ fn run_cpu(mut cpu: Cpu, sender: SyncSender<Vec<u8>>, receiver: Receiver<GBEvent
         'recv: loop {
             match receiver.try_recv() {
                 Ok(event) => match event {
-                    GBEvent::KeyUp(key) => cpu.keyup(key),
-                    GBEvent::KeyDown(key) => cpu.keydown(key),
+                    GBEvent::KeyUp(key) => game.keyup(key),
+                    GBEvent::KeyDown(key) => game.keydown(key),
                     GBEvent::SpeedUp => limit_speed = false,
                     GBEvent::SpeedDown => {
                         limit_speed = true;
-                        cpu.sync_audio();
+                        game.sync_audio();
                     }
                 },
                 Err(TryRecvError::Empty) => break 'recv,
