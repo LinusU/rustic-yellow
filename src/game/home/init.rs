@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-use super::{copy2::fill_memory, lcd::disable_lcd};
+use super::{clear_sprites::clear_sprites, copy2::fill_memory, lcd::disable_lcd};
 
 const R_LCDC_DEFAULT: u8 = 0b11100011;
 
@@ -154,6 +154,13 @@ pub fn init(cpu: &mut Cpu, cycles: &mut u64) {
     *cycles += cpu.mmu.do_cycle(24) as u64;
     fill_memory(cpu, cycles);
     cpu.pc = 0x1d50;
+
+    // call ClearSprites
+
+    cpu.pushstack(0x1d53);
+    *cycles += cpu.mmu.do_cycle(24) as u64;
+    clear_sprites(cpu, cycles);
+    cpu.pc = 0x1d53;
 }
 
 fn clear_vram(cpu: &mut Cpu, cycles: &mut u64) {
