@@ -1,3 +1,5 @@
+pub const LY_VBLANK: u8 = 145;
+
 /// Joypad (R/W)
 pub const R_JOYP: u16 = 0xff00;
 

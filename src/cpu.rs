@@ -153,12 +153,12 @@ impl Cpu {
         4
     }
 
-    fn pushstack(&mut self, value: u16) {
+    pub fn pushstack(&mut self, value: u16) {
         self.sp -= 2;
         self.mmu.ww(self.sp, value);
     }
 
-    fn popstack(&mut self) -> u16 {
+    pub fn popstack(&mut self) -> u16 {
         let res = self.mmu.rw(self.sp);
         self.sp += 2;
         res

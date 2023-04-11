@@ -1,9 +1,12 @@
 use crate::{
     cpu::Cpu,
     game::constants::hardware_constants::{
-        R_BGP, R_IE, R_IF, R_OBP0, R_OBP1, R_SB, R_SC, R_SCX, R_SCY, R_TAC, R_TMA, R_WX, R_WY,
+        R_BGP, R_IE, R_IF, R_LCDC, R_LCDC_ENABLE_MASK, R_OBP0, R_OBP1, R_SB, R_SC, R_SCX, R_SCY,
+        R_TAC, R_TMA, R_WX, R_WY,
     },
 };
+
+use super::lcd::disable_lcd;
 
 const R_LCDC_DEFAULT: u8 = 0b11100011;
 
@@ -41,6 +44,18 @@ pub fn init(cpu: &mut Cpu, cycles: &mut u64) {
     cpu.mmu.wb(R_OBP0, 0);
     cpu.mmu.wb(R_OBP1, 0);
     *cycles += cpu.mmu.do_cycle(12 * 13) as u64;
-
     cpu.pc = 0x1d2c;
+
+    cpu.a = R_LCDC_ENABLE_MASK;
+    *cycles += cpu.mmu.do_cycle(8) as u64;
+    cpu.pc = 0x1d2e;
+
+    cpu.mmu.wb(R_LCDC, R_LCDC_ENABLE_MASK);
+    *cycles += cpu.mmu.do_cycle(12) as u64;
+    cpu.pc = 0x1d30;
+
+    cpu.pushstack(0x1d33);
+    *cycles += cpu.mmu.do_cycle(24) as u64;
+    disable_lcd(cpu, cycles);
+    cpu.pc = 0x1d33;
 }
