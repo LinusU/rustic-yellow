@@ -3,13 +3,13 @@ use crate::{
     game::{
         constants::hardware_constants::{
             R_BGP, R_IE, R_IF, R_LCDC, R_LCDC_ENABLE_MASK, R_OBP0, R_OBP1, R_SB, R_SC, R_SCX,
-            R_SCY, R_TAC, R_TMA, R_WX, R_WY, WRAM0_BEGIN, WRAM1_END,
+            R_SCY, R_TAC, R_TMA, R_WX, R_WY, VRAM_BEGIN, VRAM_END, WRAM0_BEGIN, WRAM1_END,
         },
         ram::wram::W_STACK,
     },
 };
 
-use super::lcd::disable_lcd;
+use super::{copy2::fill_memory, lcd::disable_lcd};
 
 const R_LCDC_DEFAULT: u8 = 0b11100011;
 
@@ -127,4 +127,46 @@ pub fn init(cpu: &mut Cpu, cycles: &mut u64) {
             break;
         }
     }
+
+    // call ClearVram
+
+    cpu.pushstack(0x1d47);
+    *cycles += cpu.mmu.do_cycle(24) as u64;
+    clear_vram(cpu, cycles);
+    cpu.pc = 0x1d47;
+}
+
+fn clear_vram(cpu: &mut Cpu, cycles: &mut u64) {
+    cpu.pc = 0x1dc6;
+
+    // ld hl, VRAM_Begin
+    // ld bc, VRAM_End - VRAM_Begin
+    // xor a
+    // jp FillMemory
+
+    cpu.h = (VRAM_BEGIN >> 8) as u8;
+    cpu.l = (VRAM_BEGIN & 0x00ff) as u8;
+    *cycles += cpu.mmu.do_cycle(12) as u64;
+    cpu.pc = 0x1dc9;
+
+    cpu.b = ((VRAM_END - VRAM_BEGIN) >> 8) as u8;
+    cpu.c = ((VRAM_END - VRAM_BEGIN) & 0x00ff) as u8;
+    *cycles += cpu.mmu.do_cycle(12) as u64;
+    cpu.pc = 0x1dcc;
+
+    {
+        let b = cpu.a;
+        let r = cpu.a ^ b;
+        cpu.flag(CpuFlag::Z, r == 0);
+        cpu.flag(CpuFlag::C, false);
+        cpu.flag(CpuFlag::H, false);
+        cpu.flag(CpuFlag::N, false);
+        cpu.a = r;
+    }
+    *cycles += cpu.mmu.do_cycle(4) as u64;
+    cpu.pc = 0x1dcd;
+
+    cpu.pc = 0x166e;
+    *cycles += cpu.mmu.do_cycle(16) as u64;
+    fill_memory(cpu, cycles);
 }
