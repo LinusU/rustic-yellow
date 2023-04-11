@@ -2,8 +2,9 @@ use crate::{
     cpu::{Cpu, CpuFlag},
     game::{
         constants::hardware_constants::{
-            R_BGP, R_IE, R_IF, R_LCDC, R_LCDC_ENABLE_MASK, R_OBP0, R_OBP1, R_SB, R_SC, R_SCX,
-            R_SCY, R_TAC, R_TMA, R_WX, R_WY, VRAM_BEGIN, VRAM_END, WRAM0_BEGIN, WRAM1_END,
+            HRAM_BEGIN, HRAM_END, R_BGP, R_IE, R_IF, R_LCDC, R_LCDC_ENABLE_MASK, R_OBP0, R_OBP1,
+            R_SB, R_SC, R_SCX, R_SCY, R_TAC, R_TMA, R_WX, R_WY, VRAM_BEGIN, VRAM_END, WRAM0_BEGIN,
+            WRAM1_END,
         },
         ram::wram::W_STACK,
     },
@@ -134,6 +135,25 @@ pub fn init(cpu: &mut Cpu, cycles: &mut u64) {
     *cycles += cpu.mmu.do_cycle(24) as u64;
     clear_vram(cpu, cycles);
     cpu.pc = 0x1d47;
+
+    // ld hl, HRAM_Begin
+    // ld bc, HRAM_End - HRAM_Begin - 1
+    // call FillMemory
+
+    cpu.h = (HRAM_BEGIN >> 8) as u8;
+    cpu.l = (HRAM_BEGIN & 0x00ff) as u8;
+    *cycles += cpu.mmu.do_cycle(12) as u64;
+    cpu.pc = 0x1d4a;
+
+    cpu.b = ((HRAM_END - HRAM_BEGIN - 1) >> 8) as u8;
+    cpu.c = ((HRAM_END - HRAM_BEGIN - 1) & 0x00ff) as u8;
+    *cycles += cpu.mmu.do_cycle(12) as u64;
+    cpu.pc = 0x1d4d;
+
+    cpu.pushstack(0x1d50);
+    *cycles += cpu.mmu.do_cycle(24) as u64;
+    fill_memory(cpu, cycles);
+    cpu.pc = 0x1d50;
 }
 
 fn clear_vram(cpu: &mut Cpu, cycles: &mut u64) {
