@@ -1,3 +1,16 @@
+// memory map
+pub const VRAM_BEGIN: u16 = 0x8000;
+pub const VRAM_END: u16 = 0xa000;
+pub const SRAM_BEGIN: u16 = 0xa000;
+pub const SRAM_END: u16 = 0xc000;
+pub const WRAM0_BEGIN: u16 = 0xc000;
+pub const WRAM0_END: u16 = 0xd000;
+pub const WRAM1_BEGIN: u16 = 0xd000;
+pub const WRAM1_END: u16 = 0xe000;
+// hardware registers $ff00-$ff80 (see below)
+pub const HRAM_BEGIN: u16 = 0xff80;
+pub const HRAM_END: u16 = 0xffff;
+
 pub const LY_VBLANK: u8 = 145;
 
 /// Joypad (R/W)
