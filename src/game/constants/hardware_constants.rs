@@ -17,6 +17,13 @@ pub const MBC1_ROM_BANK: u16 = 0x2000;
 pub const MBC1_SRAM_BANK: u16 = 0x4000;
 pub const MBC1_SRAM_BANKING_MODE: u16 = 0x6000;
 
+// interrupt flags
+pub const VBLANK: u8 = 0;
+pub const LCD_STAT: u8 = 1;
+pub const TIMER: u8 = 2;
+pub const SERIAL: u8 = 3;
+pub const JOYPAD: u8 = 4;
+
 pub const LY_VBLANK: u8 = 145;
 
 /// Joypad (R/W)

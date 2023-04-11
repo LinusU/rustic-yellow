@@ -3,11 +3,14 @@ use crate::{
     game::{
         constants::hardware_constants::{
             HRAM_BEGIN, HRAM_END, MBC1_ROM_BANK, R_BGP, R_IE, R_IF, R_LCDC, R_LCDC_ENABLE_MASK,
-            R_OBP0, R_OBP1, R_SB, R_SC, R_SCX, R_SCY, R_TAC, R_TMA, R_WX, R_WY, VRAM_BEGIN,
-            VRAM_END, WRAM0_BEGIN, WRAM1_END,
+            R_OBP0, R_OBP1, R_SB, R_SC, R_SCX, R_SCY, R_STAT, R_TAC, R_TMA, R_WX, R_WY, SERIAL,
+            TIMER, VBLANK, VRAM_BEGIN, VRAM_END, WRAM0_BEGIN, WRAM1_END,
         },
         engine::gfx::oam_dma::{write_dma_code_to_hram, BANK_WRITE_DMA_CODE_TO_HRAM},
-        ram::{hram::H_LOADED_ROM_BANK, wram::W_STACK},
+        ram::{
+            hram::{H_LOADED_ROM_BANK, H_SCX, H_SCY, H_TILE_ANIMATIONS},
+            wram::{W_C0F3, W_STACK},
+        },
     },
 };
 
@@ -184,6 +187,65 @@ pub fn init(cpu: &mut Cpu, cycles: &mut u64) {
     *cycles += cpu.mmu.do_cycle(24) as u64;
     write_dma_code_to_hram(cpu, cycles);
     cpu.pc = 0x1d5d;
+
+    // xor a
+    // ldh [hTileAnimations], a
+    // ldh [rSTAT], a
+    // ldh [hSCX], a
+    // ldh [hSCY], a
+    // ldh [rIF], a
+    // ld [wc0f3], a
+    // ld [wc0f3 + 1], a
+    // ld a, 1 << VBLANK + 1 << TIMER + 1 << SERIAL
+    // ldh [rIE], a
+
+    {
+        let b = cpu.a;
+        let r = cpu.a ^ b;
+        cpu.flag(CpuFlag::Z, r == 0);
+        cpu.flag(CpuFlag::C, false);
+        cpu.flag(CpuFlag::H, false);
+        cpu.flag(CpuFlag::N, false);
+        cpu.a = r;
+    }
+    *cycles += cpu.mmu.do_cycle(4) as u64;
+    cpu.pc = 0x1d5e;
+
+    cpu.mmu.wb(H_TILE_ANIMATIONS, cpu.a);
+    *cycles += cpu.mmu.do_cycle(12) as u64;
+    cpu.pc = 0x1d60;
+
+    cpu.mmu.wb(R_STAT, cpu.a);
+    *cycles += cpu.mmu.do_cycle(12) as u64;
+    cpu.pc = 0x1d62;
+
+    cpu.mmu.wb(H_SCX, cpu.a);
+    *cycles += cpu.mmu.do_cycle(12) as u64;
+    cpu.pc = 0x1d64;
+
+    cpu.mmu.wb(H_SCY, cpu.a);
+    *cycles += cpu.mmu.do_cycle(12) as u64;
+    cpu.pc = 0x1d66;
+
+    cpu.mmu.wb(R_IF, cpu.a);
+    *cycles += cpu.mmu.do_cycle(12) as u64;
+    cpu.pc = 0x1d68;
+
+    cpu.mmu.wb(W_C0F3, cpu.a);
+    *cycles += cpu.mmu.do_cycle(16) as u64;
+    cpu.pc = 0x1d6b;
+
+    cpu.mmu.wb(W_C0F3 + 1, cpu.a);
+    *cycles += cpu.mmu.do_cycle(16) as u64;
+    cpu.pc = 0x1d6e;
+
+    cpu.a = (1 << VBLANK) | (1 << TIMER) | (1 << SERIAL);
+    *cycles += cpu.mmu.do_cycle(8) as u64;
+    cpu.pc = 0x1d70;
+
+    cpu.mmu.wb(R_IE, cpu.a);
+    *cycles += cpu.mmu.do_cycle(12) as u64;
+    cpu.pc = 0x1d72;
 }
 
 fn clear_vram(cpu: &mut Cpu, cycles: &mut u64) {
