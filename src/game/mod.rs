@@ -1,5 +1,8 @@
+#![allow(dead_code)]
+
 use crate::{cpu::Cpu, AudioPlayer, KeypadKey};
 
+mod constants;
 mod home;
 mod ram;
 
