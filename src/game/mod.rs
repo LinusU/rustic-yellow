@@ -1,5 +1,10 @@
 #![allow(dead_code)]
 
+use std::{
+    ops::{Generator, GeneratorState},
+    pin::Pin,
+};
+
 use crate::{cpu::Cpu, AudioPlayer, KeypadKey};
 
 mod constants;
@@ -10,6 +15,19 @@ mod ram;
 pub struct Game {
     cpu: Cpu,
     cycles: u64,
+}
+
+#[macro_export]
+macro_rules! yield_from {
+    ($generator_ctor:expr) => {{
+        let mut generator = $generator_ctor;
+        loop {
+            match std::pin::Pin::new(&mut generator).resume(()) {
+                std::ops::GeneratorState::Yielded(cycles) => yield cycles,
+                std::ops::GeneratorState::Complete(()) => break,
+            }
+        }
+    }};
 }
 
 impl Game {
@@ -23,7 +41,13 @@ impl Game {
         let mut cpu = Cpu::new(rom, player);
         let mut cycles = 0;
 
-        home::start::start(&mut cpu, &mut cycles);
+        let mut generator = home::start::start(&mut cpu);
+
+        while let GeneratorState::Yielded(ticks) = Pin::new(&mut generator).resume(()) {
+            cycles += ticks as u64;
+        }
+
+        drop(generator);
 
         Self { cpu, cycles }
     }

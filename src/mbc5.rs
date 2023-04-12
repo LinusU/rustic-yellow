@@ -44,7 +44,7 @@ impl MBC5 {
             0x3000..=0x3FFF => self.rombank = (self.rombank & 0x0FF) | (((v & 0x1) as usize) << 8),
             0x4000..=0x5FFF => self.rambank = (v & 0x0F) as usize,
             0x6000..=0x7FFF => { /* ? */ }
-            _ => panic!("Could not write to {:04X} (MBC5)", a),
+            _ => panic!("Could not write to {a:04X} (MBC5)"),
         }
     }
 

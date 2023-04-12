@@ -37,7 +37,7 @@ impl Timer {
                         _ => 0,
                     })
             }
-            _ => panic!("Timer does not handler read {:4X}", a),
+            _ => panic!("Timer does not handler read {a:4X}"),
         }
     }
 
@@ -61,7 +61,7 @@ impl Timer {
                     _ => 1024,
                 };
             }
-            _ => panic!("Timer does not handler write {:4X}", a),
+            _ => panic!("Timer does not handler write {a:4X}"),
         };
     }
 

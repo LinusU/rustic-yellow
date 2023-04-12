@@ -1,4 +1,5 @@
 #![allow(clippy::bool_to_int_with_if, clippy::identity_op)]
+#![feature(generators, generator_trait)]
 
 pub use crate::game::Game;
 pub use crate::gpu::{SCREEN_H, SCREEN_W};

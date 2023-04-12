@@ -270,7 +270,7 @@ impl CpalPlayer {
         let wanted_samplerate = cpal::SampleRate(44100);
         let supported_configs = match device.supported_output_configs() {
             Ok(e) => e,
-            Err(e) => panic!("Error while querying configs: {:?}", e),
+            Err(e) => panic!("Error while querying configs: {e:?}"),
         };
         let mut supported_config = None;
         for f in supported_configs {
@@ -294,7 +294,7 @@ impl CpalPlayer {
         let sample_format = selected_config.sample_format();
         let config: cpal::StreamConfig = selected_config.into();
 
-        let err_fn = |err| eprintln!("An error occurred on the output audio stream: {}", err);
+        let err_fn = |err| eprintln!("An error occurred on the output audio stream: {err}");
 
         let shared_buffer = Arc::new(Mutex::new(Vec::new()));
         let stream_buffer = shared_buffer.clone();
@@ -309,7 +309,7 @@ impl CpalPlayer {
             cpal::SampleFormat::F32 => device.build_output_stream(&config, move|data: &mut [f32], _callback_info: &cpal::OutputCallbackInfo| cpal_thread(data, &stream_buffer), err_fn, None).unwrap(),
             cpal::SampleFormat::U16 => device.build_output_stream(&config, move|data: &mut [u16], _callback_info: &cpal::OutputCallbackInfo| cpal_thread(data, &stream_buffer), err_fn, None).unwrap(),
             cpal::SampleFormat::I16 => device.build_output_stream(&config, move|data: &mut [i16], _callback_info: &cpal::OutputCallbackInfo| cpal_thread(data, &stream_buffer), err_fn, None).unwrap(),
-            _ => panic!("Unsupported sample format: {:?}", sample_format),
+            _ => panic!("Unsupported sample format: {sample_format:?}"),
         };
 
         stream.play().unwrap();

@@ -167,7 +167,7 @@ impl Mmu {
             0xFF80..=0xFFFE => self.zram[address as usize & 0x007F],
             0xFFFF => self.inte,
             // _ => 0xFF,
-            _ => panic!("Unimplemented read from {:04X}", address),
+            _ => panic!("Unimplemented read from {address:04X}"),
         }
     }
 
@@ -197,7 +197,7 @@ impl Mmu {
             0xFF70 => { self.wrambank = match value & 0x7 { 0 => 1, n => n as usize }; },
             0xFF80..=0xFFFE => self.zram[address as usize & 0x007F] = value,
             0xFFFF => self.inte = value,
-            _ => panic!("Invalid write to address {:#06X}", address),
+            _ => panic!("Invalid write to address {address:#06X}"),
         };
     }
 
@@ -230,7 +230,7 @@ impl Mmu {
         match a {
             0xFF51..=0xFF54 => { self.hdma[(a - 0xFF51) as usize] },
             0xFF55 => self.hdma_len | if self.hdma_status == DMAType::NoDMA { 0x80 } else { 0 },
-            _ => panic!("The address {:04X} should not be handled by hdma_read", a),
+            _ => panic!("The address {a:04X} should not be handled by hdma_read"),
         }
     }
 
@@ -250,7 +250,7 @@ impl Mmu {
                 let src = ((self.hdma[0] as u16) << 8) | (self.hdma[1] as u16);
                 let dst = ((self.hdma[2] as u16) << 8) | (self.hdma[3] as u16) | 0x8000;
                 if !(src <= 0x7FF0 || (0xA000..=0xDFF0).contains(&src)) {
-                    panic!("HDMA transfer with illegal start address {:04X}", src);
+                    panic!("HDMA transfer with illegal start address {src:04X}");
                 }
 
                 self.hdma_src = src;
@@ -263,7 +263,7 @@ impl Mmu {
                     DMAType::Gdma
                 };
             }
-            _ => panic!("The address {:04X} should not be handled by hdma_write", a),
+            _ => panic!("The address {a:04X} should not be handled by hdma_write"),
         };
     }
 

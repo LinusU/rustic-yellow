@@ -352,7 +352,7 @@ impl Gpu {
                     self.csprit_ind = (self.csprit_ind + 1) & 0x3F;
                 };
             }
-            _ => panic!("GPU does not handle write {:04X}", a),
+            _ => panic!("GPU does not handle write {a:04X}"),
         }
     }
 

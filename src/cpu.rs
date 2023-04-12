@@ -413,7 +413,7 @@ impl Cpu {
             0xFB => { self.setei = 2; 1 },
             0xFE => { let v = self.fetchbyte(); self.alu_cp(v); 2 },
             0xFF => { self.pushstack(self.pc); self.pc = 0x38; 4 },
-            other=> panic!("Instruction {:02X} is not implemented", other),
+            other=> panic!("Instruction {other:02X} is not implemented"),
         }
     }
 
