@@ -12,6 +12,7 @@ mod gpu;
 mod keypad;
 mod mbc5;
 mod mmu;
+mod op;
 mod serial;
 mod sound;
 mod timer;

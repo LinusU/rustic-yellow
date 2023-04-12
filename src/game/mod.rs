@@ -2,10 +2,10 @@
 
 use std::{
     ops::{Generator, GeneratorState},
-    pin::Pin,
+    pin::Pin, cell::RefCell, rc::Rc,
 };
 
-use crate::{cpu::Cpu, AudioPlayer, KeypadKey};
+use crate::{cpu::Cpu, AudioPlayer, KeypadKey, mmu::Mmu, op::run_rom_code};
 
 mod constants;
 mod engine;
@@ -13,7 +13,9 @@ mod home;
 mod ram;
 
 pub struct Game {
-    cpu: Cpu,
+    // cpu: Cpu,
+    foo: Pin<Box<dyn Generator<Yield = u32, Return = Cpu>>>,
+    mmu: Rc<RefCell<Mmu>>,
     cycles: u64,
 }
 
@@ -24,7 +26,7 @@ macro_rules! yield_from {
         loop {
             match std::pin::Pin::new(&mut generator).resume(()) {
                 std::ops::GeneratorState::Yielded(cycles) => yield cycles,
-                std::ops::GeneratorState::Complete(()) => break,
+                std::ops::GeneratorState::Complete(_) => break,
             }
         }
     }};
@@ -38,18 +40,23 @@ impl Game {
         assert_eq!(rom[0x147], 0x1b);
         assert_eq!(rom[0x149], 0x03);
 
-        let mut cpu = Cpu::new(rom, player);
+        let mmu = Rc::new(RefCell::new(Mmu::new(rom, player)));
+
+        let mut cpu = Cpu::new(mmu.clone());
         let mut cycles = 0;
 
-        let mut generator = home::start::start(&mut cpu);
+        // let mut generator = home::start::start(&mut cpu);
 
-        while let GeneratorState::Yielded(ticks) = Pin::new(&mut generator).resume(()) {
-            cycles += ticks as u64;
-        }
+        // while let GeneratorState::Yielded(ticks) = Pin::new(&mut generator).resume(()) {
+        //     cycles += ticks as u64;
+        // }
 
-        drop(generator);
+        // drop(generator);
 
-        Self { cpu, cycles }
+        eprintln!("We have ported the first {cycles} cycles to Rust!");
+
+        // Self { cpu, mmu, cycles }
+        Self { foo: Box::pin(run_rom_code(cpu)), mmu, cycles }
     }
 
     pub fn cycles(&self) -> u64 {
@@ -57,27 +64,34 @@ impl Game {
     }
 
     pub fn do_cycle(&mut self) {
-        self.cycles += self.cpu.do_cycle() as u64;
+        match Pin::new(&mut self.foo).resume(()) {
+            GeneratorState::Yielded(ticks) => self.cycles += (ticks * 4) as u64,
+            GeneratorState::Complete(_) => panic!("Generator is complete"),
+        }
+
+        // self.cycles += self.cpu.do_cycle() as u64;
     }
 
     pub fn check_and_reset_gpu_updated(&mut self) -> bool {
-        self.cpu.check_and_reset_gpu_updated()
+        let result = self.mmu.borrow().gpu.updated;
+        self.mmu.borrow_mut().gpu.updated = false;
+        result
     }
 
-    pub fn get_gpu_data(&self) -> &[u8] {
-        self.cpu.get_gpu_data()
+    pub fn get_gpu_data(&self) -> Vec<u8> {
+        self.mmu.borrow().gpu.data.clone()
     }
 
     pub fn keyup(&mut self, key: KeypadKey) {
-        self.cpu.keyup(key)
+        self.mmu.borrow_mut().keypad.keyup(key)
     }
 
     pub fn keydown(&mut self, key: KeypadKey) {
-        self.cpu.keydown(key)
+        self.mmu.borrow_mut().keypad.keydown(key)
     }
 
     pub fn sync_audio(&mut self) {
-        self.cpu.sync_audio()
+        self.mmu.borrow_mut().sound.sync()
     }
 }
 
@@ -105,7 +119,7 @@ mod tests {
             RgbImage::from_raw(
                 SCREEN_W as u32,
                 SCREEN_H as u32,
-                game.get_gpu_data().to_owned(),
+                game.get_gpu_data(),
             )
             .unwrap(),
         )
@@ -115,7 +129,7 @@ mod tests {
     fn save_image(game: &Game, path: &str) {
         image::save_buffer(
             path,
-            game.get_gpu_data(),
+            &game.get_gpu_data(),
             SCREEN_W as u32,
             SCREEN_H as u32,
             ColorType::Rgb8,
