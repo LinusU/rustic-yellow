@@ -1,20 +1,13 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use glium::glutin::platform::run_return::EventLoopExtRunReturn;
-use rustic_yellow::{AudioPlayer, Game};
-use std::sync::mpsc::{self, Receiver, SyncSender, TryRecvError};
+use rustic_yellow::{AudioPlayer, Game, KeypadEvent};
+use std::sync::mpsc::{self, Receiver, SyncSender};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
 #[derive(Default)]
 struct RenderOptions {
     pub linear_interpolation: bool,
-}
-
-enum GBEvent {
-    KeyUp(rustic_yellow::KeypadKey),
-    KeyDown(rustic_yellow::KeypadKey),
-    SpeedUp,
-    SpeedDown,
 }
 
 #[cfg(target_os = "windows")]
@@ -84,20 +77,16 @@ fn main() {
                         => set_window_size(display.gl_window().window(), 1),
                     KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::R), .. }
                         => set_window_size(display.gl_window().window(), scale),
-                    KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::LShift), .. }
-                        => { let _ = sender1.send(GBEvent::SpeedUp); },
-                    KeyboardInput { state: Released, virtual_keycode: Some(VirtualKeyCode::LShift), .. }
-                        => { let _ = sender1.send(GBEvent::SpeedDown); },
                     KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::T), .. }
                         => { renderoptions.linear_interpolation = !renderoptions.linear_interpolation; }
                     KeyboardInput { state: Pressed, virtual_keycode: Some(glutinkey), .. } => {
                         if let Some(key) = glutin_to_keypad(glutinkey) {
-                            let _ = sender1.send(GBEvent::KeyDown(key));
+                            let _ = sender1.send(KeypadEvent::Down(key));
                         }
                     },
                     KeyboardInput { state: Released, virtual_keycode: Some(glutinkey), .. } => {
                         if let Some(key) = glutin_to_keypad(glutinkey) {
-                            let _ = sender1.send(GBEvent::KeyUp(key));
+                            let _ = sender1.send(KeypadEvent::Up(key));
                         }
                     }
                     _ => (),
@@ -185,42 +174,23 @@ fn recalculate_screen(
 fn run_game(
     player: Box<dyn AudioPlayer>,
     sender: SyncSender<Vec<u8>>,
-    receiver: Receiver<GBEvent>,
+    receiver: Receiver<KeypadEvent>,
 ) {
-    let mut game = Game::new(player, sender);
+    let mut game = Game::new(player, sender, receiver);
 
     let periodic = timer_periodic(16);
-    let mut limit_speed = true;
 
     let waitticks = (4194304f64 / 1000.0 * 16.0).round() as u32;
     let mut ticks = 0;
 
-    'outer: loop {
+    loop {
         while ticks < waitticks {
             ticks += game.do_cycle();
         }
 
         ticks -= waitticks;
 
-        'recv: loop {
-            match receiver.try_recv() {
-                Ok(event) => match event {
-                    GBEvent::KeyUp(key) => game.keyup(key),
-                    GBEvent::KeyDown(key) => game.keydown(key),
-                    GBEvent::SpeedUp => limit_speed = false,
-                    GBEvent::SpeedDown => {
-                        limit_speed = true;
-                        game.sync_audio();
-                    }
-                },
-                Err(TryRecvError::Empty) => break 'recv,
-                Err(TryRecvError::Disconnected) => break 'outer,
-            }
-        }
-
-        if limit_speed {
-            let _ = periodic.recv();
-        }
+        let _ = periodic.recv();
     }
 }
 

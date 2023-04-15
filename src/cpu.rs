@@ -1,6 +1,6 @@
-use std::sync::mpsc::SyncSender;
+use std::sync::mpsc::{Receiver, SyncSender};
 
-use crate::{mmu::Mmu, sound::AudioPlayer, KeypadKey};
+use crate::{keypad::KeypadEvent, mmu::Mmu, sound::AudioPlayer};
 use CpuFlag::{C, H, N, Z};
 
 #[derive(Copy, Clone)]
@@ -36,6 +36,7 @@ impl Cpu {
         rom: Vec<u8>,
         player: Box<dyn AudioPlayer>,
         update_screen: SyncSender<Vec<u8>>,
+        keypad_events: Receiver<KeypadEvent>,
     ) -> Cpu {
         Cpu {
             a: 0x11,
@@ -54,20 +55,12 @@ impl Cpu {
             setdi: 0,
             setei: 0,
 
-            mmu: Mmu::new(rom, player, update_screen),
+            mmu: Mmu::new(rom, player, update_screen, keypad_events),
         }
     }
 
     pub fn sync_audio(&mut self) {
         self.mmu.sound.sync();
-    }
-
-    pub fn keyup(&mut self, key: KeypadKey) {
-        self.mmu.keypad.keyup(key);
-    }
-
-    pub fn keydown(&mut self, key: KeypadKey) {
-        self.mmu.keypad.keydown(key);
     }
 
     pub fn do_cycle(&mut self) -> u32 {

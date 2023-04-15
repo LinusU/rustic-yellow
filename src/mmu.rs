@@ -1,8 +1,8 @@
-use std::sync::mpsc::SyncSender;
+use std::sync::mpsc::{Receiver, SyncSender};
 
 use crate::{
     gpu::Gpu,
-    keypad::Keypad,
+    keypad::{Keypad, KeypadEvent},
     mbc5::MBC5,
     serial::Serial,
     sound::{AudioPlayer, Sound},
@@ -64,6 +64,7 @@ impl Mmu {
         rom: Vec<u8>,
         player: Box<dyn AudioPlayer>,
         update_screen: SyncSender<Vec<u8>>,
+        keypad_events: Receiver<KeypadEvent>,
     ) -> Mmu {
         let mut mmu = Mmu {
             wram: [0; WRAM_SIZE],
@@ -73,7 +74,7 @@ impl Mmu {
             intf: 0,
             serial: Serial::new(),
             timer: Timer::new(),
-            keypad: Keypad::new(),
+            keypad: Keypad::new(keypad_events),
             gpu: Gpu::new(update_screen),
             sound: Sound::new(player),
             hdma_status: DMAType::NoDMA,
@@ -135,9 +136,6 @@ impl Mmu {
         self.timer.do_cycle(cputicks);
         self.intf |= self.timer.interrupt;
         self.timer.interrupt = 0;
-
-        self.intf |= self.keypad.interrupt;
-        self.keypad.interrupt = 0;
 
         self.gpu.do_cycle(gputicks);
         self.intf |= self.gpu.interrupt;

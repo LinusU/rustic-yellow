@@ -2,7 +2,7 @@
 
 pub use crate::game::Game;
 pub use crate::gpu::{SCREEN_H, SCREEN_W};
-pub use crate::keypad::KeypadKey;
+pub use crate::keypad::{KeypadEvent, KeypadKey};
 pub use crate::sound::AudioPlayer;
 
 mod cpu;
