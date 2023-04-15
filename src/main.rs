@@ -60,6 +60,8 @@ fn main() {
 
     let gamethread = thread::spawn(move || run_game(Box::new(player), sender2, receiver1));
 
+    let periodic = timer_periodic(16_743);
+
     #[rustfmt::skip]
     eventloop.run_return(move |ev, _evtarget, controlflow| {
         use glium::glutin::event::ElementState::{Pressed, Released};
@@ -95,7 +97,10 @@ fn main() {
             },
             Event::MainEventsCleared => {
                 match receiver2.recv() {
-                    Ok(data) => recalculate_screen(&display, &mut texture, &data, &renderoptions),
+                    Ok(data) => {
+                        periodic.recv().unwrap();
+                        recalculate_screen(&display, &mut texture, &data, &renderoptions);
+                    }
                     Err(..) => stop = true, // Remote end has hung-up
                 }
             }
@@ -178,26 +183,15 @@ fn run_game(
 ) {
     let mut game = Game::new(player, sender, receiver);
 
-    let periodic = timer_periodic(16);
-
-    let waitticks = (4194304f64 / 1000.0 * 16.0).round() as u32;
-    let mut ticks = 0;
-
     loop {
-        while ticks < waitticks {
-            ticks += game.do_cycle();
-        }
-
-        ticks -= waitticks;
-
-        let _ = periodic.recv();
+        game.do_cycle();
     }
 }
 
-fn timer_periodic(ms: u64) -> Receiver<()> {
+fn timer_periodic(micros: u64) -> Receiver<()> {
     let (tx, rx) = std::sync::mpsc::sync_channel(1);
     std::thread::spawn(move || loop {
-        std::thread::sleep(std::time::Duration::from_millis(ms));
+        std::thread::sleep(std::time::Duration::from_micros(micros));
         if tx.send(()).is_err() {
             break;
         }
