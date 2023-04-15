@@ -1,3 +1,5 @@
+use std::sync::mpsc::SyncSender;
+
 use crate::{mmu::Mmu, sound::AudioPlayer, KeypadKey};
 use CpuFlag::{C, H, N, Z};
 
@@ -30,7 +32,11 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(rom: Vec<u8>, player: Box<dyn AudioPlayer>) -> Cpu {
+    pub fn new(
+        rom: Vec<u8>,
+        player: Box<dyn AudioPlayer>,
+        update_screen: SyncSender<Vec<u8>>,
+    ) -> Cpu {
         Cpu {
             a: 0x11,
             f: 0xB0,
@@ -48,18 +54,8 @@ impl Cpu {
             setdi: 0,
             setei: 0,
 
-            mmu: Mmu::new(rom, player),
+            mmu: Mmu::new(rom, player, update_screen),
         }
-    }
-
-    pub fn check_and_reset_gpu_updated(&mut self) -> bool {
-        let result = self.mmu.gpu.updated;
-        self.mmu.gpu.updated = false;
-        result
-    }
-
-    pub fn get_gpu_data(&self) -> &[u8] {
-        &self.mmu.gpu.data
     }
 
     pub fn sync_audio(&mut self) {

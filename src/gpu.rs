@@ -1,4 +1,7 @@
-use std::cmp::Ordering;
+use std::{
+    cmp::Ordering,
+    sync::mpsc::{SendError, SyncSender},
+};
 
 const VRAM_SIZE: usize = 0x4000;
 const VOAM_SIZE: usize = 0xA0;
@@ -50,15 +53,15 @@ pub struct Gpu {
     csprit_ind: u8,
     csprit: [[[u8; 3]; 4]; 8],
     vrambank: usize,
-    pub data: Vec<u8>,
+    data: Vec<u8>,
     bgprio: [PrioType; SCREEN_W],
-    pub updated: bool,
     pub interrupt: u8,
     hblanking: bool,
+    update_screen: SyncSender<Vec<u8>>,
 }
 
 impl Gpu {
-    pub fn new() -> Gpu {
+    pub fn new(update_screen: SyncSender<Vec<u8>>) -> Gpu {
         Gpu {
             mode: 0,
             modeclock: 0,
@@ -92,7 +95,6 @@ impl Gpu {
             voam: [0; VOAM_SIZE],
             data: vec![0; SCREEN_W * SCREEN_H * 3],
             bgprio: [PrioType::Normal; SCREEN_W],
-            updated: false,
             interrupt: 0,
             cbgpal_inc: false,
             cbgpal_ind: 0,
@@ -102,6 +104,7 @@ impl Gpu {
             csprit: [[[0u8; 3]; 4]; 8],
             vrambank: 0,
             hblanking: false,
+            update_screen,
         }
     }
 
@@ -170,7 +173,7 @@ impl Gpu {
                 // Vertical blank
                 self.wy_trigger = false;
                 self.interrupt |= 0x01;
-                self.updated = true;
+                self.update_screen();
                 self.m1_inte
             }
             2 => self.m2_inte,
@@ -360,7 +363,16 @@ impl Gpu {
         for v in self.data.iter_mut() {
             *v = 255;
         }
-        self.updated = true;
+        self.update_screen();
+    }
+
+    fn update_screen(&mut self) {
+        match self.update_screen.send(self.data.clone()) {
+            Ok(_) => {}
+            Err(SendError(_)) => {
+                panic!("Screen disconnected")
+            }
+        }
     }
 
     fn update_pal(&mut self) {

@@ -1,7 +1,7 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use glium::glutin::platform::run_return::EventLoopExtRunReturn;
 use rustic_yellow::{AudioPlayer, Game};
-use std::sync::mpsc::{self, Receiver, SyncSender, TryRecvError, TrySendError};
+use std::sync::mpsc::{self, Receiver, SyncSender, TryRecvError};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
@@ -43,7 +43,6 @@ fn main() {
     let scale = 4;
 
     let (player, cpal_audio_stream) = CpalPlayer::get();
-    let game = Game::new(Box::new(player));
 
     let (sender1, receiver1) = mpsc::channel();
     let (sender2, receiver2) = mpsc::sync_channel(1);
@@ -66,7 +65,7 @@ fn main() {
 
     let mut renderoptions = <RenderOptions as Default>::default();
 
-    let gamethread = thread::spawn(move || run_game(game, sender2, receiver1));
+    let gamethread = thread::spawn(move || run_game(Box::new(player), sender2, receiver1));
 
     #[rustfmt::skip]
     eventloop.run_return(move |ev, _evtarget, controlflow| {
@@ -183,7 +182,13 @@ fn recalculate_screen(
     target.finish().unwrap();
 }
 
-fn run_game(mut game: Game, sender: SyncSender<Vec<u8>>, receiver: Receiver<GBEvent>) {
+fn run_game(
+    player: Box<dyn AudioPlayer>,
+    sender: SyncSender<Vec<u8>>,
+    receiver: Receiver<GBEvent>,
+) {
+    let mut game = Game::new(player, sender);
+
     let periodic = timer_periodic(16);
     let mut limit_speed = true;
 
@@ -193,12 +198,6 @@ fn run_game(mut game: Game, sender: SyncSender<Vec<u8>>, receiver: Receiver<GBEv
     'outer: loop {
         while ticks < waitticks {
             ticks += game.do_cycle();
-            if game.check_and_reset_gpu_updated() {
-                let data = game.get_gpu_data().to_vec();
-                if let Err(TrySendError::Disconnected(..)) = sender.try_send(data) {
-                    break 'outer;
-                }
-            }
         }
 
         ticks -= waitticks;

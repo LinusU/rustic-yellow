@@ -1,3 +1,5 @@
+use std::sync::mpsc::SyncSender;
+
 use crate::{
     gpu::Gpu,
     keypad::Keypad,
@@ -58,7 +60,11 @@ fn fill_random(slice: &mut [u8], start: u32) {
 }
 
 impl Mmu {
-    pub fn new(rom: Vec<u8>, player: Box<dyn AudioPlayer>) -> Mmu {
+    pub fn new(
+        rom: Vec<u8>,
+        player: Box<dyn AudioPlayer>,
+        update_screen: SyncSender<Vec<u8>>,
+    ) -> Mmu {
         let mut mmu = Mmu {
             wram: [0; WRAM_SIZE],
             zram: [0; ZRAM_SIZE],
@@ -68,7 +74,7 @@ impl Mmu {
             serial: Serial::new(),
             timer: Timer::new(),
             keypad: Keypad::new(),
-            gpu: Gpu::new(),
+            gpu: Gpu::new(update_screen),
             sound: Sound::new(player),
             hdma_status: DMAType::NoDMA,
             hdma_src: 0,

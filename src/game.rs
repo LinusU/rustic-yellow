@@ -1,3 +1,5 @@
+use std::sync::mpsc::SyncSender;
+
 use crate::{cpu::Cpu, AudioPlayer, KeypadKey};
 
 pub struct Game {
@@ -5,7 +7,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(player: Box<dyn AudioPlayer>) -> Self {
+    pub fn new(player: Box<dyn AudioPlayer>, update_screen: SyncSender<Vec<u8>>) -> Self {
         let rom = include_bytes!("../rom_file.gb").to_vec();
 
         assert_eq!(rom[0x143], 0x80);
@@ -13,20 +15,12 @@ impl Game {
         assert_eq!(rom[0x149], 0x03);
 
         Self {
-            cpu: Cpu::new(rom, player),
+            cpu: Cpu::new(rom, player, update_screen),
         }
     }
 
     pub fn do_cycle(&mut self) -> u32 {
         self.cpu.do_cycle()
-    }
-
-    pub fn check_and_reset_gpu_updated(&mut self) -> bool {
-        self.cpu.check_and_reset_gpu_updated()
-    }
-
-    pub fn get_gpu_data(&self) -> &[u8] {
-        self.cpu.get_gpu_data()
     }
 
     pub fn keyup(&mut self, key: KeypadKey) {
