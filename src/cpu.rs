@@ -76,6 +76,7 @@ impl Cpu {
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
                 (_, 0x1e64) => crate::game::home::vblank::delay_frame(self),
                 (_, 0x372f) => crate::game::home::delay::delay_frames(self),
+                (_, 0x3ddb) => crate::game::home::palettes::delay3(self),
                 (0x01, 0x5cbd) => crate::game::engine::menus::main_menu::init_options(self),
                 (0x01, 0x5dfb) => crate::game::engine::menus::main_menu::check_for_player_name_in_sram(self),
 
