@@ -73,6 +73,7 @@ impl Cpu {
         loop {
             match (self.bank(), self.pc) {
                 (_, 0x0000) => break,
+                (_, 0x1e64) => crate::game::home::vblank::delay_frame(self),
                 (0x01, 0x5cbd) => crate::game::engine::menus::main_menu::init_options(self),
                 (0x01, 0x5dfb) => crate::game::engine::menus::main_menu::check_for_player_name_in_sram(self),
 
