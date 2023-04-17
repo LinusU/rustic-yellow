@@ -23,8 +23,8 @@ impl Game {
         }
     }
 
-    pub fn do_cycle(&mut self) -> u32 {
-        self.cpu.do_cycle()
+    pub fn boot(&mut self) {
+        self.cpu.call(0x0100)
     }
 
     pub fn sync_audio(&mut self) {

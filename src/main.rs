@@ -181,11 +181,7 @@ fn run_game(
     sender: SyncSender<Vec<u8>>,
     receiver: Receiver<KeypadEvent>,
 ) {
-    let mut game = Game::new(player, sender, receiver);
-
-    loop {
-        game.do_cycle();
-    }
+    Game::new(player, sender, receiver).boot();
 }
 
 fn timer_periodic(micros: u64) -> Receiver<()> {
