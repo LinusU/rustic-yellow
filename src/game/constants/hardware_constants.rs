@@ -1,0 +1,8 @@
+// MBC1
+pub const MBC1_SRAM_ENABLE: u16 = 0x0000;
+pub const MBC1_ROM_BANK: u16 = 0x2000;
+pub const MBC1_SRAM_BANK: u16 = 0x4000;
+pub const MBC1_SRAM_BANKING_MODE: u16 = 0x6000;
+
+pub const SRAM_DISABLE: u8 = 0x00;
+pub const SRAM_ENABLE: u8 = 0x0a;

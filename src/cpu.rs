@@ -63,6 +63,7 @@ impl Cpu {
         self.mmu.sound.sync();
     }
 
+    #[rustfmt::skip]
     pub fn call(&mut self, pc: u16) {
         assert_ne!(pc, 0x0000);
 
@@ -73,6 +74,7 @@ impl Cpu {
             match (self.bank(), self.pc) {
                 (_, 0x0000) => break,
                 (0x01, 0x5cbd) => crate::game::engine::menus::main_menu::init_options(self),
+                (0x01, 0x5dfb) => crate::game::engine::menus::main_menu::check_for_player_name_in_sram(self),
 
                 _ => {
                     let ticks = if self.halted { 4 } else { self.step() * 4 };
@@ -84,6 +86,10 @@ impl Cpu {
 
     pub fn bank(&self) -> usize {
         self.mmu.mbc.rombank
+    }
+
+    pub fn read_byte(&mut self, addr: u16) -> u8 {
+        self.mmu.rb(addr)
     }
 
     pub fn write_byte(&mut self, addr: u16, value: u8) {
