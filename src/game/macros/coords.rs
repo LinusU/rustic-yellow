@@ -1,4 +1,3 @@
-#[macro_export]
 macro_rules! coord {
     ($x:expr, $y:expr) => {
         ((($y as u16) * (crate::game::constants::gfx_constants::SCREEN_WIDTH as u16))
@@ -11,3 +10,5 @@ macro_rules! coord {
             + $origin)
     };
 }
+
+pub(crate) use coord;

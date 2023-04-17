@@ -1,4 +1,4 @@
-use crate::cpu::Cpu;
+use crate::{cpu::Cpu, game::macros};
 
 use super::delay::delay_frames;
 
@@ -12,4 +12,13 @@ pub fn delay3(cpu: &mut Cpu) {
     // jp DelayFrames
     cpu.cycle(16);
     delay_frames(cpu);
+}
+
+pub fn run_palette_command(cpu: &mut Cpu) {
+    // Useless W_ON_SGB check
+    cpu.cycle(16);
+    cpu.cycle(4);
+    cpu.cycle(8);
+
+    macros::predef::predef_jump!(cpu, _RunPaletteCommand);
 }

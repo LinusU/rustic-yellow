@@ -78,6 +78,7 @@ impl Cpu {
                 (_, 0x16dd) => crate::game::home::copy2::clear_screen(self),
                 (_, 0x372f) => crate::game::home::delay::delay_frames(self),
                 (_, 0x3ddb) => crate::game::home::palettes::delay3(self),
+                (_, 0x3e05) => crate::game::home::palettes::run_palette_command(self),
                 (0x01, 0x5cbd) => crate::game::engine::menus::main_menu::init_options(self),
                 (0x01, 0x5dfb) => crate::game::engine::menus::main_menu::check_for_player_name_in_sram(self),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
@@ -88,6 +89,11 @@ impl Cpu {
                 }
             }
         }
+    }
+
+    pub fn jump(&mut self, pc: u16) {
+        self.call(pc);
+        self.pc = self.stack_pop();
     }
 
     pub fn bank(&self) -> usize {
