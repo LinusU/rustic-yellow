@@ -1,7 +1,7 @@
 pub struct MBC5 {
     rom: Vec<u8>,
     ram: Vec<u8>,
-    rombank: usize,
+    pub(crate) rombank: usize,
     rambank: usize,
     ram_on: bool,
     // savepath: Option<path::PathBuf>,

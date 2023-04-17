@@ -64,16 +64,33 @@ impl Cpu {
     }
 
     pub fn call(&mut self, pc: u16) {
+        assert_ne!(pc, 0x0000);
+
         self.stack_push(0x0000);
         self.pc = pc;
 
-        while self.pc != 0x0000 {
-            let ticks = if self.halted { 4 } else { self.step() * 4 };
-            self.cycle(ticks);
+        loop {
+            match (self.bank(), self.pc) {
+                (_, 0x0000) => break,
+                (0x01, 0x5cbd) => crate::game::engine::menus::main_menu::init_options(self),
+
+                _ => {
+                    let ticks = if self.halted { 4 } else { self.step() * 4 };
+                    self.cycle(ticks);
+                }
+            }
         }
     }
 
-    fn cycle(&mut self, ticks: u32) {
+    pub fn bank(&self) -> usize {
+        self.mmu.mbc.rombank
+    }
+
+    pub fn write_byte(&mut self, addr: u16, value: u8) {
+        self.mmu.wb(addr, value);
+    }
+
+    pub fn cycle(&mut self, ticks: u32) {
         self.mmu.do_cycle(ticks);
         self.updateime();
         self.handleinterrupt();

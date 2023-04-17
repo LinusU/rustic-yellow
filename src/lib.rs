@@ -5,8 +5,8 @@ pub use crate::gpu::{SCREEN_H, SCREEN_W};
 pub use crate::keypad::{KeypadEvent, KeypadKey};
 pub use crate::sound::AudioPlayer;
 
-mod cpu;
-mod game;
+pub(crate) mod cpu;
+pub(crate) mod game;
 mod gpu;
 mod keypad;
 mod mbc5;

@@ -2,6 +2,10 @@ use std::sync::mpsc::{Receiver, SyncSender};
 
 use crate::{cpu::Cpu, keypad::KeypadEvent, AudioPlayer};
 
+pub mod constants;
+pub mod engine;
+pub mod ram;
+
 pub struct Game {
     cpu: Cpu,
 }
@@ -12,7 +16,7 @@ impl Game {
         update_screen: SyncSender<Vec<u8>>,
         keypad_events: Receiver<KeypadEvent>,
     ) -> Self {
-        let rom = include_bytes!("../rom_file.gb").to_vec();
+        let rom = include_bytes!("../../rom_file.gb").to_vec();
 
         assert_eq!(rom[0x143], 0x80);
         assert_eq!(rom[0x147], 0x1b);
