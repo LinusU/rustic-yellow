@@ -80,6 +80,7 @@ impl Cpu {
                 (_, 0x3ddb) => crate::game::home::palettes::delay3(self),
                 (0x01, 0x5cbd) => crate::game::engine::menus::main_menu::init_options(self),
                 (0x01, 0x5dfb) => crate::game::engine::menus::main_menu::check_for_player_name_in_sram(self),
+                (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
 
                 _ => {
                     let ticks = if self.halted { 4 } else { self.step() * 4 };
