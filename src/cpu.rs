@@ -75,6 +75,7 @@ impl Cpu {
                 (_, 0x0000) => break,
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
                 (_, 0x1e64) => crate::game::home::vblank::delay_frame(self),
+                (_, 0x16dd) => crate::game::home::copy2::clear_screen(self),
                 (_, 0x372f) => crate::game::home::delay::delay_frames(self),
                 (_, 0x3ddb) => crate::game::home::palettes::delay3(self),
                 (0x01, 0x5cbd) => crate::game::engine::menus::main_menu::init_options(self),

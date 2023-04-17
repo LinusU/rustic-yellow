@@ -5,6 +5,7 @@ use crate::{cpu::Cpu, keypad::KeypadEvent, AudioPlayer};
 pub mod constants;
 pub mod engine;
 pub mod home;
+pub mod macros;
 pub mod ram;
 
 pub struct Game {
