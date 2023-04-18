@@ -2,7 +2,7 @@ use crate::{
     cpu::Cpu,
     game::{
         constants, home, macros,
-        ram::{sram, wram},
+        ram::{hram, sram, wram},
     },
 };
 
@@ -128,7 +128,30 @@ pub fn main_menu(cpu: &mut Cpu) {
 
         match cpu.b {
             0 => {
-                return cpu.jump(0x5c64); // MainMenu.choseContinue
+                // "Continue" selected
+                cpu.call(0x5d1f); // DisplayContinueGameInfo
+
+                {
+                    let v = cpu.read_byte(wram::W_CURRENT_MAP_SCRIPT_FLAGS);
+                    cpu.write_byte(wram::W_CURRENT_MAP_SCRIPT_FLAGS, v | (1 << 5));
+                }
+
+                loop {
+                    cpu.write_byte(hram::H_JOY_PRESSED, 0);
+                    cpu.write_byte(hram::H_JOY_RELEASED, 0);
+                    cpu.write_byte(hram::H_JOY_HELD, 0);
+                    cpu.call(0x01b9); // Joypad
+
+                    let btn = cpu.read_byte(hram::H_JOY_HELD);
+
+                    if (btn & constants::input_constants::A_BUTTON) != 0 {
+                        return cpu.jump(0x5c83); // MainMenu.pressedA
+                    }
+
+                    if (btn & constants::input_constants::B_BUTTON) != 0 {
+                        break;
+                    }
+                }
             }
             1 => {
                 return cpu.jump(0x5cd2); // StartNewGame

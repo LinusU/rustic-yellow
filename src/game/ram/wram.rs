@@ -44,6 +44,9 @@ pub const W_SAVE_FILE_STATUS: u16 = 0xd087;
 
 pub const W_OPTIONS_INITIALIZED: u16 = 0xd089;
 
+/// not exactly sure what this is used for, but it seems to be used as a multipurpose temp flag value
+pub const W_CURRENT_MAP_SCRIPT_FLAGS: u16 = 0xd125;
+
 pub const W_LINK_STATE: u16 = 0xd12a;
 
 /// bit 7 = battle animation
