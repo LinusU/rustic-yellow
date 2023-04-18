@@ -11,6 +11,7 @@ mod gpu;
 mod keypad;
 mod mbc5;
 mod mmu;
+mod saves;
 mod serial;
 mod sound;
 mod timer;

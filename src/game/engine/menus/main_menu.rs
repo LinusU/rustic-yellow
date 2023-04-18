@@ -2,19 +2,25 @@ use crate::{
     cpu::Cpu,
     game::{
         constants, home, macros,
-        ram::{hram, sram, wram},
+        ram::{hram, wram},
     },
+    saves,
 };
 
 pub fn main_menu(cpu: &mut Cpu) {
     init_options(cpu);
 
     cpu.write_byte(wram::W_OPTIONS_INITIALIZED, 0);
-    cpu.write_byte(wram::W_SAVE_FILE_STATUS, 1);
 
-    if check_for_player_name_in_sram(cpu) {
-        macros::predef::predef_call!(cpu, LoadSAV);
-    }
+    let has_saves = match saves::list_save_files() {
+        Ok(files) => !files.is_empty(),
+        Err(e) => {
+            eprintln!("Error listing save files: {}", e);
+            false
+        }
+    };
+
+    cpu.write_byte(wram::W_SAVE_FILE_STATUS, if has_saves { 2 } else { 1 });
 
     loop {
         home::delay::delay_frames(cpu, 20);
@@ -51,7 +57,7 @@ pub fn main_menu(cpu: &mut Cpu) {
             cpu.write_byte(wram::W_D730, v | (1 << 6));
         }
 
-        if cpu.read_byte(wram::W_SAVE_FILE_STATUS) != 1 {
+        if has_saves {
             // there's a save file
             home::text::text_box_border(cpu, 0, 0, 13, 6);
             home::text::place_string(cpu, 2, 2, "CONTINUE");
@@ -108,30 +114,7 @@ pub fn main_menu(cpu: &mut Cpu) {
 
         match cpu.b {
             0 => {
-                // "Continue" selected
-                cpu.call(0x5d1f); // DisplayContinueGameInfo
-
-                {
-                    let v = cpu.read_byte(wram::W_CURRENT_MAP_SCRIPT_FLAGS);
-                    cpu.write_byte(wram::W_CURRENT_MAP_SCRIPT_FLAGS, v | (1 << 5));
-                }
-
-                loop {
-                    cpu.write_byte(hram::H_JOY_PRESSED, 0);
-                    cpu.write_byte(hram::H_JOY_RELEASED, 0);
-                    cpu.write_byte(hram::H_JOY_HELD, 0);
-                    cpu.call(0x01b9); // Joypad
-
-                    let btn = cpu.read_byte(hram::H_JOY_HELD);
-
-                    if (btn & constants::input_constants::A_BUTTON) != 0 {
-                        return cpu.jump(0x5c83); // MainMenu.pressedA
-                    }
-
-                    if (btn & constants::input_constants::B_BUTTON) != 0 {
-                        break;
-                    }
-                }
+                main_menu_select_save(cpu);
             }
             1 => {
                 return cpu.jump(0x5cd2); // StartNewGame
@@ -141,6 +124,67 @@ pub fn main_menu(cpu: &mut Cpu) {
                 cpu.write_byte(wram::W_OPTIONS_INITIALIZED, 1);
             }
             _ => unreachable!("Invalid menu item: {}", cpu.b),
+        }
+    }
+}
+
+fn main_menu_select_save(cpu: &mut Cpu) {
+    let list = match saves::list_save_files() {
+        Ok(ref files) if files.is_empty() => {
+            return;
+        }
+        Ok(files) => files,
+        Err(error) => {
+            eprintln!("Error listing save files: {}", error);
+            return;
+        }
+    };
+
+    let first_page = &list[0..8.min(list.len())];
+    let height = (first_page.len() as u8) * 2;
+
+    home::text::text_box_border(cpu, 0, 0, 18, height);
+
+    for (i, save) in first_page.iter().enumerate() {
+        let y = (i as u8) * 2 + 2;
+        home::text::place_string(cpu, 2, y, &save.name);
+    }
+
+    cpu.write_byte(wram::W_MAX_MENU_ITEM, (first_page.len() as u8) - 1);
+    cpu.call(0x3aab); // call HandleMenuInput
+
+    if (cpu.a & constants::input_constants::B_BUTTON) != 0 {
+        return;
+    }
+
+    let selected = cpu.read_byte(wram::W_CURRENT_MENU_ITEM) as usize;
+    let save = &list[selected];
+
+    cpu.replace_ram(std::fs::read(&save.path).unwrap());
+
+    macros::predef::predef_call!(cpu, LoadSAV);
+
+    cpu.call(0x5d1f); // DisplayContinueGameInfo
+
+    {
+        let v = cpu.read_byte(wram::W_CURRENT_MAP_SCRIPT_FLAGS);
+        cpu.write_byte(wram::W_CURRENT_MAP_SCRIPT_FLAGS, v | (1 << 5));
+    }
+
+    loop {
+        cpu.write_byte(hram::H_JOY_PRESSED, 0);
+        cpu.write_byte(hram::H_JOY_RELEASED, 0);
+        cpu.write_byte(hram::H_JOY_HELD, 0);
+        cpu.call(0x01b9); // Joypad
+
+        let btn = cpu.read_byte(hram::H_JOY_HELD);
+
+        if (btn & constants::input_constants::A_BUTTON) != 0 {
+            return cpu.jump(0x5c83); // MainMenu.pressedA
+        }
+
+        if (btn & constants::input_constants::B_BUTTON) != 0 {
+            break;
         }
     }
 }
@@ -155,33 +199,4 @@ pub fn init_options(cpu: &mut Cpu) {
         constants::misc_constants::TEXT_DELAY_MEDIUM,
     );
     cpu.write_byte(wram::W_PRINTER_SETTINGS, 64); // audio?
-}
-
-/// Check if the player name data in SRAM has a string terminator character
-/// (indicating that a name may have been saved there) and return whether it does
-pub fn check_for_player_name_in_sram(cpu: &mut Cpu) -> bool {
-    cpu.write_byte(
-        constants::hardware_constants::MBC1_SRAM_ENABLE,
-        constants::hardware_constants::SRAM_ENABLE,
-    );
-    cpu.write_byte(constants::hardware_constants::MBC1_SRAM_BANKING_MODE, 1);
-    cpu.write_byte(constants::hardware_constants::MBC1_SRAM_BANK, 1);
-
-    let mut result = false;
-
-    for i in 0..=constants::text_constants::NAME_LENGTH {
-        // 0x50 = string terminator
-        if cpu.read_byte(sram::S_PLAYER_NAME + (i as u16)) == 0x50 {
-            result = true;
-            break;
-        }
-    }
-
-    cpu.write_byte(
-        constants::hardware_constants::MBC1_SRAM_ENABLE,
-        constants::hardware_constants::SRAM_DISABLE,
-    );
-    cpu.write_byte(constants::hardware_constants::MBC1_SRAM_BANKING_MODE, 0);
-
-    result
 }

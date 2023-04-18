@@ -21,6 +21,11 @@ impl MBC5 {
         }
     }
 
+    pub fn replace_ram(&mut self, ram: Vec<u8>) {
+        assert_eq!(ram.len(), 0x8000);
+        self.ram = ram;
+    }
+
     pub fn readrom(&self, a: u16) -> u8 {
         let idx = if a < 0x4000 {
             a as usize

@@ -109,6 +109,10 @@ impl Cpu {
         self.handleinterrupt();
     }
 
+    pub fn replace_ram(&mut self, ram: Vec<u8>) {
+        self.mmu.mbc.replace_ram(ram);
+    }
+
     fn fetch_byte(&mut self) -> u8 {
         let b = self.mmu.rb(self.pc);
         self.pc = self.pc.wrapping_add(1);
