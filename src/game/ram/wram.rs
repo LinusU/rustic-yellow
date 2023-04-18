@@ -1,5 +1,26 @@
 pub const W_TILE_MAP: u16 = 0xc3a0;
 
+pub const W_TOP_MENU_ITEM_Y: u16 = 0xcc24;
+pub const W_TOP_MENU_ITEM_X: u16 = 0xcc25;
+
+/// the id of the currently selected menu item \
+/// the top item has id 0, the one below that has id 1, etc. \
+/// note that the "top item" means the top item currently visible on the screen,
+/// add this value to [wListScrollOffset] to get the item's position within the list
+pub const W_CURRENT_MENU_ITEM: u16 = 0xcc26;
+
+/// the tile that was behind the menu cursor's current location
+pub const W_TILE_BEHIND_CURSOR: u16 = 0xcc27;
+
+/// id of the bottom menu item
+pub const W_MAX_MENU_ITEM: u16 = 0xcc28;
+
+/// bit mask of keys that the menu will respond to
+pub const W_MENU_WATCHED_KEYS: u16 = 0xcc29;
+
+/// id of previously selected menu item
+pub const W_LAST_MENU_ITEM: u16 = 0xcc2a;
+
 /// It is mainly used by the party menu to remember the cursor position while the
 /// menu isn't active.
 /// It is also used to remember the cursor position of mon lists (for the
@@ -7,6 +28,9 @@ pub const W_TILE_MAP: u16 = 0xc3a0;
 /// when you choose a mon from the list and a sub-menu is shown. It's reset when
 /// you return to the main Bill's PC menu.
 pub const W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM: u16 = 0xcc2b;
+
+/// how many times should HandleMenuInput poll the joypad state before it returns?
+pub const W_MENU_JOYPAD_POLL_COUNT: u16 = 0xcc34;
 
 /// if running on SGB or CGB, it's 1, else it's 0
 pub const W_ON_SGB: u16 = 0xcf1a;
