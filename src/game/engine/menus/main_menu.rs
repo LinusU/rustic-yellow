@@ -6,9 +6,6 @@ use crate::{
     },
 };
 
-const CONTINUE_TEXT: u16 = 0x5d06;
-const NEW_GAME_TEXT: u16 = 0x5d0f;
-
 pub fn main_menu(cpu: &mut Cpu) {
     init_options(cpu);
 
@@ -56,23 +53,14 @@ pub fn main_menu(cpu: &mut Cpu) {
 
         if cpu.read_byte(wram::W_SAVE_FILE_STATUS) != 1 {
             // there's a save file
-            cpu.set_hl(macros::coords::coord!(0, 0));
-            cpu.b = 6;
-            cpu.c = 13;
-            cpu.call(0x16f0); // call TextBoxBorder
-
-            cpu.set_hl(macros::coords::coord!(2, 2));
-            cpu.set_de(CONTINUE_TEXT);
-            cpu.call(0x1723); // call PlaceString
+            home::text::text_box_border(cpu, 0, 0, 13, 6);
+            home::text::place_string(cpu, 2, 2, "CONTINUE");
+            home::text::place_string(cpu, 2, 4, "NEW GAME");
+            home::text::place_string(cpu, 2, 6, "OPTION");
         } else {
-            cpu.set_hl(macros::coords::coord!(0, 0));
-            cpu.b = 4;
-            cpu.c = 13;
-            cpu.call(0x16f0); // call TextBoxBorder
-
-            cpu.set_hl(macros::coords::coord!(2, 2));
-            cpu.set_de(NEW_GAME_TEXT);
-            cpu.call(0x1723); // call PlaceString
+            home::text::text_box_border(cpu, 0, 0, 13, 4);
+            home::text::place_string(cpu, 2, 2, "NEW GAME");
+            home::text::place_string(cpu, 2, 4, "OPTION");
         }
 
         // Print text with delay between each letter
