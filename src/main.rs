@@ -2,7 +2,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use glium::glutin::platform::run_return::EventLoopExtRunReturn;
 use rustic_yellow::{AudioPlayer, Game, KeypadEvent};
 use std::sync::mpsc::{self, Receiver, SyncSender};
-use std::sync::{Arc, Mutex};
+use std::sync::{atomic::AtomicU64, Arc, Mutex};
 use std::thread;
 
 #[derive(Default)]
@@ -35,6 +35,8 @@ fn create_window_builder() -> glium::glutin::window::WindowBuilder {
 fn main() {
     let scale = 4;
 
+    let render_delay = Arc::new(AtomicU64::new(16_743));
+
     let (player, cpal_audio_stream) = CpalPlayer::get();
 
     let (sender1, receiver1) = mpsc::channel();
@@ -60,7 +62,7 @@ fn main() {
 
     let gamethread = thread::spawn(move || run_game(Box::new(player), sender2, receiver1));
 
-    let periodic = timer_periodic(16_743);
+    let periodic = timer_periodic(render_delay.clone());
 
     #[rustfmt::skip]
     eventloop.run_return(move |ev, _evtarget, controlflow| {
@@ -76,9 +78,17 @@ fn main() {
                     KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::Escape), .. }
                         => stop = true,
                     KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::Key1), .. }
-                        => set_window_size(display.gl_window().window(), 1),
-                    KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::R), .. }
-                        => set_window_size(display.gl_window().window(), scale),
+                        => render_delay.store(16_743, std::sync::atomic::Ordering::Relaxed), // 59.7 fps
+                    KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::Key2), .. }
+                        => render_delay.store(10_000, std::sync::atomic::Ordering::Relaxed), // 100 fps
+                    KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::Key3), .. }
+                        => render_delay.store(8_333, std::sync::atomic::Ordering::Relaxed), // 120 fps
+                    KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::Key4), .. }
+                        => render_delay.store(5_000, std::sync::atomic::Ordering::Relaxed), // 200 fps
+                    KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::Key5), .. }
+                        => render_delay.store(4_166, std::sync::atomic::Ordering::Relaxed), // 240 fps
+                    KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::Key6), .. }
+                        => render_delay.store(2_500, std::sync::atomic::Ordering::Relaxed), // 400 fps
                     KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::T), .. }
                         => { renderoptions.linear_interpolation = !renderoptions.linear_interpolation; }
                     KeyboardInput { state: Pressed, virtual_keycode: Some(glutinkey), .. } => {
@@ -96,11 +106,10 @@ fn main() {
                 _ => (),
             },
             Event::MainEventsCleared => {
+                periodic.recv().unwrap();
+
                 match receiver2.recv() {
-                    Ok(data) => {
-                        periodic.recv().unwrap();
-                        recalculate_screen(&display, &mut texture, &data, &renderoptions);
-                    }
+                    Ok(data) => { recalculate_screen(&display, &mut texture, &data, &renderoptions); },
                     Err(..) => stop = true, // Remote end has hung-up
                 }
             }
@@ -184,9 +193,10 @@ fn run_game(
     Game::new(player, sender, receiver).boot();
 }
 
-fn timer_periodic(micros: u64) -> Receiver<()> {
+fn timer_periodic(delay: Arc<AtomicU64>) -> Receiver<()> {
     let (tx, rx) = std::sync::mpsc::sync_channel(1);
     std::thread::spawn(move || loop {
+        let micros = delay.load(std::sync::atomic::Ordering::Relaxed);
         std::thread::sleep(std::time::Duration::from_micros(micros));
         if tx.send(()).is_err() {
             break;
