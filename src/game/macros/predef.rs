@@ -1,6 +1,19 @@
 #[rustfmt::skip]
 macro_rules! predef_id {
     (_RunPaletteCommand) => { 0x45 };
+    (LoadSAV) => { 0x52 };
+}
+
+macro_rules! predef_call {
+    ($cpu:ident, $id:ident) => {
+        // LD A,u8
+        $cpu.a = crate::game::macros::predef::predef_id!($id);
+        $cpu.cycle(8);
+
+        // CALL u16
+        $cpu.cycle(24);
+        $cpu.call(0x3eb4);
+    };
 }
 
 macro_rules! predef_jump {
@@ -16,5 +29,6 @@ macro_rules! predef_jump {
     };
 }
 
+pub(crate) use predef_call;
 pub(crate) use predef_id;
 pub(crate) use predef_jump;

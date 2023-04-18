@@ -1,7 +1,26 @@
 pub const W_TILE_MAP: u16 = 0xc3a0;
 
+/// It is mainly used by the party menu to remember the cursor position while the
+/// menu isn't active.
+/// It is also used to remember the cursor position of mon lists (for the
+/// withdraw/deposit/release actions) in Bill's PC so that it doesn't get lost
+/// when you choose a mon from the list and a sub-menu is shown. It's reset when
+/// you return to the main Bill's PC menu.
+pub const W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM: u16 = 0xcc2b;
+
 /// if running on SGB or CGB, it's 1, else it's 0
 pub const W_ON_SGB: u16 = 0xcf1a;
+
+/// the map you will start at when the debug bit is set
+pub const W_DEFAULT_MAP: u16 = 0xd07b;
+
+/// 1 = no save file or save file is corrupted
+/// 2 = save file exists and no corruption has been detected
+pub const W_SAVE_FILE_STATUS: u16 = 0xd087;
+
+pub const W_OPTIONS_INITIALIZED: u16 = 0xd089;
+
+pub const W_LINK_STATE: u16 = 0xd12a;
 
 /// bit 7 = battle animation
 ///   0: On
@@ -22,3 +41,19 @@ pub const W_OPTIONS: u16 = 0xd354;
 pub const W_LETTER_PRINTING_DELAY_FLAGS: u16 = 0xd357;
 
 pub const W_PRINTER_SETTINGS: u16 = 0xd497;
+
+/// bit 0: the player has received Lapras in the Silph Co. building
+/// bit 1: set in various places, but doesn't appear to have an effect
+/// bit 2: the player has healed pokemon at a pokemon center at least once
+/// bit 3: the player has a received a pokemon from Prof. Oak
+/// bit 4: disable battles
+/// bit 5: set when a battle ends and when the player blacks out in the overworld due to poison
+/// bit 6: using the link feature
+/// bit 7: set if scripted NPC movement has been initialised
+pub const W_D72E: u16 = 0xd72d;
+
+/// bit 0: NPC sprite being moved by script \
+/// bit 5: ignore joypad input \
+/// bit 6: print text with no delay between each letter \
+/// bit 7: set if joypad states are being simulated in the overworld or an NPC's movement is being scripted
+pub const W_D730: u16 = 0xd730;

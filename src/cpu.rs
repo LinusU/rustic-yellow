@@ -79,8 +79,9 @@ impl Cpu {
                 (_, 0x372f) => crate::game::home::delay::delay_frames(self),
                 (_, 0x3ddb) => crate::game::home::palettes::delay3(self),
                 (_, 0x3e05) => crate::game::home::palettes::run_palette_command(self),
+                (0x01, 0x5ba6) => crate::game::engine::menus::main_menu::main_menu(self),
                 (0x01, 0x5cbd) => crate::game::engine::menus::main_menu::init_options(self),
-                (0x01, 0x5dfb) => crate::game::engine::menus::main_menu::check_for_player_name_in_sram(self),
+                (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
 
                 _ => {

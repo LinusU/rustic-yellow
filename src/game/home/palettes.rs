@@ -1,4 +1,7 @@
-use crate::{cpu::Cpu, game::macros};
+use crate::{
+    cpu::Cpu,
+    game::{constants, macros},
+};
 
 use super::delay::delay_frames;
 
@@ -12,6 +15,12 @@ pub fn delay3(cpu: &mut Cpu) {
     // jp DelayFrames
     cpu.cycle(16);
     delay_frames(cpu);
+}
+
+pub fn run_default_palette_command(cpu: &mut Cpu) {
+    cpu.b = constants::palette_constants::SET_PAL_DEFAULT;
+    cpu.cycle(8);
+    run_palette_command(cpu);
 }
 
 pub fn run_palette_command(cpu: &mut Cpu) {
