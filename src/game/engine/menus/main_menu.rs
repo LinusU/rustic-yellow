@@ -22,112 +22,124 @@ pub fn main_menu(cpu: &mut Cpu) {
         macros::predef::predef_call!(cpu, LoadSAV);
     }
 
-    cpu.c = 20;
-    cpu.stack_push(0x0001);
-    home::delay::delay_frames(cpu);
+    loop {
+        cpu.c = 20;
+        cpu.stack_push(0x0001);
+        home::delay::delay_frames(cpu);
 
-    cpu.write_byte(
-        wram::W_LINK_STATE,
-        constants::serial_constants::LINK_STATE_NONE,
-    );
+        cpu.write_byte(
+            wram::W_LINK_STATE,
+            constants::serial_constants::LINK_STATE_NONE,
+        );
 
-    cpu.write_byte(wram::W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM, 0);
-    cpu.write_byte(wram::W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM + 1, 0);
-    cpu.write_byte(wram::W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM + 2, 0);
-    cpu.write_byte(wram::W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM + 3, 0);
+        cpu.write_byte(wram::W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM, 0);
+        cpu.write_byte(wram::W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM + 1, 0);
+        cpu.write_byte(wram::W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM + 2, 0);
+        cpu.write_byte(wram::W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM + 3, 0);
 
-    cpu.write_byte(wram::W_DEFAULT_MAP, 0);
+        cpu.write_byte(wram::W_DEFAULT_MAP, 0);
 
-    // Toggle link feature bit off
-    {
-        let v = cpu.read_byte(wram::W_D72E);
-        cpu.write_byte(wram::W_D72E, v & !(1 << 6));
+        // Toggle link feature bit off
+        {
+            let v = cpu.read_byte(wram::W_D72E);
+            cpu.write_byte(wram::W_D72E, v & !(1 << 6));
+        }
+
+        cpu.stack_push(0x0001);
+        home::copy2::clear_screen(cpu);
+
+        cpu.stack_push(0x0001);
+        home::palettes::run_default_palette_command(cpu);
+
+        cpu.call(0x36a3); // call LoadTextBoxTilePatterns
+        cpu.call(0x3683); // call LoadFontTilePatterns
+
+        // Print text with no delay between each letter
+        {
+            let v = cpu.read_byte(wram::W_D730);
+            cpu.write_byte(wram::W_D730, v | (1 << 6));
+        }
+
+        if cpu.read_byte(wram::W_SAVE_FILE_STATUS) != 1 {
+            // there's a save file
+            cpu.set_hl(macros::coords::coord!(0, 0));
+            cpu.b = 6;
+            cpu.c = 13;
+            cpu.call(0x16f0); // call TextBoxBorder
+
+            cpu.set_hl(macros::coords::coord!(2, 2));
+            cpu.set_de(CONTINUE_TEXT);
+            cpu.call(0x1723); // call PlaceString
+        } else {
+            cpu.set_hl(macros::coords::coord!(0, 0));
+            cpu.b = 4;
+            cpu.c = 13;
+            cpu.call(0x16f0); // call TextBoxBorder
+
+            cpu.set_hl(macros::coords::coord!(2, 2));
+            cpu.set_de(NEW_GAME_TEXT);
+            cpu.call(0x1723); // call PlaceString
+        }
+
+        // Print text with delay between each letter
+        {
+            let v = cpu.read_byte(wram::W_D730);
+            cpu.write_byte(wram::W_D730, v & !(1 << 6));
+        }
+
+        cpu.call(0x231c); // call UpdateSprites
+
+        cpu.write_byte(wram::W_CURRENT_MENU_ITEM, 0);
+        cpu.write_byte(wram::W_LAST_MENU_ITEM, 0);
+        cpu.write_byte(wram::W_MENU_JOYPAD_POLL_COUNT, 0);
+
+        cpu.write_byte(wram::W_TOP_MENU_ITEM_X, 1);
+        cpu.write_byte(wram::W_TOP_MENU_ITEM_Y, 2);
+
+        cpu.write_byte(
+            wram::W_MENU_WATCHED_KEYS,
+            constants::input_constants::A_BUTTON
+                | constants::input_constants::B_BUTTON
+                | constants::input_constants::START,
+        );
+
+        {
+            let v = cpu.read_byte(wram::W_SAVE_FILE_STATUS);
+            cpu.write_byte(wram::W_MAX_MENU_ITEM, v);
+        }
+
+        cpu.call(0x3aab); // call HandleMenuInput
+
+        if (cpu.a & constants::input_constants::B_BUTTON) != 0 {
+            return cpu.jump(0x4171); // jump DisplayTitleScreen
+        }
+
+        cpu.c = 20;
+        cpu.stack_push(0x0001);
+        home::delay::delay_frames(cpu);
+
+        cpu.b = cpu.read_byte(wram::W_CURRENT_MENU_ITEM);
+
+        if cpu.read_byte(wram::W_SAVE_FILE_STATUS) != 2 {
+            // If there's no save file, increment the current menu item so that the numbers
+            // are the same whether or not there's a save file.
+            cpu.b += 1;
+        }
+
+        match cpu.b {
+            0 => {
+                return cpu.jump(0x5c64); // MainMenu.choseContinue
+            }
+            1 => {
+                return cpu.jump(0x5cd2); // StartNewGame
+            }
+            2 => {
+                cpu.call(0x5df2); // DisplayOptionMenu
+                cpu.write_byte(wram::W_OPTIONS_INITIALIZED, 1);
+            }
+            _ => unreachable!("Invalid menu item: {}", cpu.b),
+        }
     }
-
-    cpu.stack_push(0x0001);
-    home::copy2::clear_screen(cpu);
-
-    cpu.stack_push(0x0001);
-    home::palettes::run_default_palette_command(cpu);
-
-    cpu.call(0x36a3); // call LoadTextBoxTilePatterns
-    cpu.call(0x3683); // call LoadFontTilePatterns
-
-    // Print text with no delay between each letter
-    {
-        let v = cpu.read_byte(wram::W_D730);
-        cpu.write_byte(wram::W_D730, v | (1 << 6));
-    }
-
-    if cpu.read_byte(wram::W_SAVE_FILE_STATUS) != 1 {
-        // there's a save file
-        cpu.set_hl(macros::coords::coord!(0, 0));
-        cpu.b = 6;
-        cpu.c = 13;
-        cpu.call(0x16f0); // call TextBoxBorder
-
-        cpu.set_hl(macros::coords::coord!(2, 2));
-        cpu.set_de(CONTINUE_TEXT);
-        cpu.call(0x1723); // call PlaceString
-    } else {
-        cpu.set_hl(macros::coords::coord!(0, 0));
-        cpu.b = 4;
-        cpu.c = 13;
-        cpu.call(0x16f0); // call TextBoxBorder
-
-        cpu.set_hl(macros::coords::coord!(2, 2));
-        cpu.set_de(NEW_GAME_TEXT);
-        cpu.call(0x1723); // call PlaceString
-    }
-
-    // Print text with delay between each letter
-    {
-        let v = cpu.read_byte(wram::W_D730);
-        cpu.write_byte(wram::W_D730, v & !(1 << 6));
-    }
-
-    cpu.call(0x231c); // call UpdateSprites
-
-    cpu.write_byte(wram::W_CURRENT_MENU_ITEM, 0);
-    cpu.write_byte(wram::W_LAST_MENU_ITEM, 0);
-    cpu.write_byte(wram::W_MENU_JOYPAD_POLL_COUNT, 0);
-
-    cpu.write_byte(wram::W_TOP_MENU_ITEM_X, 1);
-    cpu.write_byte(wram::W_TOP_MENU_ITEM_Y, 2);
-
-    cpu.write_byte(
-        wram::W_MENU_WATCHED_KEYS,
-        constants::input_constants::A_BUTTON
-            | constants::input_constants::B_BUTTON
-            | constants::input_constants::START,
-    );
-
-    {
-        let v = cpu.read_byte(wram::W_SAVE_FILE_STATUS);
-        cpu.write_byte(wram::W_MAX_MENU_ITEM, v);
-    }
-
-    cpu.call(0x3aab); // call HandleMenuInput
-
-    if (cpu.a & constants::input_constants::B_BUTTON) != 0 {
-        eprintln!("B pressed");
-        return cpu.jump(0x4171); // jump DisplayTitleScreen
-    }
-
-    cpu.c = 20;
-    cpu.stack_push(0x0001);
-    home::delay::delay_frames(cpu);
-
-    cpu.b = cpu.read_byte(wram::W_CURRENT_MENU_ITEM);
-
-    if cpu.read_byte(wram::W_SAVE_FILE_STATUS) != 2 {
-        // If there's no save file, increment the current menu item so that the numbers
-        // are the same whether or not there's a save file.
-        cpu.b += 1;
-    }
-
-    // MainMenu.skipInc
-    cpu.jump(0x5c50);
 }
 
 pub fn init_options(cpu: &mut Cpu) {
