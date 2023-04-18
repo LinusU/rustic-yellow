@@ -10,22 +10,17 @@ const CONTINUE_TEXT: u16 = 0x5d06;
 const NEW_GAME_TEXT: u16 = 0x5d0f;
 
 pub fn main_menu(cpu: &mut Cpu) {
-    // call InitOptions
-    cpu.stack_push(0x0001);
     init_options(cpu);
 
     cpu.write_byte(wram::W_OPTIONS_INITIALIZED, 0);
     cpu.write_byte(wram::W_SAVE_FILE_STATUS, 1);
 
-    // call CheckForPlayerNameInSRAM
     if check_for_player_name_in_sram(cpu) {
         macros::predef::predef_call!(cpu, LoadSAV);
     }
 
     loop {
-        cpu.c = 20;
-        cpu.stack_push(0x0001);
-        home::delay::delay_frames(cpu);
+        home::delay::delay_frames(cpu, 20);
 
         cpu.write_byte(
             wram::W_LINK_STATE,
@@ -45,7 +40,6 @@ pub fn main_menu(cpu: &mut Cpu) {
             cpu.write_byte(wram::W_D72E, v & !(1 << 6));
         }
 
-        cpu.stack_push(0x0001);
         home::copy2::clear_screen(cpu);
 
         cpu.stack_push(0x0001);
@@ -114,9 +108,7 @@ pub fn main_menu(cpu: &mut Cpu) {
             return cpu.jump(0x4171); // jump DisplayTitleScreen
         }
 
-        cpu.c = 20;
-        cpu.stack_push(0x0001);
-        home::delay::delay_frames(cpu);
+        home::delay::delay_frames(cpu, 20);
 
         cpu.b = cpu.read_byte(wram::W_CURRENT_MENU_ITEM);
 
@@ -175,7 +167,6 @@ pub fn init_options(cpu: &mut Cpu) {
         constants::misc_constants::TEXT_DELAY_MEDIUM,
     );
     cpu.write_byte(wram::W_PRINTER_SETTINGS, 64); // audio?
-    cpu.pc = cpu.stack_pop();
 }
 
 /// Check if the player name data in SRAM has a string terminator character

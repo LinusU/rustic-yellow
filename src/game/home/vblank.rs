@@ -6,23 +6,13 @@ pub fn delay_frame(cpu: &mut Cpu) {
     const NOT_VBLANKED: u8 = 1;
 
     cpu.write_byte(hram::H_VBLANK_OCCURRED, NOT_VBLANKED);
-    cpu.cycle(20);
 
     loop {
         cpu.halted = true;
         cpu.cycle(4);
 
-        let result = cpu.read_byte(hram::H_VBLANK_OCCURRED);
-        cpu.cycle(16);
-
-        if result == HAS_VBLANKED {
-            cpu.cycle(8);
+        if cpu.read_byte(hram::H_VBLANK_OCCURRED) == HAS_VBLANKED {
             break;
         }
-
-        cpu.cycle(12);
     }
-
-    cpu.pc = cpu.stack_pop();
-    cpu.cycle(16);
 }

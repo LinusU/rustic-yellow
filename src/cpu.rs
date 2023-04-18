@@ -74,13 +74,7 @@ impl Cpu {
             match (self.bank(), self.pc) {
                 (_, 0x0000) => break,
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
-                (_, 0x1e64) => crate::game::home::vblank::delay_frame(self),
-                (_, 0x16dd) => crate::game::home::copy2::clear_screen(self),
-                (_, 0x372f) => crate::game::home::delay::delay_frames(self),
-                (_, 0x3ddb) => crate::game::home::palettes::delay3(self),
-                (_, 0x3e05) => crate::game::home::palettes::run_palette_command(self),
                 (0x01, 0x5ba6) => crate::game::engine::menus::main_menu::main_menu(self),
-                (0x01, 0x5cbd) => crate::game::engine::menus::main_menu::init_options(self),
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
 
