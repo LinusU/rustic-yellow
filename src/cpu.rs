@@ -76,6 +76,7 @@ impl Cpu {
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
                 (0x01, 0x5ba6) => crate::game::engine::menus::main_menu::main_menu(self),
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
+                (0x04, 0x6195) => crate::game::engine::menus::start_sub_menus::start_menu_save_reset(self),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
 
                 _ => {
@@ -111,6 +112,10 @@ impl Cpu {
 
     pub fn replace_ram(&mut self, ram: Vec<u8>) {
         self.mmu.mbc.replace_ram(ram);
+    }
+
+    pub fn borrow_ram(&self) -> &[u8] {
+        self.mmu.mbc.borrow_ram()
     }
 
     fn fetch_byte(&mut self) -> u8 {

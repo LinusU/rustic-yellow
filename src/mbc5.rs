@@ -26,6 +26,10 @@ impl MBC5 {
         self.ram = ram;
     }
 
+    pub fn borrow_ram(&self) -> &[u8] {
+        &self.ram
+    }
+
     pub fn readrom(&self, a: u16) -> u8 {
         let idx = if a < 0x4000 {
             a as usize

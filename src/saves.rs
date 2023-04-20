@@ -24,6 +24,10 @@ pub struct SaveFile {
     pub name: String,
 }
 
+pub fn create_save_file(name: String) -> SaveFile {
+    SaveFile { path: get_save_dir().join(&name).with_extension("sav"), name }
+}
+
 pub fn list_save_files() -> Result<Vec<SaveFile>> {
     let ext: OsString = OsString::from("sav");
 
@@ -48,6 +52,11 @@ pub fn list_save_files() -> Result<Vec<SaveFile>> {
             }
         }
     }
+
+    // Sort by last modified
+    files.sort_by_cached_key(|save| {
+        std::cmp::Reverse(save.path.metadata().and_then(|meta| meta.modified()).ok().unwrap_or(std::time::SystemTime::UNIX_EPOCH))
+    });
 
     Ok(files)
 }

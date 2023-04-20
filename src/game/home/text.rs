@@ -16,6 +16,8 @@ pub fn place_string(cpu: &mut Cpu, x: u8, y: u8, string: &str) {
             ptr + (off as u16),
             match chr {
                 ' ' => 0x7f,
+                ':' => 0x9c,
+                '▶' => 0xed,
                 '0'..='9' => (chr as u8) - ('0' as u8) + 0xf6,
                 'A'..='Z' => (chr as u8) - ('A' as u8) + 0x80,
                 'a'..='z' => (chr as u8) - ('a' as u8) + 0xa0,
