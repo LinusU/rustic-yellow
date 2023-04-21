@@ -2,6 +2,9 @@ pub const W_NEW_SOUND_ID: u16 = 0xc0ee;
 
 pub const W_AUDIO_ROM_BANK: u16 = 0xc0ef;
 
+pub const W_SPRITE_DATA_START: u16 = 0xc100;
+pub const W_SPRITE_DATA_END: u16 = 0xc300;
+
 pub const W_TILE_MAP: u16 = 0xc3a0;
 
 pub const W_TOP_MENU_ITEM_Y: u16 = 0xcc24;
@@ -53,8 +56,16 @@ pub const W_CURRENT_MAP_SCRIPT_FLAGS: u16 = 0xd125;
 
 pub const W_LINK_STATE: u16 = 0xd12a;
 
+pub const W_PLAYER_NAME: u16 = 0xd157;
+
+pub const W_PARTY_DATA_START: u16 = 0xd162;
+pub const W_PARTY_DATA_END: u16 = 0xd2f6;
+
+pub const W_MAIN_DATA_START: u16 = 0xd2f6;
+
 pub const W_POKEDEX_OWNED: u16 = 0xd2f6;
 pub const W_POKEDEX_OWNED_END: u16 = 0xd309;
+pub const W_POKEDEX_SEEN_END: u16 = 0xd31c;
 
 /// bit 7 = battle animation
 ///   0: On
@@ -84,6 +95,8 @@ pub const W_OBTAINED_BADGES: u16 = 0xd355;
 /// bit 1: If 0, no delay.
 pub const W_LETTER_PRINTING_DELAY_FLAGS: u16 = 0xd357;
 
+pub const W_CUR_MAP_TILESET: u16 = 0xd366;
+
 pub const W_PRINTER_SETTINGS: u16 = 0xd497;
 
 /// bit 0: the player has received Lapras in the Silph Co. building
@@ -107,3 +120,8 @@ pub const W_PLAY_TIME_MAXED: u16 = 0xda41;
 pub const W_PLAY_TIME_MINUTES: u16 = 0xda42;
 pub const W_PLAY_TIME_SECONDS: u16 = 0xda43;
 pub const W_PLAY_TIME_FRAMES: u16 = 0xda44;
+
+pub const W_MAIN_DATA_END: u16 = 0xda7f;
+
+pub const W_BOX_DATA_START: u16 = 0xda7f;
+pub const W_BOX_DATA_END: u16 = 0xdee1;

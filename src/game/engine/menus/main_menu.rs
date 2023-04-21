@@ -1,8 +1,8 @@
 use crate::{
     cpu::Cpu,
     game::{
-        constants, home, macros,
-        ram::{sram, wram},
+        constants, home,
+        ram::{hram, sram, wram},
     },
     saves, KeypadKey,
 };
@@ -40,27 +40,19 @@ pub fn main_menu(cpu: &mut Cpu) {
         cpu.write_byte(wram::W_D72E, v & !(1 << 6));
     }
 
-    cpu.stack_push(0x0001);
-    home::palettes::run_default_palette_command(cpu);
-
-    cpu.call(0x36a3); // call LoadTextBoxTilePatterns
-    cpu.call(0x3683); // call LoadFontTilePatterns
-
     let layer = cpu.gpu_push_layer();
 
     if has_saves {
-        home::text::text_box_border(cpu.gpu_mut_layer(layer), 0, 0, 13, 6);
+        home::text::text_box_border(cpu.gpu_mut_layer(layer), 0, 0, 13, 4);
         home::text::place_string(cpu.gpu_mut_layer(layer), 2, 2, "CONTINUE");
         home::text::place_string(cpu.gpu_mut_layer(layer), 2, 4, "NEW GAME");
-        home::text::place_string(cpu.gpu_mut_layer(layer), 2, 6, "OPTION");
     } else {
-        home::text::text_box_border(cpu.gpu_mut_layer(layer), 0, 0, 13, 4);
+        home::text::text_box_border(cpu.gpu_mut_layer(layer), 0, 0, 13, 2);
         home::text::place_string(cpu.gpu_mut_layer(layer), 2, 2, "NEW GAME");
-        home::text::place_string(cpu.gpu_mut_layer(layer), 2, 4, "OPTION");
     }
 
     let mut selected = 0;
-    let max_menu_item = if has_saves { 2 } else { 1 };
+    let max_menu_item = if has_saves { 1 } else { 0 };
 
     loop {
         cpu.gpu_mut_layer(layer)
@@ -72,7 +64,7 @@ pub fn main_menu(cpu: &mut Cpu) {
         match key {
             KeypadKey::B => {
                 cpu.gpu_pop_layer(layer);
-                return cpu.jump(0x4171); // jump DisplayTitleScreen
+                return;
             }
 
             KeypadKey::Up if selected > 0 => {
@@ -103,18 +95,14 @@ pub fn main_menu(cpu: &mut Cpu) {
             0 => {
                 if main_menu_select_save(cpu) {
                     cpu.gpu_pop_layer(layer);
+                    prepare_for_game(cpu);
                     return cpu.jump(0x5c83); // MainMenu.pressedA
                 }
             }
             1 => {
                 cpu.gpu_pop_layer(layer);
+                prepare_for_game(cpu);
                 return cpu.jump(0x5cd2); // StartNewGame
-            }
-            2 => {
-                cpu.gpu_pop_layer(layer);
-                cpu.call(0x5df2); // DisplayOptionMenu
-                cpu.write_byte(wram::W_OPTIONS_INITIALIZED, 1);
-                return cpu.jump(0x4171); // jump DisplayTitleScreen
             }
             _ => unreachable!("Invalid menu item: {}", selected),
         }
@@ -182,7 +170,7 @@ fn main_menu_select_save(cpu: &mut Cpu) -> bool {
 
         cpu.replace_ram(std::fs::read(&save.path).unwrap());
 
-        macros::predef::predef_call!(cpu, LoadSAV);
+        super::save::load_sav(cpu);
 
         if display_continue_game_info(cpu) {
             cpu.gpu_pop_layer(layer);
@@ -245,11 +233,7 @@ fn display_continue_game_info(cpu: &mut Cpu) -> bool {
 /// Check if the player name data in SRAM has a string terminator character
 /// (indicating that a name may have been saved there) and return whether it does
 pub fn check_for_player_name_in_sram(cpu: &mut Cpu) -> String {
-    cpu.write_byte(
-        constants::hardware_constants::MBC1_SRAM_ENABLE,
-        constants::hardware_constants::SRAM_ENABLE,
-    );
-    cpu.write_byte(constants::hardware_constants::MBC1_SRAM_BANKING_MODE, 1);
+    super::save::enable_sram_and_latch_clock_data(cpu);
     cpu.write_byte(constants::hardware_constants::MBC1_SRAM_BANK, 1);
 
     let mut result = String::with_capacity(constants::text_constants::NAME_LENGTH as usize);
@@ -274,11 +258,7 @@ pub fn check_for_player_name_in_sram(cpu: &mut Cpu) -> String {
         }
     }
 
-    cpu.write_byte(
-        constants::hardware_constants::MBC1_SRAM_ENABLE,
-        constants::hardware_constants::SRAM_DISABLE,
-    );
-    cpu.write_byte(constants::hardware_constants::MBC1_SRAM_BANKING_MODE, 0);
+    super::save::disable_sram_and_prepare_clock_data(cpu);
 
     result
 }
@@ -304,4 +284,28 @@ pub fn init_options(cpu: &mut Cpu) {
         constants::misc_constants::TEXT_DELAY_MEDIUM,
     );
     cpu.write_byte(wram::W_PRINTER_SETTINGS, 64); // audio?
+}
+
+/// These things were handled when navigating to, and when running the main
+/// menu. The rest of the game depends on them being set up, so we do it here.
+fn prepare_for_game(cpu: &mut Cpu) {
+    cpu.stack_push(0x0001);
+    home::palettes::run_default_palette_command(cpu);
+
+    cpu.write_byte(hram::H_WY, 0);
+    cpu.write_byte(hram::H_AUTO_BG_TRANSFER_ENABLED, 1);
+
+    cpu.call(0x16dd); // ClearScreen
+    cpu.call(0x0082); // ClearSprites
+
+    cpu.a = 0x98;
+    cpu.call(0x4332); // TitleScreenCopyTileMapToVRAM
+    cpu.a = 0x9c;
+    cpu.call(0x4332); // TitleScreenCopyTileMapToVRAM
+
+    home::palettes::delay3(cpu);
+    cpu.call(0x1e6f); // LoadGBPal
+
+    cpu.call(0x3683); // LoadFontTilePatterns
+    cpu.call(0x36a3); // LoadTextBoxTilePatterns
 }
