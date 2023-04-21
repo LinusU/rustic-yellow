@@ -10,3 +10,4 @@ blip_buf = "0.1.4"
 cpal = "0.15.2"
 glium = { version = "0.32.1", default-features = false, features = ["glutin"] }
 image = { version = "0.24.6", default-features = false, features = ["png"] }
+rodio = { version = "0.17.1", default-features = false, features = ["flac"] }

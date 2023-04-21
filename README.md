@@ -17,6 +17,14 @@ cd rustic-yellow
 
 Rustic Yellow requires a ROM file for Pokemon Yellow in order to build the project. The ROM file must have the SHA1 hash `cc7d03262ebfaf2f06772c1a480c7d9d5f4a38e1` and be named `rom_file.gb`. You can obtain a ROM file from various sources online, but please note that it may be illegal to download and use ROMs in some jurisdictions.
 
+## Music
+
+Rustic Yellow requires music in FLAC format from the "Pokémon Red & Pokémon Green: Super Music Collection" album. You can download the music from the following link:
+
+https://archive.org/details/pkmn-rgby-soundtrack
+
+Copy all of the FLAC files from the album, both from `Disc 1` and `Disc 2 (Yellow)`, into a directory named `music` in the project root.
+
 ## Running the Game
 
 To run Rustic Yellow, make sure you have a ROM file named `rom_file.gb` with the correct SHA1 hash in the project directory. Then use the following command:

@@ -8,9 +8,6 @@ use crate::{
 };
 
 pub fn main_menu(cpu: &mut Cpu) {
-    // FIXME: Implement our own audio system that isn't dependent of the CPU cycling
-    cpu.call(0x2233); // StopAllMusic
-
     init_options(cpu);
 
     cpu.write_byte(wram::W_OPTIONS_INITIALIZED, 0);

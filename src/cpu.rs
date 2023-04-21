@@ -1,6 +1,8 @@
 use std::sync::mpsc::{Receiver, SyncSender};
 
-use crate::{gpu::GpuLayer, keypad::KeypadEvent, mmu::Mmu, sound::AudioPlayer, KeypadKey};
+use crate::{
+    gpu::GpuLayer, keypad::KeypadEvent, mmu::Mmu, sound::AudioPlayer, sound2::Music, KeypadKey,
+};
 use CpuFlag::{C, H, N, Z};
 
 #[derive(Copy, Clone)]
@@ -74,6 +76,8 @@ impl Cpu {
             match (self.bank(), self.pc) {
                 (_, 0x0000) => break,
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
+                (_, 0x2211) => crate::game::home::audio::play_music(self),
+                (_, 0x2238) => crate::game::home::audio::play_sound(self),
                 (0x01, 0x5ba6) => crate::game::engine::menus::main_menu::main_menu(self),
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
@@ -131,6 +135,10 @@ impl Cpu {
 
     pub fn keypad_wait(&mut self) -> KeypadKey {
         self.mmu.keypad.wait()
+    }
+
+    pub fn start_music(&mut self, id: Music) {
+        self.mmu.sound2.start_music(id)
     }
 
     fn fetch_byte(&mut self) -> u8 {

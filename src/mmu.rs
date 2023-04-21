@@ -6,6 +6,7 @@ use crate::{
     mbc5::MBC5,
     serial::Serial,
     sound::{AudioPlayer, Sound},
+    sound2::Sound2,
     timer::Timer,
 };
 
@@ -36,6 +37,7 @@ pub struct Mmu {
     pub keypad: Keypad,
     pub gpu: Gpu,
     pub sound: Sound,
+    pub sound2: Sound2,
     hdma_status: DMAType,
     hdma_src: u16,
     hdma_dst: u16,
@@ -77,6 +79,7 @@ impl Mmu {
             keypad: Keypad::new(keypad_events),
             gpu: Gpu::new(update_screen),
             sound: Sound::new(player),
+            sound2: Sound2::new(),
             hdma_status: DMAType::NoDMA,
             hdma_src: 0,
             hdma_dst: 0,

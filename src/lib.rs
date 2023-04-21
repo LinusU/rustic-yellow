@@ -14,4 +14,5 @@ mod mmu;
 mod saves;
 mod serial;
 mod sound;
+mod sound2;
 mod timer;

@@ -1,3 +1,7 @@
+pub const W_NEW_SOUND_ID: u16 = 0xc0ee;
+
+pub const W_AUDIO_ROM_BANK: u16 = 0xc0ef;
+
 pub const W_TILE_MAP: u16 = 0xc3a0;
 
 pub const W_TOP_MENU_ITEM_Y: u16 = 0xcc24;
