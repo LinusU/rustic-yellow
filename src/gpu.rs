@@ -5,14 +5,69 @@ use std::{
 
 const VRAM_SIZE: usize = 0x4000;
 const VOAM_SIZE: usize = 0xA0;
-pub const SCREEN_W: usize = 160;
-pub const SCREEN_H: usize = 144;
+
+const GB_SCALE: usize = 4;
+const GB_SCREEN_W: usize = 160;
+const GB_SCREEN_H: usize = 144;
+
+pub const SCREEN_W: usize = GB_SCREEN_W * GB_SCALE;
+pub const SCREEN_H: usize = GB_SCREEN_H * GB_SCALE;
 
 #[derive(PartialEq, Copy, Clone)]
 enum PrioType {
     Color0,
     PrioFlag,
     Normal,
+}
+
+#[derive(PartialEq, Eq, Copy, Clone)]
+pub enum GpuAtlas {
+    BoxBorder,
+    Font,
+}
+
+#[derive(PartialEq, Eq, Copy, Clone)]
+pub struct GpuTile {
+    pub atlas: GpuAtlas,
+    pub src_x: usize,
+    pub src_y: usize,
+}
+
+impl GpuTile {
+    pub const fn new(atlas: GpuAtlas, src_x: usize, src_y: usize) -> GpuTile {
+        GpuTile {
+            atlas,
+            src_x,
+            src_y,
+        }
+    }
+}
+
+pub struct GpuLayer {
+    pub background: [Option<GpuTile>; 20 * 18],
+}
+
+impl GpuLayer {
+    pub fn new() -> GpuLayer {
+        GpuLayer {
+            background: [None; 20 * 18],
+        }
+    }
+
+    pub fn set_background(&mut self, x: usize, y: usize, tile: GpuTile) {
+        self.background[y * 20 + x] = Some(tile);
+    }
+
+    pub fn clear_background(&mut self, x: usize, y: usize) {
+        self.background[y * 20 + x] = None;
+    }
+}
+
+fn load_png(bytes: &[u8]) -> Vec<u8> {
+    image::load_from_memory_with_format(bytes, image::ImageFormat::Png)
+        .unwrap()
+        .into_rgba8()
+        .into_raw()
 }
 
 pub struct Gpu {
@@ -54,10 +109,14 @@ pub struct Gpu {
     csprit: [[[u8; 3]; 4]; 8],
     vrambank: usize,
     data: Vec<u8>,
-    bgprio: [PrioType; SCREEN_W],
+    bgprio: [PrioType; GB_SCREEN_W],
     pub interrupt: u8,
     hblanking: bool,
     update_screen: SyncSender<Vec<u8>>,
+
+    layers: Vec<GpuLayer>,
+    atlas_box_border: Vec<u8>,
+    atlas_font: Vec<u8>,
 }
 
 impl Gpu {
@@ -93,8 +152,8 @@ impl Gpu {
             pal1: [0; 4],
             vram: [0; VRAM_SIZE],
             voam: [0; VOAM_SIZE],
-            data: vec![0; SCREEN_W * SCREEN_H * 3],
-            bgprio: [PrioType::Normal; SCREEN_W],
+            data: vec![0; GB_SCREEN_W * GB_SCREEN_H * 3],
+            bgprio: [PrioType::Normal; GB_SCREEN_W],
             interrupt: 0,
             cbgpal_inc: false,
             cbgpal_ind: 0,
@@ -105,7 +164,24 @@ impl Gpu {
             vrambank: 0,
             hblanking: false,
             update_screen,
+            layers: vec![],
+            atlas_box_border: load_png(include_bytes!("../gfx/box_border.png")),
+            atlas_font: load_png(include_bytes!("../gfx/font.png")),
         }
+    }
+
+    pub fn layer_push(&mut self) -> usize {
+        self.layers.push(GpuLayer::new());
+        self.layers.len() - 1
+    }
+
+    pub fn layer_pop(&mut self, layer: usize) {
+        self.layers.pop();
+        assert_eq!(layer, self.layers.len());
+    }
+
+    pub fn layer_mut(&mut self, layer: usize) -> &mut GpuLayer {
+        &mut self.layers[layer]
     }
 
     pub fn do_cycle(&mut self, ticks: u32) {
@@ -366,8 +442,68 @@ impl Gpu {
         self.update_screen();
     }
 
-    fn update_screen(&mut self) {
-        match self.update_screen.send(self.data.clone()) {
+    pub fn update_screen(&mut self) {
+        debug_assert_eq!(self.data.len(), GB_SCREEN_W * GB_SCREEN_H * 3);
+
+        let mut screen = Vec::with_capacity(SCREEN_W * SCREEN_H * 3);
+        let mut src = 0;
+
+        for _ in 0..GB_SCREEN_H {
+            let row_start = screen.len();
+
+            for _ in 0..GB_SCREEN_W {
+                for _ in 0..GB_SCALE {
+                    screen.push(self.data[src]);
+                    screen.push(self.data[src + 1]);
+                    screen.push(self.data[src + 2]);
+                }
+
+                src += 3;
+            }
+
+            for _ in 0..(GB_SCALE / 2) {
+                screen.extend_from_within(row_start..);
+            }
+        }
+
+        debug_assert_eq!(screen.len(), SCREEN_W * SCREEN_H * 3);
+
+        for layer in &self.layers {
+            for (idx, tile) in layer.background.iter().enumerate() {
+                if let Some(tile) = tile {
+                    let dst_x = (idx % 20) * 32;
+                    let dst_y = (idx / 20) * 32;
+
+                    let (src, src_w) = match tile.atlas {
+                        GpuAtlas::BoxBorder => (&self.atlas_box_border[..], 96),
+                        GpuAtlas::Font => (&self.atlas_font[..], 512),
+                    };
+
+                    for dy in 0..32 {
+                        for dx in 0..32 {
+                            let src_idx =
+                                ((((tile.src_y * 32) + dy) * src_w) + (tile.src_x * 32) + dx) * 4;
+                            let dst_idx = (((dst_y + dy) * SCREEN_W) + dst_x + dx) * 3;
+
+                            let alpha = src[src_idx + 3] as f32 / 255.0;
+                            let inv_alpha = 1.0 - alpha;
+
+                            screen[dst_idx + 0] = (screen[dst_idx + 0] as f32 * inv_alpha
+                                + src[src_idx + 0] as f32 * alpha)
+                                as u8;
+                            screen[dst_idx + 1] = (screen[dst_idx + 1] as f32 * inv_alpha
+                                + src[src_idx + 1] as f32 * alpha)
+                                as u8;
+                            screen[dst_idx + 2] = (screen[dst_idx + 2] as f32 * inv_alpha
+                                + src[src_idx + 2] as f32 * alpha)
+                                as u8;
+                        }
+                    }
+                }
+            }
+        }
+
+        match self.update_screen.send(screen) {
             Ok(_) => {}
             Err(SendError(_)) => {
                 panic!("Screen disconnected")
@@ -393,7 +529,7 @@ impl Gpu {
     }
 
     fn renderscan(&mut self) {
-        for x in 0..SCREEN_W {
+        for x in 0..GB_SCREEN_W {
             self.setcolor(x, 255);
             self.bgprio[x] = PrioType::Normal;
         }
@@ -402,16 +538,16 @@ impl Gpu {
     }
 
     fn setcolor(&mut self, x: usize, color: u8) {
-        self.data[self.line as usize * SCREEN_W * 3 + x * 3 + 0] = color;
-        self.data[self.line as usize * SCREEN_W * 3 + x * 3 + 1] = color;
-        self.data[self.line as usize * SCREEN_W * 3 + x * 3 + 2] = color;
+        self.data[self.line as usize * GB_SCREEN_W * 3 + x * 3 + 0] = color;
+        self.data[self.line as usize * GB_SCREEN_W * 3 + x * 3 + 1] = color;
+        self.data[self.line as usize * GB_SCREEN_W * 3 + x * 3 + 2] = color;
     }
 
     fn setrgb(&mut self, x: usize, r: u8, g: u8, b: u8) {
         // Gameboy Color RGB correction
         // Taken from the Gambatte emulator
         // assume r, g and b are between 0 and 1F
-        let baseidx = self.line as usize * SCREEN_W * 3 + x * 3;
+        let baseidx = self.line as usize * GB_SCREEN_W * 3 + x * 3;
 
         let r = r as u32;
         let g = g as u32;
@@ -436,7 +572,7 @@ impl Gpu {
         let bgy = self.scy.wrapping_add(self.line);
         let bgtiley = (bgy as u16 >> 3) & 31;
 
-        for x in 0..SCREEN_W {
+        for x in 0..GB_SCREEN_W {
             let winx = -((self.winx as i32) - 7) + (x as i32);
             let bgx = self.scx as u32 + x as u32;
 
@@ -536,7 +672,7 @@ impl Gpu {
         sprites_to_draw[..sidx].sort_unstable_by(cgb_sprite_order);
 
         for &(spritex, spritey, i) in &sprites_to_draw[..sidx] {
-            if spritex < -7 || spritex >= (SCREEN_W as i32) {
+            if spritex < -7 || spritex >= (GB_SCREEN_W as i32) {
                 continue;
             }
 
@@ -565,7 +701,7 @@ impl Gpu {
             };
 
             'xloop: for x in 0..8 {
-                if spritex + x < 0 || spritex + x >= (SCREEN_W as i32) {
+                if spritex + x < 0 || spritex + x >= (GB_SCREEN_W as i32) {
                     continue;
                 }
 

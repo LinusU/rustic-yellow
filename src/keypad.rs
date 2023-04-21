@@ -35,6 +35,19 @@ impl Keypad {
         }
     }
 
+    pub fn wait(&mut self) -> KeypadKey {
+        loop {
+            match self.events.recv() {
+                Ok(KeypadEvent::Down(key)) => {
+                    self.keydown(key);
+                    return key;
+                }
+                Ok(KeypadEvent::Up(key)) => self.keyup(key),
+                Err(_) => panic!("Keypad event channel closed"),
+            }
+        }
+    }
+
     pub fn rb(&mut self) -> u8 {
         self.update();
         self.data

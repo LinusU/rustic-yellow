@@ -33,8 +33,6 @@ fn create_window_builder() -> glium::glutin::window::WindowBuilder {
 }
 
 fn main() {
-    let scale = 4;
-
     let render_delay = Arc::new(AtomicU64::new(16_743));
 
     let (player, cpal_audio_stream) = CpalPlayer::get();
@@ -47,7 +45,7 @@ fn main() {
     let context_builder = glium::glutin::ContextBuilder::new();
     let display =
         glium::backend::glutin::Display::new(window_builder, context_builder, &eventloop).unwrap();
-    set_window_size(display.gl_window().window(), scale);
+    set_window_size(display.gl_window().window());
 
     let mut texture = glium::texture::texture2d::Texture2d::empty_with_format(
         &display,
@@ -108,8 +106,9 @@ fn main() {
             Event::MainEventsCleared => {
                 periodic.recv().unwrap();
 
-                match receiver2.recv() {
+                match receiver2.try_recv() {
                     Ok(data) => { recalculate_screen(&display, &mut texture, &data, &renderoptions); },
+                    Err(mpsc::TryRecvError::Empty) => (),
                     Err(..) => stop = true, // Remote end has hung-up
                 }
             }
@@ -205,14 +204,14 @@ fn timer_periodic(delay: Arc<AtomicU64>) -> Receiver<()> {
     rx
 }
 
-fn set_window_size(window: &glium::glutin::window::Window, scale: u32) {
+fn set_window_size(window: &glium::glutin::window::Window) {
     use glium::glutin::dpi::{LogicalSize, PhysicalSize};
 
     let dpi = window.scale_factor();
 
     let physical_size = PhysicalSize::<u32>::from((
-        rustic_yellow::SCREEN_W as u32 * scale,
-        rustic_yellow::SCREEN_H as u32 * scale,
+        rustic_yellow::SCREEN_W as u32,
+        rustic_yellow::SCREEN_H as u32,
     ));
     let logical_size = LogicalSize::<u32>::from_physical(physical_size, dpi);
 

@@ -1,6 +1,6 @@
 use std::sync::mpsc::{Receiver, SyncSender};
 
-use crate::{keypad::KeypadEvent, mmu::Mmu, sound::AudioPlayer};
+use crate::{gpu::GpuLayer, keypad::KeypadEvent, mmu::Mmu, sound::AudioPlayer, KeypadKey};
 use CpuFlag::{C, H, N, Z};
 
 #[derive(Copy, Clone)]
@@ -111,6 +111,26 @@ impl Cpu {
 
     pub fn replace_ram(&mut self, ram: Vec<u8>) {
         self.mmu.mbc.replace_ram(ram);
+    }
+
+    pub fn gpu_push_layer(&mut self) -> usize {
+        self.mmu.gpu.layer_push()
+    }
+
+    pub fn gpu_pop_layer(&mut self, layer: usize) {
+        self.mmu.gpu.layer_pop(layer);
+    }
+
+    pub fn gpu_mut_layer(&mut self, layer: usize) -> &mut GpuLayer {
+        self.mmu.gpu.layer_mut(layer)
+    }
+
+    pub fn gpu_update_screen(&mut self) {
+        self.mmu.gpu.update_screen();
+    }
+
+    pub fn keypad_wait(&mut self) -> KeypadKey {
+        self.mmu.keypad.wait()
     }
 
     fn fetch_byte(&mut self) -> u8 {

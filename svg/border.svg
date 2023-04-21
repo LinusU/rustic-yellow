@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24">
+
+  <!-- <rect x="3" y="3" width="18" height="18" rx="6" />
+  <rect x="4" y="4" width="16" height="16" rx="5" fill="white" />
+
+
+  <circle r="3" cx="4" cy="4" />
+  <circle r=".66" cx="3.5" cy="2.54" fill="white" />
+  <path d="M2,4 a2,2,180,0,0,4,0" fill="white" /> -->
+
+  <rect x="2" y="3" width="20" height="20" rx="4" />
+  <rect x="3" y="4" width="18" height="17" rx="3" fill="white" />
+  <rect x="4" y="5" width="16" height="15" rx="2" />
+  <rect x="5" y="7" width="14" height="12" rx="1" fill="white" />
+
+</svg>
