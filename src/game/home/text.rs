@@ -46,6 +46,7 @@ pub fn place_string(layer: &mut GpuLayer, x: usize, y: usize, string: &str) {
             'a'..='p' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('a' as usize), 2),
             'q'..='z' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('a' as usize), 3),
             '0'..='9' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('0' as usize) + 6, 7),
+            'é' => GpuTile::new(GpuAtlas::Font, 10, 3),
             ':' => GpuTile::new(GpuAtlas::Font, 12, 1),
             ';' => GpuTile::new(GpuAtlas::Font, 13, 1),
             ' ' => EMPTY,

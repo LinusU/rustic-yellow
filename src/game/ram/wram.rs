@@ -49,6 +49,9 @@ pub const W_CURRENT_MAP_SCRIPT_FLAGS: u16 = 0xd125;
 
 pub const W_LINK_STATE: u16 = 0xd12a;
 
+pub const W_POKEDEX_OWNED: u16 = 0xd2f6;
+pub const W_POKEDEX_OWNED_END: u16 = 0xd309;
+
 /// bit 7 = battle animation
 ///   0: On
 ///   1: Off
@@ -60,6 +63,16 @@ pub const W_LINK_STATE: u16 = 0xd12a;
 ///   3: Medium
 ///   5: Slow
 pub const W_OPTIONS: u16 = 0xd354;
+
+/// bit 0: Boulder \
+/// bit 1: Cascade \
+/// bit 2: Thunder \
+/// bit 3: Rainbow \
+/// bit 4: Soul \
+/// bit 5: Marsh \
+/// bit 6: Volcano \
+/// bit 7: Earth
+pub const W_OBTAINED_BADGES: u16 = 0xd355;
 
 /// bit 0: If 0, limit the delay to 1 frame. Note that this has no effect if
 ///        the delay has been disabled entirely through bit 1 of this variable
@@ -84,3 +97,9 @@ pub const W_D72E: u16 = 0xd72d;
 /// bit 6: print text with no delay between each letter \
 /// bit 7: set if joypad states are being simulated in the overworld or an NPC's movement is being scripted
 pub const W_D730: u16 = 0xd730;
+
+pub const W_PLAY_TIME_HOURS: u16 = 0xda40;
+pub const W_PLAY_TIME_MAXED: u16 = 0xda41;
+pub const W_PLAY_TIME_MINUTES: u16 = 0xda42;
+pub const W_PLAY_TIME_SECONDS: u16 = 0xda43;
+pub const W_PLAY_TIME_FRAMES: u16 = 0xda44;

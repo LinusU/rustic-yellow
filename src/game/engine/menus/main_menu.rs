@@ -2,7 +2,7 @@ use crate::{
     cpu::Cpu,
     game::{
         constants, home, macros,
-        ram::{hram, wram},
+        ram::{sram, wram},
     },
     saves, KeypadKey,
 };
@@ -106,12 +106,7 @@ pub fn main_menu(cpu: &mut Cpu) {
             0 => {
                 if main_menu_select_save(cpu) {
                     cpu.gpu_pop_layer(layer);
-
-                    if main_menu_display_save_info(cpu) {
-                        return cpu.jump(0x5c83); // MainMenu.pressedA
-                    } else {
-                        return cpu.jump(0x4171); // jump DisplayTitleScreen
-                    }
+                    return cpu.jump(0x5c83); // MainMenu.pressedA
                 }
             }
             1 => {
@@ -180,49 +175,126 @@ fn main_menu_select_save(cpu: &mut Cpu) -> bool {
                 continue;
             }
 
-            KeypadKey::A => {
-                break;
-            }
+            KeypadKey::A => {}
             _ => {
                 continue;
             }
         }
-    }
 
-    let save = &list[selected];
+        let save = &list[selected];
 
-    cpu.replace_ram(std::fs::read(&save.path).unwrap());
+        cpu.replace_ram(std::fs::read(&save.path).unwrap());
 
-    macros::predef::predef_call!(cpu, LoadSAV);
+        macros::predef::predef_call!(cpu, LoadSAV);
 
-    cpu.gpu_pop_layer(layer);
-    true
-}
-
-fn main_menu_display_save_info(cpu: &mut Cpu) -> bool {
-    cpu.call(0x5d1f); // DisplayContinueGameInfo
-
-    {
-        let v = cpu.read_byte(wram::W_CURRENT_MAP_SCRIPT_FLAGS);
-        cpu.write_byte(wram::W_CURRENT_MAP_SCRIPT_FLAGS, v | (1 << 5));
-    }
-
-    loop {
-        cpu.write_byte(hram::H_JOY_PRESSED, 0);
-        cpu.write_byte(hram::H_JOY_RELEASED, 0);
-        cpu.write_byte(hram::H_JOY_HELD, 0);
-        cpu.call(0x01b9); // Joypad
-
-        let btn = cpu.read_byte(hram::H_JOY_HELD);
-
-        if (btn & constants::input_constants::A_BUTTON) != 0 {
+        if display_continue_game_info(cpu) {
+            cpu.gpu_pop_layer(layer);
             return true;
         }
+    }
+}
 
-        if (btn & constants::input_constants::B_BUTTON) != 0 {
-            return false;
+fn display_continue_game_info(cpu: &mut Cpu) -> bool {
+    let name = check_for_player_name_in_sram(cpu);
+    let badges = cpu.read_byte(wram::W_OBTAINED_BADGES).count_ones();
+    let num_owned = read_num_owned_mons(cpu);
+    let hours = cpu.read_byte(wram::W_PLAY_TIME_HOURS);
+    let minutes = cpu.read_byte(wram::W_PLAY_TIME_MINUTES);
+
+    let layer = cpu.gpu_push_layer();
+
+    home::text::text_box_border(cpu.gpu_mut_layer(layer), 4, 7, 14, 8);
+
+    home::text::place_string(cpu.gpu_mut_layer(layer), 5, 9, "PLAYER");
+    home::text::place_string(cpu.gpu_mut_layer(layer), 12, 9, &name);
+
+    home::text::place_string(cpu.gpu_mut_layer(layer), 5, 11, "BADGES");
+    home::text::place_string(cpu.gpu_mut_layer(layer), 17, 11, &format!("{:2}", badges));
+
+    home::text::place_string(cpu.gpu_mut_layer(layer), 5, 13, "POKéDEX");
+    home::text::place_string(
+        cpu.gpu_mut_layer(layer),
+        16,
+        13,
+        &format!("{:3}", num_owned),
+    );
+
+    home::text::place_string(cpu.gpu_mut_layer(layer), 5, 15, "TIME");
+    home::text::place_string(
+        cpu.gpu_mut_layer(layer),
+        13,
+        15,
+        &format!("{:3}:{:02}", hours, minutes),
+    );
+
+    cpu.gpu_update_screen();
+
+    let result = loop {
+        match cpu.keypad_wait() {
+            KeypadKey::A => {
+                break true;
+            }
+            KeypadKey::B => {
+                break false;
+            }
+            _ => {}
+        }
+    };
+
+    cpu.gpu_pop_layer(layer);
+    result
+}
+
+/// Check if the player name data in SRAM has a string terminator character
+/// (indicating that a name may have been saved there) and return whether it does
+pub fn check_for_player_name_in_sram(cpu: &mut Cpu) -> String {
+    cpu.write_byte(
+        constants::hardware_constants::MBC1_SRAM_ENABLE,
+        constants::hardware_constants::SRAM_ENABLE,
+    );
+    cpu.write_byte(constants::hardware_constants::MBC1_SRAM_BANKING_MODE, 1);
+    cpu.write_byte(constants::hardware_constants::MBC1_SRAM_BANK, 1);
+
+    let mut result = String::with_capacity(constants::text_constants::NAME_LENGTH as usize);
+
+    for i in 0..=constants::text_constants::NAME_LENGTH {
+        let ch = cpu.read_byte(sram::S_PLAYER_NAME + (i as u16));
+
+        match ch {
+            0x50 => {
+                break;
+            }
+            0x80..=0x99 => {
+                result.push((('A' as u8) + (ch - 0x80)) as char);
+            }
+            0xa0..=0xb9 => {
+                result.push((('a' as u8) + (ch - 0xa0)) as char);
+            }
+            0xf6..=0xff => {
+                result.push((('0' as u8) + (ch - 0xf6)) as char);
+            }
+            _ => panic!("Invalid character in player name: {:02x}", ch),
         }
     }
+
+    cpu.write_byte(
+        constants::hardware_constants::MBC1_SRAM_ENABLE,
+        constants::hardware_constants::SRAM_DISABLE,
+    );
+    cpu.write_byte(constants::hardware_constants::MBC1_SRAM_BANKING_MODE, 0);
+
+    result
+}
+
+fn read_num_owned_mons(cpu: &mut Cpu) -> u32 {
+    let mut num_owned = 0;
+
+    for addr in wram::W_POKEDEX_OWNED..wram::W_POKEDEX_OWNED_END {
+        let byte = cpu.read_byte(addr);
+        num_owned += byte.count_ones();
+    }
+
+    num_owned
 }
 
 pub fn init_options(cpu: &mut Cpu) {
