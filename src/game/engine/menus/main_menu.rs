@@ -291,6 +291,8 @@ pub fn init_options(cpu: &mut Cpu) {
 /// These things were handled when navigating to, and when running the main
 /// menu. The rest of the game depends on them being set up, so we do it here.
 fn prepare_for_game(cpu: &mut Cpu) {
+    home::palettes::gb_pal_white_out_with_delay3(cpu);
+
     cpu.stack_push(0x0001);
     home::palettes::run_default_palette_command(cpu);
 
