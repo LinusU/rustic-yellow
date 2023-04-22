@@ -1,8 +1,5 @@
 use crate::gpu::{GpuAtlas, GpuLayer, GpuTile};
 
-pub const EMPTY: GpuTile = GpuTile::new(GpuAtlas::Font, 15, 3);
-pub const SELECTED_ITEM: GpuTile = GpuTile::new(GpuAtlas::Font, 13, 6);
-
 const BOX_TOP_LEFT: GpuTile = GpuTile::new(GpuAtlas::BoxBorder, 0, 0);
 const BOX_TOP_RIGHT: GpuTile = GpuTile::new(GpuAtlas::BoxBorder, 2, 0);
 const BOX_BOTTOM_LEFT: GpuTile = GpuTile::new(GpuAtlas::BoxBorder, 0, 2);
@@ -38,23 +35,29 @@ pub fn text_box_border(layer: &mut GpuLayer, x: usize, y: usize, mut w: usize, m
     }
 }
 
+pub fn place_char(layer: &mut GpuLayer, x: usize, y: usize, chr: char) {
+    let tile = match chr {
+        'A'..='P' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('A' as usize), 0),
+        'Q'..='Z' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('Q' as usize), 1),
+        ':' => GpuTile::new(GpuAtlas::Font, 12, 1),
+        ';' => GpuTile::new(GpuAtlas::Font, 13, 1),
+        'a'..='p' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('a' as usize), 2),
+        'q'..='z' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('q' as usize), 3),
+        'é' => GpuTile::new(GpuAtlas::Font, 10, 3),
+        ' ' => GpuTile::new(GpuAtlas::Font, 15, 3),
+        '?' => GpuTile::new(GpuAtlas::Font, 6, 6),
+        '!' => GpuTile::new(GpuAtlas::Font, 7, 6),
+        '▷' => GpuTile::new(GpuAtlas::Font, 12, 6),
+        '▶' => GpuTile::new(GpuAtlas::Font, 13, 6),
+        '0'..='9' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('0' as usize) + 6, 7),
+        _ => panic!("Invalid character: {}", chr),
+    };
+
+    layer.set_background(x, y, tile);
+}
+
 pub fn place_string(layer: &mut GpuLayer, x: usize, y: usize, string: &str) {
     for (idx, chr) in string.chars().enumerate() {
-        let tile = match chr {
-            'A'..='P' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('A' as usize), 0),
-            'Q'..='Z' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('A' as usize), 1),
-            'a'..='p' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('a' as usize), 2),
-            'q'..='z' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('a' as usize), 3),
-            '0'..='9' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('0' as usize) + 6, 7),
-            'é' => GpuTile::new(GpuAtlas::Font, 10, 3),
-            ':' => GpuTile::new(GpuAtlas::Font, 12, 1),
-            ';' => GpuTile::new(GpuAtlas::Font, 13, 1),
-            ' ' => EMPTY,
-            '?' => GpuTile::new(GpuAtlas::Font, 6, 6),
-            '!' => GpuTile::new(GpuAtlas::Font, 7, 6),
-            _ => panic!("Invalid character: {}", chr),
-        };
-
-        layer.set_background(x + idx, y, tile);
+        place_char(layer, x + idx, y, chr);
     }
 }

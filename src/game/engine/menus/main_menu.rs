@@ -42,71 +42,39 @@ pub fn main_menu(cpu: &mut Cpu) {
         cpu.write_byte(wram::W_D72E, v & !(1 << 6));
     }
 
+    let mut selected = 0;
     let layer = cpu.gpu_push_layer();
 
-    if has_saves {
-        home::text::text_box_border(cpu.gpu_mut_layer(layer), 0, 0, 13, 4);
-        home::text::place_string(cpu.gpu_mut_layer(layer), 2, 2, "CONTINUE");
-        home::text::place_string(cpu.gpu_mut_layer(layer), 2, 4, "NEW GAME");
-    } else {
-        home::text::text_box_border(cpu.gpu_mut_layer(layer), 0, 0, 13, 2);
-        home::text::place_string(cpu.gpu_mut_layer(layer), 2, 2, "NEW GAME");
-    }
-
-    let mut selected = 0;
-    let max_menu_item = if has_saves { 1 } else { 0 };
-
     loop {
-        cpu.gpu_mut_layer(layer)
-            .set_background(1, selected * 2 + 2, home::text::SELECTED_ITEM);
+        let selected = super::menu_single_choice(
+            cpu,
+            layer,
+            &mut selected,
+            (0, 0),
+            &["CONTINUE", "NEW GAME"][if has_saves { 0.. } else { 1.. }],
+        );
 
-        cpu.gpu_update_screen();
-        let key = cpu.keypad_wait();
-
-        match key {
-            KeypadKey::B => {
+        match (selected, has_saves) {
+            (None, _) => {
                 cpu.gpu_pop_layer(layer);
                 return;
             }
 
-            KeypadKey::Up if selected > 0 => {
-                cpu.gpu_mut_layer(layer)
-                    .set_background(1, selected * 2 + 2, home::text::EMPTY);
-                selected -= 1;
-                continue;
-            }
-
-            KeypadKey::Down if selected < max_menu_item => {
-                cpu.gpu_mut_layer(layer)
-                    .set_background(1, selected * 2 + 2, home::text::EMPTY);
-                selected += 1;
-                continue;
-            }
-
-            KeypadKey::A => {}
-            _ => {
-                continue;
-            }
-        }
-
-        // If there's no save file, increment the current menu item so that the numbers
-        // are the same whether or not there's a save file.
-        let selected = if has_saves { selected } else { selected + 1 };
-
-        match selected {
-            0 => {
+            (Some(0), true) => {
                 if main_menu_select_save(cpu) {
                     cpu.gpu_pop_layer(layer);
                     prepare_for_game(cpu);
                     return cpu.jump(0x5c83); // MainMenu.pressedA
                 }
             }
-            1 => {
+
+            (Some(0), false) | (Some(1), true) => {
                 cpu.gpu_pop_layer(layer);
                 prepare_for_game(cpu);
                 return cpu.jump(0x5cd2); // StartNewGame
             }
-            _ => unreachable!("Invalid menu item: {}", selected),
+
+            _ => unreachable!(),
         }
     }
 }
@@ -123,60 +91,39 @@ fn main_menu_select_save(cpu: &mut Cpu) -> bool {
         }
     };
 
-    let first_page = &list[0..8.min(list.len())];
-    let height = first_page.len() * 2;
-
-    let layer = cpu.gpu_push_layer();
-    home::text::text_box_border(cpu.gpu_mut_layer(layer), 0, 0, 18, height);
-
-    for (i, save) in first_page.iter().enumerate() {
-        home::text::place_string(cpu.gpu_mut_layer(layer), 2, i * 2 + 2, &save.name);
-    }
-
     let mut selected = 0;
+    let layer = cpu.gpu_push_layer();
 
     loop {
-        cpu.gpu_mut_layer(layer)
-            .set_background(1, selected * 2 + 2, home::text::SELECTED_ITEM);
+        let selected = super::menu_single_choice(
+            cpu,
+            layer,
+            &mut selected,
+            (0, 0),
+            &list
+                .iter()
+                .map(|save| save.name.as_ref())
+                .collect::<Vec<_>>()[..],
+        );
 
-        cpu.gpu_update_screen();
-        let key = cpu.keypad_wait();
-
-        match key {
-            KeypadKey::B => {
+        match selected {
+            None => {
                 cpu.gpu_pop_layer(layer);
                 return false;
             }
 
-            KeypadKey::Up if selected > 0 => {
-                cpu.gpu_mut_layer(layer)
-                    .set_background(1, selected * 2 + 2, home::text::EMPTY);
-                selected -= 1;
-                continue;
+            Some(selected) => {
+                let save = &list[selected];
+
+                cpu.replace_ram(std::fs::read(&save.path).unwrap());
+
+                super::save::load_sav(cpu);
+
+                if display_continue_game_info(cpu) {
+                    cpu.gpu_pop_layer(layer);
+                    return true;
+                }
             }
-
-            KeypadKey::Down if selected < first_page.len() - 1 => {
-                cpu.gpu_mut_layer(layer)
-                    .set_background(1, selected * 2 + 2, home::text::EMPTY);
-                selected += 1;
-                continue;
-            }
-
-            KeypadKey::A => {}
-            _ => {
-                continue;
-            }
-        }
-
-        let save = &list[selected];
-
-        cpu.replace_ram(std::fs::read(&save.path).unwrap());
-
-        super::save::load_sav(cpu);
-
-        if display_continue_game_info(cpu) {
-            cpu.gpu_pop_layer(layer);
-            return true;
         }
     }
 }
