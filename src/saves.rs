@@ -49,5 +49,16 @@ pub fn list_save_files() -> Result<Vec<SaveFile>> {
         }
     }
 
+    // Sort by last modified
+    files.sort_by_cached_key(|save| {
+        std::cmp::Reverse(
+            save.path
+                .metadata()
+                .and_then(|meta| meta.modified())
+                .ok()
+                .unwrap_or(std::time::SystemTime::UNIX_EPOCH),
+        )
+    });
+
     Ok(files)
 }
