@@ -114,12 +114,11 @@ fn main_menu_select_save(cpu: &mut Cpu) -> bool {
 
             Some(selected) => {
                 let save = &list[selected];
+                let data = std::fs::read(&save.path).unwrap();
 
-                cpu.replace_ram(std::fs::read(&save.path).unwrap());
-
-                super::save::load_sav(cpu);
-
-                if display_continue_game_info(cpu) {
+                if display_continue_game_info(cpu, &data) {
+                    cpu.replace_ram(data);
+                    super::save::load_sav(cpu);
                     cpu.gpu_pop_layer(layer);
                     return true;
                 }
@@ -128,29 +127,30 @@ fn main_menu_select_save(cpu: &mut Cpu) -> bool {
     }
 }
 
-fn display_continue_game_info(cpu: &mut Cpu) -> bool {
-    let name = check_for_player_name_in_sram(cpu);
-    let badges = cpu.read_byte(wram::W_OBTAINED_BADGES).count_ones();
-    let num_owned = read_num_owned_mons(cpu);
-    let hours = cpu.read_byte(wram::W_PLAY_TIME_HOURS);
-    let minutes = cpu.read_byte(wram::W_PLAY_TIME_MINUTES);
+fn display_continue_game_info(cpu: &mut Cpu, data: &[u8]) -> bool {
+    let summary = super::save::load_sav_summary(data);
 
     let layer = cpu.gpu_push_layer();
 
     home::text::text_box_border(cpu.gpu_mut_layer(layer), 4, 7, 14, 8);
 
     home::text::place_string(cpu.gpu_mut_layer(layer), 5, 9, "PLAYER");
-    home::text::place_string(cpu.gpu_mut_layer(layer), 12, 9, &name);
+    home::text::place_string(cpu.gpu_mut_layer(layer), 12, 9, &summary.player_name);
 
     home::text::place_string(cpu.gpu_mut_layer(layer), 5, 11, "BADGES");
-    home::text::place_string(cpu.gpu_mut_layer(layer), 17, 11, &format!("{:2}", badges));
+    home::text::place_string(
+        cpu.gpu_mut_layer(layer),
+        17,
+        11,
+        &format!("{:2}", summary.num_badges),
+    );
 
     home::text::place_string(cpu.gpu_mut_layer(layer), 5, 13, "POKéDEX");
     home::text::place_string(
         cpu.gpu_mut_layer(layer),
         16,
         13,
-        &format!("{:3}", num_owned),
+        &format!("{:3}", summary.owned_mons),
     );
 
     home::text::place_string(cpu.gpu_mut_layer(layer), 5, 15, "TIME");
@@ -158,7 +158,10 @@ fn display_continue_game_info(cpu: &mut Cpu) -> bool {
         cpu.gpu_mut_layer(layer),
         13,
         15,
-        &format!("{:3}:{:02}", hours, minutes),
+        &format!(
+            "{:3}:{:02}",
+            summary.play_time_hh_mm.0, summary.play_time_hh_mm.1
+        ),
     );
 
     cpu.gpu_update_screen();
@@ -177,50 +180,6 @@ fn display_continue_game_info(cpu: &mut Cpu) -> bool {
 
     cpu.gpu_pop_layer(layer);
     result
-}
-
-/// Check if the player name data in SRAM has a string terminator character
-/// (indicating that a name may have been saved there) and return whether it does
-pub fn check_for_player_name_in_sram(cpu: &mut Cpu) -> String {
-    super::save::enable_sram_and_latch_clock_data(cpu);
-    cpu.write_byte(constants::hardware_constants::MBC1_SRAM_BANK, 1);
-
-    let mut result = String::with_capacity(constants::text_constants::NAME_LENGTH as usize);
-
-    for i in 0..=constants::text_constants::NAME_LENGTH {
-        let ch = cpu.read_byte(sram::S_PLAYER_NAME + (i as u16));
-
-        match ch {
-            0x50 => {
-                break;
-            }
-            0x80..=0x99 => {
-                result.push((('A' as u8) + (ch - 0x80)) as char);
-            }
-            0xa0..=0xb9 => {
-                result.push((('a' as u8) + (ch - 0xa0)) as char);
-            }
-            0xf6..=0xff => {
-                result.push((('0' as u8) + (ch - 0xf6)) as char);
-            }
-            _ => panic!("Invalid character in player name: {:02x}", ch),
-        }
-    }
-
-    super::save::disable_sram_and_prepare_clock_data(cpu);
-
-    result
-}
-
-fn read_num_owned_mons(cpu: &mut Cpu) -> u32 {
-    let mut num_owned = 0;
-
-    for addr in wram::W_POKEDEX_OWNED..wram::W_POKEDEX_OWNED_END {
-        let byte = cpu.read_byte(addr);
-        num_owned += byte.count_ones();
-    }
-
-    num_owned
 }
 
 pub fn init_options(cpu: &mut Cpu) {
