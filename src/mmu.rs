@@ -63,7 +63,6 @@ fn fill_random(slice: &mut [u8], start: u32) {
 
 impl Mmu {
     pub fn new(
-        rom: Vec<u8>,
         player: Box<dyn AudioPlayer>,
         update_screen: SyncSender<Vec<u8>>,
         keypad_events: Receiver<KeypadEvent>,
@@ -85,7 +84,7 @@ impl Mmu {
             hdma_dst: 0,
             hdma_len: 0,
             wrambank: 1,
-            mbc: MBC5::new(rom),
+            mbc: MBC5::new(),
             gbspeed: GbSpeed::Single,
             speed_switch_req: false,
         };

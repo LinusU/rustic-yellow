@@ -1,7 +1,8 @@
 use std::path;
 
+use crate::rom::ROM;
+
 pub struct MBC5 {
-    rom: Vec<u8>,
     ram: Vec<u8>,
     pub(crate) rombank: usize,
     rambank: usize,
@@ -10,9 +11,8 @@ pub struct MBC5 {
 }
 
 impl MBC5 {
-    pub fn new(rom: Vec<u8>) -> MBC5 {
+    pub fn new() -> MBC5 {
         MBC5 {
-            rom,
             ram: vec![0; 0x8000],
             rombank: 1,
             rambank: 0,
@@ -42,7 +42,7 @@ impl MBC5 {
         } else {
             (self.rombank * 0x4000) | ((a as usize) & 0x3FFF)
         };
-        *self.rom.get(idx).unwrap_or(&0)
+        *ROM.get(idx).unwrap_or(&0)
     }
 
     pub fn readram(&self, a: u16) -> u8 {

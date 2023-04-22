@@ -38,7 +38,6 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new(
-        rom: Vec<u8>,
         player: Box<dyn AudioPlayer>,
         update_screen: SyncSender<Vec<u8>>,
         keypad_events: Receiver<KeypadEvent>,
@@ -60,7 +59,7 @@ impl Cpu {
             setdi: 0,
             setei: 0,
 
-            mmu: Mmu::new(rom, player, update_screen, keypad_events),
+            mmu: Mmu::new(player, update_screen, keypad_events),
         }
     }
 
@@ -86,6 +85,7 @@ impl Cpu {
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
                 (0x1c, 0x7b91) => crate::game::engine::menus::save::save_sav_to_sram(self),
+                (0x3c, 0x4000) => crate::game::engine::pikachu::pikachu_pcm::play_pikachu_sound_clip(self),
 
                 _ => {
                     let ticks = if self.halted { 4 } else { self.step() * 4 };
@@ -152,6 +152,10 @@ impl Cpu {
 
     pub fn start_music(&mut self, id: Music) {
         self.mmu.sound2.start_music(id)
+    }
+
+    pub fn play_pikachu_cry(&mut self, id: u8) {
+        self.mmu.sound2.play_pikachu_cry(id)
     }
 
     fn fetch_byte(&mut self) -> u8 {
