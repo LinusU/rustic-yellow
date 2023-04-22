@@ -13,6 +13,10 @@ pub const H_JOY_HELD: u16 = 0xffb4;
 /// if zero, no
 pub const H_AUTO_BG_TRANSFER_ENABLED: u16 = 0xffba;
 
+/// the destination address of the automatic background transfer \
+/// size: 2 bytes
+pub const H_AUTO_BG_TRANSFER_DEST: u16 = 0xffbc;
+
 /// V-blank sets this to 0 each time it runs.
 /// So, by setting it to a nonzero value and waiting for it to become 0 again,
 /// you can detect that the V-blank handler has run since then.

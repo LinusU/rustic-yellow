@@ -1,8 +1,10 @@
 use crate::{
     cpu::Cpu,
     game::{
-        constants, home,
-        ram::{hram, sram, wram},
+        constants,
+        engine::movie,
+        home,
+        ram::{hram, sram, vram, wram},
     },
     saves, KeypadKey,
 };
@@ -298,10 +300,8 @@ fn prepare_for_game(cpu: &mut Cpu) {
     cpu.call(0x16dd); // ClearScreen
     cpu.call(0x0082); // ClearSprites
 
-    cpu.a = 0x98;
-    cpu.call(0x4332); // TitleScreenCopyTileMapToVRAM
-    cpu.a = 0x9c;
-    cpu.call(0x4332); // TitleScreenCopyTileMapToVRAM
+    movie::title::title_screen_copy_tile_map_to_vram(cpu, vram::V_BG_MAP0);
+    movie::title::title_screen_copy_tile_map_to_vram(cpu, vram::V_BG_MAP1);
 
     home::palettes::delay3(cpu);
     cpu.call(0x1e6f); // LoadGBPal
