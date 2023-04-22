@@ -60,6 +60,9 @@ fn music_from_bank_and_id(bank: u8, id: u8) -> Option<Music> {
 }
 
 pub fn play_music(cpu: &mut Cpu) {
+    cpu.write_byte(wram::W_AUDIO_ROM_BANK, cpu.c);
+    cpu.write_byte(wram::W_AUDIO_SAVED_ROM_BANK, cpu.c);
+
     if let Some(music) = music_from_bank_and_id(cpu.c, cpu.a) {
         cpu.start_music(music);
     } else {

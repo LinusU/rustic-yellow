@@ -1,6 +1,7 @@
 pub const W_NEW_SOUND_ID: u16 = 0xc0ee;
 
 pub const W_AUDIO_ROM_BANK: u16 = 0xc0ef;
+pub const W_AUDIO_SAVED_ROM_BANK: u16 = 0xc0f0;
 
 pub const W_SPRITE_DATA_START: u16 = 0xc100;
 pub const W_SPRITE_DATA_END: u16 = 0xc300;
