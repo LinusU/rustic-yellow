@@ -80,7 +80,7 @@ pub fn main_menu(cpu: &mut Cpu) {
 }
 
 fn main_menu_select_save(cpu: &mut Cpu) -> bool {
-    let list = match saves::list_save_files() {
+    let mut list = match saves::list_save_files() {
         Ok(ref files) if files.is_empty() => {
             return false;
         }
@@ -113,11 +113,12 @@ fn main_menu_select_save(cpu: &mut Cpu) -> bool {
             }
 
             Some(selected) => {
-                let save = &list[selected];
+                let save = list.swap_remove(selected);
                 let data = std::fs::read(&save.path).unwrap();
 
                 if display_continue_game_info(cpu, &data) {
                     cpu.replace_ram(data);
+                    cpu.set_save_path(save.path);
                     super::save::load_sav(cpu);
                     cpu.gpu_pop_layer(layer);
                     return true;

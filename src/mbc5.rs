@@ -1,29 +1,39 @@
+use std::path;
+
 pub struct MBC5 {
     rom: Vec<u8>,
     ram: Vec<u8>,
     pub(crate) rombank: usize,
     rambank: usize,
     ram_on: bool,
-    // savepath: Option<path::PathBuf>,
+    save_path: Option<path::PathBuf>,
 }
 
 impl MBC5 {
     pub fn new(rom: Vec<u8>) -> MBC5 {
-        // TODO: Load `savepath` if it exists, and populate `ram`
-
         MBC5 {
             rom,
             ram: vec![0; 0x8000],
             rombank: 1,
             rambank: 0,
             ram_on: false,
-            // savepath: None,
+            save_path: None,
         }
     }
 
     pub fn replace_ram(&mut self, ram: Vec<u8>) {
         assert_eq!(ram.len(), 0x8000);
         self.ram = ram;
+    }
+
+    pub fn set_save_path(&mut self, save_path: path::PathBuf) {
+        self.save_path = Some(save_path);
+    }
+
+    pub fn save_to_disk(&mut self) {
+        if let Some(ref save_path) = self.save_path {
+            std::fs::write(save_path, &self.ram).unwrap();
+        }
     }
 
     pub fn readrom(&self, a: u16) -> u8 {
@@ -63,6 +73,6 @@ impl MBC5 {
 
 impl Drop for MBC5 {
     fn drop(&mut self) {
-        // TODO: Save `ram` to `savepath`
+        self.save_to_disk();
     }
 }

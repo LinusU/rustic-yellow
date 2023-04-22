@@ -115,6 +115,18 @@ pub fn load_sav(cpu: &mut Cpu) {
     cpu.write_byte(wram::W_SAVE_FILE_STATUS, 2);
 }
 
+pub fn save_sav_to_sram(cpu: &mut Cpu) {
+    cpu.write_byte(wram::W_SAVE_FILE_STATUS, 2);
+
+    cpu.call(0x7ae5); // SaveSAVtoSRAM0
+    cpu.call(0x7b32); // SaveSAVtoSRAM1
+    cpu.call(0x7b56); // SaveSAVtoSRAM2
+
+    cpu.save_to_disk();
+
+    cpu.pc = cpu.stack_pop();
+}
+
 pub fn enable_sram_and_latch_clock_data(cpu: &mut Cpu) {
     cpu.write_byte(constants::hardware_constants::MBC1_SRAM_BANKING_MODE, 1);
     cpu.write_byte(

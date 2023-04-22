@@ -1,4 +1,7 @@
-use std::sync::mpsc::{Receiver, SyncSender};
+use std::{
+    path,
+    sync::mpsc::{Receiver, SyncSender},
+};
 
 use crate::{
     gpu::GpuLayer, keypad::KeypadEvent, mmu::Mmu, sound::AudioPlayer, sound2::Music, KeypadKey,
@@ -82,6 +85,7 @@ impl Cpu {
                 (0x01, 0x5ba6) => panic!("main_menu should only be called from Rust"),
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
+                (0x1c, 0x7b91) => crate::game::engine::menus::save::save_sav_to_sram(self),
 
                 _ => {
                     let ticks = if self.halted { 4 } else { self.step() * 4 };
@@ -116,6 +120,14 @@ impl Cpu {
 
     pub fn replace_ram(&mut self, ram: Vec<u8>) {
         self.mmu.mbc.replace_ram(ram);
+    }
+
+    pub fn set_save_path(&mut self, path: path::PathBuf) {
+        self.mmu.mbc.set_save_path(path);
+    }
+
+    pub fn save_to_disk(&mut self) {
+        self.mmu.mbc.save_to_disk();
     }
 
     pub fn gpu_push_layer(&mut self) -> usize {
