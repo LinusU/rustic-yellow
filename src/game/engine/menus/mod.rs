@@ -41,10 +41,12 @@ pub fn menu_single_choice(
 
         match key {
             KeypadKey::A => {
+                cpu.play_sfx(0x02, 0x41b0, 0, 0); // SFX_Press_AB
                 break Some(*selected);
             }
 
             KeypadKey::B => {
+                cpu.play_sfx(0x02, 0x41b0, 0, 0); // SFX_Press_AB
                 break None;
             }
 

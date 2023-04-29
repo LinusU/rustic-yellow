@@ -1,5 +1,6 @@
 use std::{fs::File, io::BufReader};
 
+use pokemon_synthesizer::SoundIterator;
 use rodio::{OutputStream, OutputStreamHandle, Sink, Source};
 
 use crate::rom::ROM;
@@ -71,6 +72,40 @@ impl rodio::Source for PikachuCrySource {
         Some(std::time::Duration::from_secs_f64(
             (self.data.len() as f64) * 8.0 / (self.sample_rate() as f64),
         ))
+    }
+}
+
+struct SynthesizerSource<'a>(SoundIterator<'a>);
+
+impl<'a> SynthesizerSource<'a> {
+    fn new(source: SoundIterator<'a>) -> SynthesizerSource<'a> {
+        SynthesizerSource(source)
+    }
+}
+
+impl Iterator for SynthesizerSource<'_> {
+    type Item = f32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
+impl Source for SynthesizerSource<'_> {
+    fn current_frame_len(&self) -> Option<usize> {
+        None
+    }
+
+    fn channels(&self) -> u16 {
+        self.0.channels()
+    }
+
+    fn sample_rate(&self) -> u32 {
+        self.0.sample_rate()
+    }
+
+    fn total_duration(&self) -> Option<std::time::Duration> {
+        None
     }
 }
 
@@ -194,6 +229,7 @@ pub struct Sound2 {
     handle: OutputStreamHandle,
     music: Option<Sink>,
     pikachu_cry: Option<Sink>,
+    sfx: Option<Sink>,
     _stream: OutputStream,
 }
 
@@ -206,6 +242,7 @@ impl Sound2 {
             music: None,
             handle,
             pikachu_cry: None,
+            sfx: None,
         }
     }
 
@@ -231,5 +268,16 @@ impl Sound2 {
         let sink = Sink::try_new(&self.handle).unwrap();
         sink.append(PikachuCrySource::new(id));
         self.pikachu_cry = Some(sink);
+    }
+
+    pub fn play_sfx(&mut self, bank: u8, addr: u16, pitch: u8, length: i8) {
+        if let Some(sink) = self.sfx.take() {
+            sink.stop();
+        }
+
+        let sound = pokemon_synthesizer::synthesis(ROM, bank, addr, pitch, length);
+        let sink = Sink::try_new(&self.handle).unwrap();
+        sink.append(SynthesizerSource::new(sound.iter()));
+        self.sfx = Some(sink);
     }
 }

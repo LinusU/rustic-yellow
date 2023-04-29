@@ -4,7 +4,7 @@ use crate::{
         constants,
         engine::movie,
         home,
-        ram::{hram, sram, vram, wram},
+        ram::{hram, vram, wram},
     },
     saves, KeypadKey,
 };
@@ -170,9 +170,11 @@ fn display_continue_game_info(cpu: &mut Cpu, data: &[u8]) -> bool {
     let result = loop {
         match cpu.keypad_wait() {
             KeypadKey::A => {
+                cpu.play_sfx(0x02, 0x41b0, 0, 0); // SFX_Press_AB
                 break true;
             }
             KeypadKey::B => {
+                cpu.play_sfx(0x02, 0x41b0, 0, 0); // SFX_Press_AB
                 break false;
             }
             _ => {}

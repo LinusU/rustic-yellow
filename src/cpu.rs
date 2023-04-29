@@ -158,6 +158,10 @@ impl Cpu {
         self.mmu.sound2.play_pikachu_cry(id)
     }
 
+    pub fn play_sfx(&mut self, bank: u8, addr: u16, pitch: u8, length: i8) {
+        self.mmu.sound2.play_sfx(bank, addr, pitch, length)
+    }
+
     fn fetch_byte(&mut self) -> u8 {
         let b = self.mmu.rb(self.pc);
         self.pc = self.pc.wrapping_add(1);
