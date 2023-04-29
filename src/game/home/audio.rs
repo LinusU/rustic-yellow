@@ -391,6 +391,13 @@ fn sfx_from_bank_and_id(bank: u8, id: u8) -> Option<(u8, u16)> {
     }
 }
 
+fn sfx_is_cry((_, addr): (u8, u16)) -> bool {
+    const CRY_SFX_START: u16 = 0x403c;
+    const CRY_SFX_END: u16 = 0x418c;
+
+    (CRY_SFX_START..CRY_SFX_END).contains(&addr)
+}
+
 pub fn play_sound(cpu: &mut Cpu) {
     // Note: Not sure why we are reading W_AUDIO_SAVED_ROM_BANK instead of
     // W_AUDIO_ROM_BANK, but if we don't we sometimes play the wrong audio...
@@ -401,7 +408,15 @@ pub fn play_sound(cpu: &mut Cpu) {
     } else if let Some(music) = music_from_bank_and_id(bank, cpu.a) {
         cpu.start_music(music);
     } else if let Some(sfx) = sfx_from_bank_and_id(bank, cpu.a) {
-        cpu.play_sfx(sfx.0, sfx.1, 0, 0);
+        let mut pitch = 0;
+        let mut length = 0;
+
+        if sfx_is_cry(sfx) {
+            pitch = cpu.read_byte(wram::W_FREQUENCY_MODIFIER);
+            length = cpu.read_byte(wram::W_TEMPO_MODIFIER) as i8;
+        }
+
+        cpu.play_sfx(sfx.0, sfx.1, pitch, length);
     } else {
         eprintln!(
             "Don't know what to play: {:02x}:{:04x} (id = {})",
