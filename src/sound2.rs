@@ -109,7 +109,7 @@ impl Source for SynthesizerSource<'_> {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Music {
     PalletTown,
     Pokecenter,
@@ -227,7 +227,7 @@ impl Music {
 
 pub struct Sound2 {
     handle: OutputStreamHandle,
-    music: Option<Sink>,
+    music: Option<(Music, Sink)>,
     pikachu_cry: Option<Sink>,
     sfx: Option<Sink>,
     _stream: OutputStream,
@@ -247,17 +247,29 @@ impl Sound2 {
     }
 
     pub fn stop_music(&mut self) {
-        if let Some(sink) = self.music.take() {
+        if let Some((_, sink)) = self.music.take() {
             sink.stop();
         }
     }
 
+    fn is_playing_music(&self, id: Music) -> bool {
+        if let Some((playing, _)) = self.music.as_ref() {
+            *playing == id
+        } else {
+            false
+        }
+    }
+
     pub fn start_music(&mut self, id: Music) {
+        if self.is_playing_music(id) {
+            return; // Allready playing this music
+        }
+
         self.stop_music();
 
         let sink = Sink::try_new(&self.handle).unwrap();
         sink.append(rodio::Decoder::new_looped(BufReader::new(id.open().unwrap())).unwrap());
-        self.music = Some(sink);
+        self.music = Some((id, sink));
     }
 
     pub fn play_pikachu_cry(&mut self, id: u8) {
