@@ -1271,6 +1271,7 @@ name = "rustic-yellow"
 version = "0.1.0"
 dependencies = [
  "blip_buf",
+ "core-foundation",
  "cpal",
  "glium",
  "image",

@@ -2,6 +2,7 @@
 name = "rustic-yellow"
 version = "0.1.0"
 edition = "2021"
+description = "A re-implementation of the classic GameBoy Color game Pokemon Yellow in Rust"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,3 +13,12 @@ glium = { version = "0.32.1", default-features = false, features = ["glutin"] }
 image = { version = "0.24.6", default-features = false, features = ["png"] }
 pokemon-synthesizer = "0.1.0"
 rodio = { version = "0.17.1", default-features = false, features = ["flac"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.9.3"
+
+[package.metadata.bundle]
+name = "Rustic Yellow"
+identifier = "com.linusu.rustic-yellow"
+icon = ["AppIcon.icns"]
+resources = ["music"]
