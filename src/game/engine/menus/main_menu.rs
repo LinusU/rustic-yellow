@@ -6,7 +6,7 @@ use crate::{
         home,
         ram::{hram, vram, wram},
     },
-    saves, KeypadKey,
+    saves, keypad::{KeypadKey, TextEvent},
 };
 
 pub fn main_menu(cpu: &mut Cpu) {
@@ -69,14 +69,66 @@ pub fn main_menu(cpu: &mut Cpu) {
             }
 
             (Some(0), false) | (Some(1), true) => {
-                cpu.gpu_pop_layer(layer);
-                prepare_for_game(cpu);
-                return cpu.jump(0x5cd2); // StartNewGame
+                if main_menu_new_game(cpu) {
+                    cpu.gpu_pop_layer(layer);
+                    prepare_for_game(cpu);
+                    return cpu.jump(0x5cd2); // StartNewGame
+                }
             }
 
             _ => unreachable!(),
         }
     }
+}
+
+fn main_menu_new_game(cpu: &mut Cpu) -> bool {
+    let layer = cpu.gpu_push_layer();
+
+    home::text::text_box_border(cpu.gpu_mut_layer(layer), 1, 2, 16, 6);
+    home::text::place_string(cpu.gpu_mut_layer(layer), 2, 4, "Save file name:");
+
+    let mut result = String::new();
+
+    loop {
+        home::text::place_string(cpu.gpu_mut_layer(layer), 3, 7, &format!("{:-<14}", result));
+
+        cpu.gpu_update_screen();
+        let event = cpu.keyboard_text();
+
+        match event {
+            TextEvent::Append(c) => {
+                if result.len() < 14 {
+                    result.push(c);
+                }
+            }
+
+            TextEvent::Delete => {
+                result.pop();
+            }
+
+            TextEvent::Cancel => {
+                cpu.gpu_pop_layer(layer);
+                return false;
+            }
+
+            TextEvent::Submit => {
+                if result.is_empty() {
+                    continue;
+                }
+
+                if !saves::save_is_free(&result) {
+                    cpu.play_sfx(0x02, 0x41ef, 0, 0);
+                    continue;
+                }
+
+                cpu.set_save_path(saves::get_save_path(&result));
+
+                cpu.gpu_pop_layer(layer);
+                return true;
+            }
+        }
+    }
+
 }
 
 fn main_menu_select_save(cpu: &mut Cpu) -> bool {

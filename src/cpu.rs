@@ -3,7 +3,7 @@ use std::{
     sync::mpsc::{Receiver, SyncSender},
 };
 
-use crate::{gpu::GpuLayer, keypad::KeypadEvent, mmu::Mmu, sound2::Music, KeypadKey};
+use crate::{gpu::GpuLayer, keypad::{KeyboardEvent, KeypadKey, TextEvent}, mmu::Mmu, sound2::Music};
 use CpuFlag::{C, H, N, Z};
 
 #[derive(Copy, Clone)]
@@ -35,7 +35,7 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(update_screen: SyncSender<Vec<u8>>, keypad_events: Receiver<KeypadEvent>) -> Cpu {
+    pub fn new(update_screen: SyncSender<Vec<u8>>, keyboard_events: Receiver<KeyboardEvent>) -> Cpu {
         Cpu {
             a: 0x11,
             f: 0xB0,
@@ -53,7 +53,7 @@ impl Cpu {
             setdi: 0,
             setei: 0,
 
-            mmu: Mmu::new(update_screen, keypad_events),
+            mmu: Mmu::new(update_screen, keyboard_events),
         }
     }
 
@@ -141,6 +141,10 @@ impl Cpu {
 
     pub fn keypad_wait(&mut self) -> KeypadKey {
         self.mmu.keypad.wait()
+    }
+
+    pub fn keyboard_text(&mut self) -> TextEvent {
+        self.mmu.keypad.text()
     }
 
     pub fn start_music(&mut self, id: Music) {

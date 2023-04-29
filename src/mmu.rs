@@ -2,7 +2,7 @@ use std::sync::mpsc::{Receiver, SyncSender};
 
 use crate::{
     gpu::Gpu,
-    keypad::{Keypad, KeypadEvent},
+    keypad::{Keypad, KeyboardEvent},
     mbc5::MBC5,
     serial::Serial,
     sound::Sound,
@@ -62,7 +62,7 @@ fn fill_random(slice: &mut [u8], start: u32) {
 }
 
 impl Mmu {
-    pub fn new(update_screen: SyncSender<Vec<u8>>, keypad_events: Receiver<KeypadEvent>) -> Mmu {
+    pub fn new(update_screen: SyncSender<Vec<u8>>, keypad_events: Receiver<KeyboardEvent>) -> Mmu {
         let mut mmu = Mmu {
             wram: [0; WRAM_SIZE],
             zram: [0; ZRAM_SIZE],

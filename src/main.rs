@@ -1,13 +1,8 @@
 use glium::glutin::platform::run_return::EventLoopExtRunReturn;
-use rustic_yellow::{Game, KeypadEvent};
+use rustic_yellow::{Game, KeyboardEvent};
 use std::sync::mpsc::{self, Receiver, SyncSender};
 use std::sync::{atomic::AtomicU64, Arc};
 use std::thread;
-
-#[derive(Default)]
-struct RenderOptions {
-    pub linear_interpolation: bool,
-}
 
 #[cfg(target_os = "windows")]
 fn create_window_builder() -> glium::glutin::window::WindowBuilder {
@@ -53,8 +48,6 @@ fn main() {
     )
     .unwrap();
 
-    let mut renderoptions = <RenderOptions as Default>::default();
-
     let gamethread = thread::spawn(move || run_game(sender2, receiver1));
 
     let periodic = timer_periodic(render_delay.clone());
@@ -70,8 +63,6 @@ fn main() {
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::CloseRequested => stop = true,
                 WindowEvent::KeyboardInput { input, .. } => match input {
-                    KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::Escape), .. }
-                        => stop = true,
                     KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::Key1), .. }
                         => render_delay.store(16_743, std::sync::atomic::Ordering::Relaxed), // 59.7 fps
                     KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::Key2), .. }
@@ -84,16 +75,14 @@ fn main() {
                         => render_delay.store(4_166, std::sync::atomic::Ordering::Relaxed), // 240 fps
                     KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::Key6), .. }
                         => render_delay.store(2_500, std::sync::atomic::Ordering::Relaxed), // 400 fps
-                    KeyboardInput { state: Pressed, virtual_keycode: Some(VirtualKeyCode::T), .. }
-                        => { renderoptions.linear_interpolation = !renderoptions.linear_interpolation; }
-                    KeyboardInput { state: Pressed, virtual_keycode: Some(glutinkey), .. } => {
-                        if let Some(key) = glutin_to_keypad(glutinkey) {
-                            let _ = sender1.send(KeypadEvent::Down(key));
+                    KeyboardInput { state: Pressed, virtual_keycode: Some(glutinkey), modifiers, .. } => {
+                        if let Some(key) = glutin_to_keyboard(glutinkey) {
+                            let _ = sender1.send(KeyboardEvent::Down { key, shift: modifiers.shift() });
                         }
                     },
                     KeyboardInput { state: Released, virtual_keycode: Some(glutinkey), .. } => {
-                        if let Some(key) = glutin_to_keypad(glutinkey) {
-                            let _ = sender1.send(KeypadEvent::Up(key));
+                        if let Some(key) = glutin_to_keyboard(glutinkey) {
+                            let _ = sender1.send(KeyboardEvent::Up { key });
                         }
                     }
                     _ => (),
@@ -104,7 +93,7 @@ fn main() {
                 periodic.recv().unwrap();
 
                 match receiver2.try_recv() {
-                    Ok(data) => { recalculate_screen(&display, &mut texture, &data, &renderoptions); },
+                    Ok(data) => { recalculate_screen(&display, &mut texture, &data); },
                     Err(mpsc::TryRecvError::Empty) => (),
                     Err(..) => stop = true, // Remote end has hung-up
                 }
@@ -119,17 +108,44 @@ fn main() {
     let _ = gamethread.join();
 }
 
-fn glutin_to_keypad(key: glium::glutin::event::VirtualKeyCode) -> Option<rustic_yellow::KeypadKey> {
+fn glutin_to_keyboard(key: glium::glutin::event::VirtualKeyCode) -> Option<rustic_yellow::KeyboardKey> {
     use glium::glutin::event::VirtualKeyCode;
     match key {
-        VirtualKeyCode::Z => Some(rustic_yellow::KeypadKey::A),
-        VirtualKeyCode::X => Some(rustic_yellow::KeypadKey::B),
-        VirtualKeyCode::Up => Some(rustic_yellow::KeypadKey::Up),
-        VirtualKeyCode::Down => Some(rustic_yellow::KeypadKey::Down),
-        VirtualKeyCode::Left => Some(rustic_yellow::KeypadKey::Left),
-        VirtualKeyCode::Right => Some(rustic_yellow::KeypadKey::Right),
-        VirtualKeyCode::Space => Some(rustic_yellow::KeypadKey::Select),
-        VirtualKeyCode::Return => Some(rustic_yellow::KeypadKey::Start),
+        VirtualKeyCode::Escape => Some(rustic_yellow::KeyboardKey::Escape),
+        VirtualKeyCode::Left => Some(rustic_yellow::KeyboardKey::Left),
+        VirtualKeyCode::Up => Some(rustic_yellow::KeyboardKey::Up),
+        VirtualKeyCode::Right => Some(rustic_yellow::KeyboardKey::Right),
+        VirtualKeyCode::Down => Some(rustic_yellow::KeyboardKey::Down),
+        VirtualKeyCode::Back => Some(rustic_yellow::KeyboardKey::Backspace),
+        VirtualKeyCode::Return => Some(rustic_yellow::KeyboardKey::Return),
+        VirtualKeyCode::Space => Some(rustic_yellow::KeyboardKey::Space),
+        VirtualKeyCode::A => Some(rustic_yellow::KeyboardKey::A),
+        VirtualKeyCode::B => Some(rustic_yellow::KeyboardKey::B),
+        VirtualKeyCode::C => Some(rustic_yellow::KeyboardKey::C),
+        VirtualKeyCode::D => Some(rustic_yellow::KeyboardKey::D),
+        VirtualKeyCode::E => Some(rustic_yellow::KeyboardKey::E),
+        VirtualKeyCode::F => Some(rustic_yellow::KeyboardKey::F),
+        VirtualKeyCode::G => Some(rustic_yellow::KeyboardKey::G),
+        VirtualKeyCode::H => Some(rustic_yellow::KeyboardKey::H),
+        VirtualKeyCode::I => Some(rustic_yellow::KeyboardKey::I),
+        VirtualKeyCode::J => Some(rustic_yellow::KeyboardKey::J),
+        VirtualKeyCode::K => Some(rustic_yellow::KeyboardKey::K),
+        VirtualKeyCode::L => Some(rustic_yellow::KeyboardKey::L),
+        VirtualKeyCode::M => Some(rustic_yellow::KeyboardKey::M),
+        VirtualKeyCode::N => Some(rustic_yellow::KeyboardKey::N),
+        VirtualKeyCode::O => Some(rustic_yellow::KeyboardKey::O),
+        VirtualKeyCode::P => Some(rustic_yellow::KeyboardKey::P),
+        VirtualKeyCode::Q => Some(rustic_yellow::KeyboardKey::Q),
+        VirtualKeyCode::R => Some(rustic_yellow::KeyboardKey::R),
+        VirtualKeyCode::S => Some(rustic_yellow::KeyboardKey::S),
+        VirtualKeyCode::T => Some(rustic_yellow::KeyboardKey::T),
+        VirtualKeyCode::U => Some(rustic_yellow::KeyboardKey::U),
+        VirtualKeyCode::V => Some(rustic_yellow::KeyboardKey::V),
+        VirtualKeyCode::W => Some(rustic_yellow::KeyboardKey::W),
+        VirtualKeyCode::X => Some(rustic_yellow::KeyboardKey::X),
+        VirtualKeyCode::Y => Some(rustic_yellow::KeyboardKey::Y),
+        VirtualKeyCode::Z => Some(rustic_yellow::KeyboardKey::Z),
+
         _ => None,
     }
 }
@@ -138,15 +154,8 @@ fn recalculate_screen(
     display: &glium::Display,
     texture: &mut glium::texture::texture2d::Texture2d,
     datavec: &[u8],
-    renderoptions: &RenderOptions,
 ) {
     use glium::Surface;
-
-    let interpolation_type = if renderoptions.linear_interpolation {
-        glium::uniforms::MagnifySamplerFilter::Linear
-    } else {
-        glium::uniforms::MagnifySamplerFilter::Nearest
-    };
 
     let rawimage2d = glium::texture::RawImage2d {
         data: std::borrow::Cow::Borrowed(datavec),
@@ -175,12 +184,12 @@ fn recalculate_screen(
             width: target_w as i32,
             height: -(target_h as i32),
         },
-        interpolation_type,
+        glium::uniforms::MagnifySamplerFilter::Nearest,
     );
     target.finish().unwrap();
 }
 
-fn run_game(sender: SyncSender<Vec<u8>>, receiver: Receiver<KeypadEvent>) {
+fn run_game(sender: SyncSender<Vec<u8>>, receiver: Receiver<KeyboardEvent>) {
     Game::new(sender, receiver).boot();
 }
 

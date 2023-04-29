@@ -45,6 +45,7 @@ pub fn place_char(layer: &mut GpuLayer, x: usize, y: usize, chr: char) {
         'q'..='z' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('q' as usize), 3),
         'é' => GpuTile::new(GpuAtlas::Font, 10, 3),
         ' ' => GpuTile::new(GpuAtlas::Font, 15, 3),
+        '-' => GpuTile::new(GpuAtlas::Font, 3, 6),
         '?' => GpuTile::new(GpuAtlas::Font, 6, 6),
         '!' => GpuTile::new(GpuAtlas::Font, 7, 6),
         '▷' => GpuTile::new(GpuAtlas::Font, 12, 6),
