@@ -15,12 +15,6 @@ const SWEEP_DELAY_ZERO_PERIOD: u8 = 8;
 // need 4 since we run the wave after delay == 0, instead of at delay == 0
 const WAVE_INITIAL_DELAY: u32 = 4;
 
-pub trait AudioPlayer: Send {
-    fn play(&mut self, left_channel: &[f32], right_channel: &[f32]);
-    fn samples_rate(&self) -> u32;
-    fn underflowed(&self) -> bool;
-}
-
 struct VolumeEnvelope {
     period: u8,
     goes_up: bool,
@@ -671,18 +665,16 @@ pub struct Sound {
     reg_ff25: u8,
     need_sync: bool,
     dmg_mode: bool,
-    player: Box<dyn AudioPlayer>,
 }
 
 impl Sound {
-    pub fn new(player: Box<dyn AudioPlayer>) -> Sound {
-        let blipbuf1 = create_blipbuf(player.samples_rate());
-        let blipbuf2 = create_blipbuf(player.samples_rate());
-        let blipbuf3 = create_blipbuf(player.samples_rate());
-        let blipbuf4 = create_blipbuf(player.samples_rate());
+    pub fn new() -> Sound {
+        let blipbuf1 = create_blipbuf(44100);
+        let blipbuf2 = create_blipbuf(44100);
+        let blipbuf3 = create_blipbuf(44100);
+        let blipbuf4 = create_blipbuf(44100);
 
-        let output_period =
-            (OUTPUT_SAMPLE_COUNT as u64 * CLOCKS_PER_SECOND as u64) / player.samples_rate() as u64;
+        let output_period = (OUTPUT_SAMPLE_COUNT as u64 * CLOCKS_PER_SECOND as u64) / 44100;
 
         Sound {
             on: false,
@@ -701,7 +693,6 @@ impl Sound {
             reg_ff25: 0x00,
             need_sync: false,
             dmg_mode: false,
-            player,
         }
     }
 
@@ -803,8 +794,7 @@ impl Sound {
         self.time = 0;
         self.prev_time = 0;
 
-        if !self.need_sync || self.player.underflowed() {
-            self.need_sync = false;
+        if !self.need_sync {
             self.mix_buffers();
         } else {
             // Prevent the BlipBuf's from filling up and triggering an assertion
@@ -911,8 +901,6 @@ impl Sound {
             debug_assert!(count1 == count2);
             debug_assert!(count1 == count3);
             debug_assert!(count1 == count4);
-
-            self.player.play(&buf_left[..count1], &buf_right[..count1]);
 
             outputted += count1;
         }

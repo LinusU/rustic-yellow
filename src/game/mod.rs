@@ -1,6 +1,6 @@
 use std::sync::mpsc::{Receiver, SyncSender};
 
-use crate::{cpu::Cpu, keypad::KeypadEvent, rom::ROM, AudioPlayer};
+use crate::{cpu::Cpu, keypad::KeypadEvent, rom::ROM};
 
 pub mod constants;
 pub mod engine;
@@ -13,17 +13,13 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(
-        player: Box<dyn AudioPlayer>,
-        update_screen: SyncSender<Vec<u8>>,
-        keypad_events: Receiver<KeypadEvent>,
-    ) -> Self {
+    pub fn new(update_screen: SyncSender<Vec<u8>>, keypad_events: Receiver<KeypadEvent>) -> Self {
         assert_eq!(ROM[0x143], 0x80);
         assert_eq!(ROM[0x147], 0x1b);
         assert_eq!(ROM[0x149], 0x03);
 
         Self {
-            cpu: Cpu::new(player, update_screen, keypad_events),
+            cpu: Cpu::new(update_screen, keypad_events),
         }
     }
 

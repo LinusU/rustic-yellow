@@ -3,9 +3,7 @@ use std::{
     sync::mpsc::{Receiver, SyncSender},
 };
 
-use crate::{
-    gpu::GpuLayer, keypad::KeypadEvent, mmu::Mmu, sound::AudioPlayer, sound2::Music, KeypadKey,
-};
+use crate::{gpu::GpuLayer, keypad::KeypadEvent, mmu::Mmu, sound2::Music, KeypadKey};
 use CpuFlag::{C, H, N, Z};
 
 #[derive(Copy, Clone)]
@@ -37,11 +35,7 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(
-        player: Box<dyn AudioPlayer>,
-        update_screen: SyncSender<Vec<u8>>,
-        keypad_events: Receiver<KeypadEvent>,
-    ) -> Cpu {
+    pub fn new(update_screen: SyncSender<Vec<u8>>, keypad_events: Receiver<KeypadEvent>) -> Cpu {
         Cpu {
             a: 0x11,
             f: 0xB0,
@@ -59,7 +53,7 @@ impl Cpu {
             setdi: 0,
             setei: 0,
 
-            mmu: Mmu::new(player, update_screen, keypad_events),
+            mmu: Mmu::new(update_screen, keypad_events),
         }
     }
 
@@ -78,7 +72,6 @@ impl Cpu {
             match (self.bank(), self.pc) {
                 (_, 0x0000) => break,
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
-                (_, 0x2211) => crate::game::home::audio::play_music(self),
                 (_, 0x2238) => crate::game::home::audio::play_sound(self),
                 (0x01, 0x42bf) => crate::game::engine::movie::title::display_title_screen_go_to_main_menu(self),
                 (0x01, 0x5ba6) => panic!("main_menu should only be called from Rust"),

@@ -43,6 +43,18 @@ pub const W_MENU_JOYPAD_POLL_COUNT: u16 = 0xcc34;
 /// if running on SGB or CGB, it's 1, else it's 0
 pub const W_ON_SGB: u16 = 0xcf1a;
 
+/// This is used to determine whether the default music is already playing when
+/// attempting to play the default music (in order to avoid restarting the same
+/// music) and whether the music has already been stopped when attempting to
+/// fade out the current music (so that the new music can be begin immediately
+/// instead of waiting).
+///
+/// It sometimes contains the sound ID of the last music played, but it may also
+/// contain $ff (if the music has been stopped) or 0 (because some routines zero
+/// it in order to prevent assumptions from being made about the current state of
+/// the music).
+pub const W_LAST_MUSIC_SOUND_ID: u16 = 0xcfc9;
+
 /// the map you will start at when the debug bit is set
 pub const W_DEFAULT_MAP: u16 = 0xd07b;
 

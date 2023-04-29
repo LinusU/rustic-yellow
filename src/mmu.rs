@@ -5,7 +5,7 @@ use crate::{
     keypad::{Keypad, KeypadEvent},
     mbc5::MBC5,
     serial::Serial,
-    sound::{AudioPlayer, Sound},
+    sound::Sound,
     sound2::Sound2,
     timer::Timer,
 };
@@ -62,11 +62,7 @@ fn fill_random(slice: &mut [u8], start: u32) {
 }
 
 impl Mmu {
-    pub fn new(
-        player: Box<dyn AudioPlayer>,
-        update_screen: SyncSender<Vec<u8>>,
-        keypad_events: Receiver<KeypadEvent>,
-    ) -> Mmu {
+    pub fn new(update_screen: SyncSender<Vec<u8>>, keypad_events: Receiver<KeypadEvent>) -> Mmu {
         let mut mmu = Mmu {
             wram: [0; WRAM_SIZE],
             zram: [0; ZRAM_SIZE],
@@ -77,7 +73,7 @@ impl Mmu {
             timer: Timer::new(),
             keypad: Keypad::new(keypad_events),
             gpu: Gpu::new(update_screen),
-            sound: Sound::new(player),
+            sound: Sound::new(),
             sound2: Sound2::new(),
             hdma_status: DMAType::NoDMA,
             hdma_src: 0,
