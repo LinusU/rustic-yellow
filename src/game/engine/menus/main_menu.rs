@@ -6,7 +6,8 @@ use crate::{
         home,
         ram::{hram, vram, wram},
     },
-    saves, keypad::{KeypadKey, TextEvent},
+    keypad::{KeypadKey, TextEvent},
+    saves,
 };
 
 pub fn main_menu(cpu: &mut Cpu) {
@@ -130,7 +131,6 @@ fn main_menu_new_game(cpu: &mut Cpu) -> bool {
             }
         }
     }
-
 }
 
 fn main_menu_select_save(cpu: &mut Cpu) -> bool {

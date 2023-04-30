@@ -79,6 +79,7 @@ impl KeyboardEvent {
         }
     }
 
+    #[rustfmt::skip]
     fn into_text_event(self) -> Option<TextEvent> {
         match self {
             KeyboardEvent::Down { key: KeyboardKey::Escape, .. } => Some(TextEvent::Cancel),
@@ -164,7 +165,7 @@ impl Keypad {
                     return key;
                 }
                 Ok(Some(KeypadEvent::Up(key))) => self.keyup(key),
-                Ok(None) => {},
+                Ok(None) => {}
                 Err(_) => panic!("Keypad event channel closed"),
             }
         }
@@ -174,7 +175,7 @@ impl Keypad {
         loop {
             match self.events.recv().map(|e| e.into_text_event()) {
                 Ok(Some(event)) => return event,
-                Ok(None) => {},
+                Ok(None) => {}
                 Err(_) => panic!("Keypad event channel closed"),
             }
         }
@@ -194,7 +195,7 @@ impl Keypad {
             match self.events.try_recv().map(|e| e.into_keypad_event()) {
                 Ok(Some(KeypadEvent::Down(key))) => self.keydown(key),
                 Ok(Some(KeypadEvent::Up(key))) => self.keyup(key),
-                Ok(None) => {},
+                Ok(None) => {}
                 Err(_) => break,
             }
         }

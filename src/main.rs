@@ -108,7 +108,9 @@ fn main() {
     let _ = gamethread.join();
 }
 
-fn glutin_to_keyboard(key: glium::glutin::event::VirtualKeyCode) -> Option<rustic_yellow::KeyboardKey> {
+fn glutin_to_keyboard(
+    key: glium::glutin::event::VirtualKeyCode,
+) -> Option<rustic_yellow::KeyboardKey> {
     use glium::glutin::event::VirtualKeyCode;
     match key {
         VirtualKeyCode::Escape => Some(rustic_yellow::KeyboardKey::Escape),

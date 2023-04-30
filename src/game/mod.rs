@@ -13,7 +13,10 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(update_screen: SyncSender<Vec<u8>>, keyboard_events: Receiver<KeyboardEvent>) -> Self {
+    pub fn new(
+        update_screen: SyncSender<Vec<u8>>,
+        keyboard_events: Receiver<KeyboardEvent>,
+    ) -> Self {
         assert_eq!(ROM[0x143], 0x80);
         assert_eq!(ROM[0x147], 0x1b);
         assert_eq!(ROM[0x149], 0x03);

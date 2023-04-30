@@ -2,7 +2,7 @@ use std::sync::mpsc::{Receiver, SyncSender};
 
 use crate::{
     gpu::Gpu,
-    keypad::{Keypad, KeyboardEvent},
+    keypad::{KeyboardEvent, Keypad},
     mbc5::MBC5,
     serial::Serial,
     sound::Sound,
