@@ -121,6 +121,8 @@ fn main_menu_new_game(cpu: &mut Cpu) -> bool {
                     continue;
                 }
 
+                saves::create_save_dir().unwrap();
+
                 cpu.set_save_path(saves::get_save_path(&result));
 
                 cpu.gpu_pop_layer(layer);
