@@ -49,7 +49,7 @@ Running `cargo bundle` should produce an `.app` file with the game and the music
 
 ## Contributing
 
-Contributions to Rustic Yellow are welcome! If you'd like to contribute code or report a bug, please open an issue or pull request on the project's GitHub page: https://github.com/LinusU/rustic-yellow
+Contributions to Rustic Yellow are welcome! Feel free to open an issue if you have any questions or suggestions. If you want to contribute code, it's probably a good idea to open an issue first to discuss the change you want to make, since it's still early days for this project.
 
 ## Acknowledgements
 
