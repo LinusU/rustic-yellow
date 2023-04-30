@@ -41,6 +41,12 @@ To run Rustic Yellow, make sure you have a ROM file named `rom_file.gb` with the
 cargo run --release
 ```
 
+## Packaging
+
+I've added some basic support for packaging the game to a proper app using [Cargo bundle](https://github.com/burtonageo/cargo-bundle). Currently only macOS is supported, but it should be possible to add support for other platforms as well.
+
+Running `cargo bundle` should produce an `.app` file with the game and the music bundled together. The `.app` file can be moved to the `Applications` folder and run from there.
+
 ## Contributing
 
 Contributions to Rustic Yellow are welcome! If you'd like to contribute code or report a bug, please open an issue or pull request on the project's GitHub page: https://github.com/LinusU/rustic-yellow
