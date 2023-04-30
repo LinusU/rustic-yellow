@@ -55,6 +55,22 @@ fn music_from_bank_and_id(bank: u8, id: u8) -> Option<Music> {
         (0x20, 159) => Some(Music::YellowUnusedSong),
         (0x20, 163) => Some(Music::GBPrinter),
 
+        // Sound effects that are actually music
+        (0x02, 134) => Some(Music::ObtainedItem), // SFX_Get_Item1_1
+        (0x02, 137) => Some(Music::PokemonEvolved), // SFX_Get_Item2_1
+        (0x02, 145) => Some(Music::PokedexRating), // SFX_Pokedex_Rating_1
+        (0x02, 148) => Some(Music::ObtainedKeyItem), // SFX_Get_Key_Item_1
+        (0x08, 134) => Some(Music::LevelUp), // SFX_Level_Up
+        (0x08, 137) => Some(Music::PokemonEvolved), // SFX_Get_Item2_2
+        (0x08, 154) => Some(Music::CaughtPokemon), // SFX_Caught_Mon
+        (0x1f, 134) => Some(Music::ObtainedItem), // SFX_Get_Item1_3
+        (0x1f, 137) => Some(Music::PokemonEvolved), // SFX_Get_Item2_3
+        (0x1f, 145) => Some(Music::PokedexRating), // SFX_Pokedex_Rating_3
+        (0x1f, 148) => Some(Music::ObtainedKeyItem), // SFX_Get_Key_Item_3
+        (0x20, 134) => Some(Music::ObtainedItem), // SFX_Get_Item1_4
+        (0x20, 137) => Some(Music::PokemonEvolved), // SFX_Get_Item2_4
+        (0x20, 150) => Some(Music::PokemonEvolved), // SFX_Get_Item2_4_2
+
         _ => None,
     }
 }
@@ -107,15 +123,15 @@ fn sfx_from_bank_and_id(bank: u8, id: u8) -> Option<(u8, u16)> {
         (0x02, 125) => Some((0x02, 0x4177)), // SFX_Cry23_1
         (0x02, 128) => Some((0x02, 0x4180)), // SFX_Cry24_1
         (0x02, 131) => Some((0x02, 0x4189)), // SFX_Cry25_1
-        (0x02, 134) => { eprintln!("Missing sound: SFX_Get_Item1_1"); None },
-        (0x02, 137) => { eprintln!("Missing sound: SFX_Get_Item2_1"); None },
+        (0x02, 134) => { eprintln!("Missing sound: SFX_Get_Item1_1"); None }, // Handled by music routine
+        (0x02, 137) => { eprintln!("Missing sound: SFX_Get_Item2_1"); None }, // Handled by music routine
         (0x02, 140) => Some((0x02, 0x41a4)), // SFX_Tink_1
         (0x02, 141) => Some((0x02, 0x41a7)), // SFX_Heal_HP_1
         (0x02, 142) => Some((0x02, 0x41aa)), // SFX_Heal_Ailment_1
         (0x02, 143) => Some((0x02, 0x41ad)), // SFX_Start_Menu_1
         (0x02, 144) => Some((0x02, 0x41b0)), // SFX_Press_AB_1
-        (0x02, 145) => { eprintln!("Missing sound: SFX_Pokedex_Rating_1"); None },
-        (0x02, 148) => { eprintln!("Missing sound: SFX_Get_Key_Item_1"); None },
+        (0x02, 145) => { eprintln!("Missing sound: SFX_Pokedex_Rating_1"); None }, // Handled by music routine
+        (0x02, 148) => { eprintln!("Missing sound: SFX_Get_Key_Item_1"); None }, // Handled by music routine
         (0x02, 151) => Some((0x02, 0x41c5)), // SFX_Poisoned_1
         (0x02, 152) => Some((0x02, 0x41c8)), // SFX_Trade_Machine_1
         (0x02, 153) => Some((0x02, 0x41cb)), // SFX_Turn_On_PC_1
@@ -185,8 +201,8 @@ fn sfx_from_bank_and_id(bank: u8, id: u8) -> Option<(u8, u16)> {
         (0x08, 125) => Some((0x08, 0x4177)), // SFX_Cry23_2
         (0x08, 128) => Some((0x08, 0x4180)), // SFX_Cry24_2
         (0x08, 131) => Some((0x08, 0x4189)), // SFX_Cry25_2
-        (0x08, 134) => { eprintln!("Missing sound: SFX_Level_Up"); None },
-        (0x08, 137) => { eprintln!("Missing sound: SFX_Get_Item2_2"); None },
+        (0x08, 134) => { eprintln!("Missing sound: SFX_Level_Up"); None }, // Handled by music routine
+        (0x08, 137) => { eprintln!("Missing sound: SFX_Get_Item2_2"); None }, // Handled by music routine
         (0x08, 140) => Some((0x08, 0x41a4)), // SFX_Tink_2
         (0x08, 141) => Some((0x08, 0x41a7)), // SFX_Heal_HP_2
         (0x08, 142) => Some((0x08, 0x41aa)), // SFX_Heal_Ailment_2
@@ -197,7 +213,7 @@ fn sfx_from_bank_and_id(bank: u8, id: u8) -> Option<(u8, u16)> {
         (0x08, 149) => Some((0x08, 0x41bf)), // SFX_Faint_Thud
         (0x08, 151) => Some((0x08, 0x41c5)), // SFX_Run
         (0x08, 152) => Some((0x08, 0x41c8)), // SFX_Dex_Page_Added
-        (0x08, 154) => { eprintln!("Missing sound: SFX_Caught_Mon"); None },
+        (0x08, 154) => { eprintln!("Missing sound: SFX_Caught_Mon"); None }, // Handled by music routine
         (0x08, 157) => Some((0x08, 0x41d7)), // SFX_Peck
         (0x08, 158) => Some((0x08, 0x41da)), // SFX_Faint_Fall
         (0x08, 159) => Some((0x08, 0x41dd)), // SFX_Battle_09
@@ -287,15 +303,15 @@ fn sfx_from_bank_and_id(bank: u8, id: u8) -> Option<(u8, u16)> {
         (0x1f, 125) => Some((0x1f, 0x4177)), // SFX_Cry23_3
         (0x1f, 128) => Some((0x1f, 0x4180)), // SFX_Cry24_3
         (0x1f, 131) => Some((0x1f, 0x4189)), // SFX_Cry25_3
-        (0x1f, 134) => { eprintln!("Missing sound: SFX_Get_Item1_3"); None },
-        (0x1f, 137) => { eprintln!("Missing sound: SFX_Get_Item2_3"); None },
+        (0x1f, 134) => { eprintln!("Missing sound: SFX_Get_Item1_3"); None }, // Handled by music routine
+        (0x1f, 137) => { eprintln!("Missing sound: SFX_Get_Item2_3"); None }, // Handled by music routine
         (0x1f, 140) => Some((0x1f, 0x41a4)), // SFX_Tink_3
         (0x1f, 141) => Some((0x1f, 0x41a7)), // SFX_Heal_HP_3
         (0x1f, 142) => Some((0x1f, 0x41aa)), // SFX_Heal_Ailment_3
         (0x1f, 143) => Some((0x1f, 0x41ad)), // SFX_Start_Menu_3
         (0x1f, 144) => Some((0x1f, 0x41b0)), // SFX_Press_AB_3
-        (0x1f, 145) => { eprintln!("Missing sound: SFX_Pokedex_Rating_3"); None },
-        (0x1f, 148) => { eprintln!("Missing sound: SFX_Get_Key_Item_3"); None },
+        (0x1f, 145) => { eprintln!("Missing sound: SFX_Pokedex_Rating_3"); None }, // Handled by music routine
+        (0x1f, 148) => { eprintln!("Missing sound: SFX_Get_Key_Item_3"); None }, // Handled by music routine
         (0x1f, 151) => Some((0x1f, 0x41c5)), // SFX_Poisoned_3
         (0x1f, 152) => Some((0x1f, 0x41c8)), // SFX_Trade_Machine_3
         (0x1f, 153) => Some((0x1f, 0x41cb)), // SFX_Turn_On_PC_3
@@ -373,8 +389,8 @@ fn sfx_from_bank_and_id(bank: u8, id: u8) -> Option<(u8, u16)> {
         (0x20, 125) => Some((0x20, 0x4177)), // SFX_Cry23_4
         (0x20, 128) => Some((0x20, 0x4180)), // SFX_Cry24_4
         (0x20, 131) => Some((0x20, 0x4189)), // SFX_Cry25_4
-        (0x20, 134) => { eprintln!("Missing sound: SFX_Get_Item1_4"); None },
-        (0x20, 137) => { eprintln!("Missing sound: SFX_Get_Item2_4"); None },
+        (0x20, 134) => { eprintln!("Missing sound: SFX_Get_Item1_4"); None }, // Handled by music routine
+        (0x20, 137) => { eprintln!("Missing sound: SFX_Get_Item2_4"); None }, // Handled by music routine
         (0x20, 140) => Some((0x20, 0x41a4)), // SFX_Tink_4
         (0x20, 141) => Some((0x20, 0x41a7)), // SFX_Heal_HP_4
         (0x20, 142) => Some((0x20, 0x41aa)), // SFX_Heal_Ailment_4
@@ -385,7 +401,7 @@ fn sfx_from_bank_and_id(bank: u8, id: u8) -> Option<(u8, u16)> {
         (0x20, 147) => Some((0x20, 0x41b9)), // SFX_Surfing_Crash
         (0x20, 148) => Some((0x20, 0x41bc)), // SFX_Unknown_802cc
         (0x20, 149) => Some((0x20, 0x41bf)), // SFX_Surfing_Land
-        (0x20, 150) => { eprintln!("Missing sound: SFX_Get_Item2_4_2"); None },
+        (0x20, 150) => { eprintln!("Missing sound: SFX_Get_Item2_4_2"); None }, // Handled by music routine
 
         _ => None
     }

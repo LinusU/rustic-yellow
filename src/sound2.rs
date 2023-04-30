@@ -183,6 +183,12 @@ pub enum Music {
     MeetJessieJames,
     YellowUnusedSong,
     GBPrinter,
+    CaughtPokemon,
+    LevelUp,
+    ObtainedItem,
+    ObtainedKeyItem,
+    PokedexRating,
+    PokemonEvolved,
 }
 
 impl Music {
@@ -244,6 +250,14 @@ impl Music {
 
             // The Printer Menu track isn't part of the Soundtrack CD from the Internet Archive, so I'm using the hidden track from the CD instead
             Music::GBPrinter => open_music("05 - Giovanni [Hidden Track].flac"),
+
+            // Sound effects
+            Music::CaughtPokemon => open_music("15 - Caught a Pokémon!.flac"),
+            Music::LevelUp => open_music("10 - Level Up!.flac"),
+            Music::ObtainedItem => open_music("12 - Obtained an Item!.flac"),
+            Music::ObtainedKeyItem => open_music("06 - Obtained a Key Item!.flac"),
+            Music::PokedexRating => open_music("34 - Pokédex Evaluation- You're on Your Way!.flac"),
+            Music::PokemonEvolved => open_music("33 - Congratulations! Your Pokémon Evolved!.flac"),
         }
     }
 }
