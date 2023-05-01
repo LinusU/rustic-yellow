@@ -7,7 +7,7 @@ use crate::{
     gpu::GpuLayer,
     keypad::{KeyboardEvent, KeypadKey, TextEvent},
     mmu::Mmu,
-    sound2::Music,
+    sound2::{Music, Sfx},
 };
 use CpuFlag::{C, H, N, Z};
 
@@ -155,16 +155,24 @@ impl Cpu {
         self.mmu.keypad.text()
     }
 
-    pub fn start_music(&mut self, id: Music) {
-        self.mmu.sound2.start_music(id)
+    pub fn start_music<T, TSource>(&mut self, music: T)
+    where
+        T: Music<TSource>,
+        TSource: rodio::Source + Send + 'static,
+        f32: cpal::FromSample<TSource::Item>,
+        TSource::Item: rodio::Sample + Send,
+    {
+        self.mmu.sound2.start_music(music)
     }
 
-    pub fn play_pikachu_cry(&mut self, id: u8) {
-        self.mmu.sound2.play_pikachu_cry(id)
-    }
-
-    pub fn play_sfx(&mut self, bank: u8, addr: u16, pitch: u8, length: i8) {
-        self.mmu.sound2.play_sfx(bank, addr, pitch, length)
+    pub fn play_sfx<T, TSource>(&mut self, sfx: T)
+    where
+        T: Sfx<TSource>,
+        TSource: rodio::Source + Send + 'static,
+        f32: cpal::FromSample<TSource::Item>,
+        TSource::Item: rodio::Sample + Send,
+    {
+        self.mmu.sound2.play_sfx(sfx)
     }
 
     fn fetch_byte(&mut self) -> u8 {

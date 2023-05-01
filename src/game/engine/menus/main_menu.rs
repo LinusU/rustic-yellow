@@ -1,7 +1,7 @@
 use crate::{
     cpu::Cpu,
     game::{
-        constants,
+        audio, constants,
         engine::movie,
         home,
         ram::{hram, vram, wram},
@@ -118,7 +118,7 @@ fn main_menu_new_game(cpu: &mut Cpu) -> bool {
                 }
 
                 if !saves::save_is_free(&result) {
-                    cpu.play_sfx(0x02, 0x41ef, 0, 0);
+                    cpu.play_sfx(audio::sfx::DENIED);
                     continue;
                 }
 
@@ -224,11 +224,11 @@ fn display_continue_game_info(cpu: &mut Cpu, data: &[u8]) -> bool {
     let result = loop {
         match cpu.keypad_wait() {
             KeypadKey::A => {
-                cpu.play_sfx(0x02, 0x41b0, 0, 0); // SFX_Press_AB
+                cpu.play_sfx(audio::sfx::PRESS_AB);
                 break true;
             }
             KeypadKey::B => {
-                cpu.play_sfx(0x02, 0x41b0, 0, 0); // SFX_Press_AB
+                cpu.play_sfx(audio::sfx::PRESS_AB);
                 break false;
             }
             _ => {}

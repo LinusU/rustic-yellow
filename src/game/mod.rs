@@ -1,12 +1,33 @@
-use std::sync::mpsc::{Receiver, SyncSender};
+use std::{
+    path::PathBuf,
+    sync::mpsc::{Receiver, SyncSender},
+};
 
 use crate::{cpu::Cpu, keypad::KeyboardEvent, rom::ROM};
 
+pub mod audio;
 pub mod constants;
 pub mod engine;
 pub mod home;
 pub mod macros;
 pub mod ram;
+
+pub fn resources_root() -> Option<PathBuf> {
+    if std::env::var_os("CARGO").is_some() {
+        return Some(PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR")?));
+    }
+
+    // TODO: support for other platforms
+    #[cfg(target_os = "macos")]
+    {
+        let bundle = core_foundation::bundle::CFBundle::main_bundle();
+        let bundle_path = bundle.path()?;
+        let resources_path = bundle.resources_path()?;
+        Some(bundle_path.join(resources_path))
+    }
+    #[cfg(not(any(target_os = "macos")))]
+    None
+}
 
 pub struct Game {
     cpu: Cpu,
