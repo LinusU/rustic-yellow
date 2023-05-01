@@ -21,7 +21,7 @@ pub fn play_sound(cpu: &mut Cpu) {
     } else if let Some(music_sfx) = MusicSfx::from_bank_and_id(bank, cpu.a, pitch, length) {
         cpu.play_sfx(music_sfx);
     } else if let Some(mut sfx) = Sfx::from_bank_and_id(bank, cpu.a) {
-        if sfx.is_cry() {
+        if sfx.is_cry() || sfx.is_battle_sfx() {
             sfx.tweak(pitch, length);
         }
 

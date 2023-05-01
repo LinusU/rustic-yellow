@@ -363,6 +363,17 @@ impl Sfx {
         (CRY_SFX_START..CRY_SFX_END).contains(&self.addr)
     }
 
+    pub fn is_battle_sfx(&self) -> bool {
+        if self.bank != 0x08 {
+            return false;
+        }
+
+        const BATTLE_SFX_START: u16 = 0x41d7;
+        const BATTLE_SFX_END: u16 = 0x42bc;
+
+        (BATTLE_SFX_START..BATTLE_SFX_END).contains(&self.addr)
+    }
+
     pub fn tweak(&mut self, pitch: u8, length: i8) {
         self.pitch = pitch;
         self.length = length;
