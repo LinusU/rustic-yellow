@@ -11,18 +11,18 @@ pub fn play_sound(cpu: &mut Cpu) {
     // W_AUDIO_ROM_BANK, but if we don't we sometimes play the wrong audio...
     let bank = cpu.read_byte(wram::W_AUDIO_SAVED_ROM_BANK);
 
+    let pitch = cpu.read_byte(wram::W_FREQUENCY_MODIFIER);
+    let length = cpu.read_byte(wram::W_TEMPO_MODIFIER) as i8;
+
     if cpu.a == 0xff {
         // Stop all sounds?
     } else if let Some(music) = Music::from_bank_and_id(bank, cpu.a) {
         cpu.start_music(music);
-    } else if let Some(music_sfx) = MusicSfx::from_bank_and_id(bank, cpu.a) {
+    } else if let Some(music_sfx) = MusicSfx::from_bank_and_id(bank, cpu.a, pitch, length) {
         cpu.play_sfx(music_sfx);
     } else if let Some(mut sfx) = Sfx::from_bank_and_id(bank, cpu.a) {
         if sfx.is_cry() {
-            sfx.tweak(
-                cpu.read_byte(wram::W_FREQUENCY_MODIFIER),
-                cpu.read_byte(wram::W_TEMPO_MODIFIER) as i8,
-            );
+            sfx.tweak(pitch, length);
         }
 
         cpu.play_sfx(sfx);
