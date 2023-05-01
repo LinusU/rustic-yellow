@@ -1,7 +1,7 @@
 use crate::{
     cpu::Cpu,
     game::{
-        audio::{music::Music, sfx::Sfx},
+        audio::{music::Music, music_sfx::MusicSfx, sfx::Sfx},
         ram::wram,
     },
 };
@@ -15,6 +15,8 @@ pub fn play_sound(cpu: &mut Cpu) {
         // Stop all sounds?
     } else if let Some(music) = Music::from_bank_and_id(bank, cpu.a) {
         cpu.start_music(music);
+    } else if let Some(music_sfx) = MusicSfx::from_bank_and_id(bank, cpu.a) {
+        cpu.play_sfx(music_sfx);
     } else if let Some(mut sfx) = Sfx::from_bank_and_id(bank, cpu.a) {
         if sfx.is_cry() {
             sfx.tweak(
