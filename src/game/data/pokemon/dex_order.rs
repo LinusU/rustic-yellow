@@ -1,0 +1,1 @@
+pub const POKEDEX_ORDER: usize = (0x10 * 0x4000) | (0x50b1 & 0x3fff);

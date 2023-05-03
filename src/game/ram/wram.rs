@@ -46,6 +46,8 @@ pub const W_MENU_JOYPAD_POLL_COUNT: u16 = 0xcc34;
 /// if running on SGB or CGB, it's 1, else it's 0
 pub const W_ON_SGB: u16 = 0xcf1a;
 
+pub const W_CF91: u16 = 0xcf90;
+
 /// This is used to determine whether the default music is already playing when
 /// attempting to play the default music (in order to avoid restarting the same
 /// music) and whether the music has already been stopped when attempting to
@@ -57,6 +59,8 @@ pub const W_ON_SGB: u16 = 0xcf1a;
 /// it in order to prevent assumptions from being made about the current state of
 /// the music).
 pub const W_LAST_MUSIC_SOUND_ID: u16 = 0xcfc9;
+
+pub const W_BATTLE_MON_SPECIES2: u16 = 0xcfd8;
 
 /// the map you will start at when the debug bit is set
 pub const W_DEFAULT_MAP: u16 = 0xd07b;

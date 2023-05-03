@@ -21,9 +21,14 @@ git clone https://github.com/LinusU/rustic-yellow.git
 cd rustic-yellow
 ```
 
-## ROM File
+## ROM Files
 
-Rustic Yellow requires a ROM file for Pokemon Yellow in order to build the project. The ROM file must have the SHA1 hash `cc7d03262ebfaf2f06772c1a480c7d9d5f4a38e1` and be named `rom_file.gb`. You can obtain a ROM file from various sources online, but please note that it may be illegal to download and use ROMs in some jurisdictions.
+Rustic Yellow requires two ROM files in order to build the project: one for the original Pokemon Yellow game, and one for Pokemon Crystal from which some updated sprites are used. The ROM files must have the following SHA1 hashes:
+
+- `pokeyellow.gbc` - `cc7d03262ebfaf2f06772c1a480c7d9d5f4a38e1`
+- `pokecrystal.gbc` - `f4cd194bdee0d04ca4eac29e09b8e4e9d818c133`
+
+You can obtain a ROM file from various sources online, but please note that it may be illegal to download and use ROMs in some jurisdictions.
 
 ## Music
 
@@ -35,7 +40,7 @@ Copy all of the FLAC files from the album, both from `Disc 1` and `Disc 2 (Yello
 
 ## Running the Game
 
-To run Rustic Yellow, make sure you have a ROM file named `rom_file.gb` with the correct SHA1 hash in the project directory. Then use the following command:
+Use the following command to build and run the game:
 
 ```sh
 cargo run --release

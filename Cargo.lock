@@ -1172,6 +1172,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "pokemon-sprite-compression"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0780676bc5b903149b1a7e48b11bee55d041fd06a66b4ff7f614a113a8ab16bb"
+
+[[package]]
 name = "pokemon-synthesizer"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1275,6 +1281,7 @@ dependencies = [
  "cpal",
  "glium",
  "image",
+ "pokemon-sprite-compression",
  "pokemon-synthesizer",
  "rodio",
 ]

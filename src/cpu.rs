@@ -87,6 +87,7 @@ impl Cpu {
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
                 (0x1c, 0x7b91) => crate::game::engine::menus::save::save_sav_to_sram(self),
                 (0x3c, 0x4000) => crate::game::engine::pikachu::pikachu_pcm::play_pikachu_sound_clip(self),
+                (0x3d, 0x6178) => crate::game::engine::battle::init_battle::load_mon_back_pic(self),
 
                 _ => {
                     let ticks = if self.halted { 4 } else { self.step() * 4 };
