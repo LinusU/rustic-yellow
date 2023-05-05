@@ -3,6 +3,7 @@ pub mod copy;
 pub mod copy2;
 pub mod delay;
 pub mod palettes;
+pub mod pics;
 pub mod print_text;
 pub mod text;
 pub mod vblank;

@@ -71,6 +71,11 @@ pub const W_SAVE_FILE_STATUS: u16 = 0xd087;
 
 pub const W_OPTIONS_INITIALIZED: u16 = 0xd089;
 
+pub const W_MON_HEADER: u16 = 0xd0b7;
+pub const W_MON_H_INDEX: u16 = 0xd0b7;
+pub const W_MON_H_SPRITE_DIM: u16 = 0xd0c1;
+pub const W_MON_H_FRONT_SPRITE: u16 = 0xd0c2;
+
 /// not exactly sure what this is used for, but it seems to be used as a multipurpose temp flag value
 pub const W_CURRENT_MAP_SCRIPT_FLAGS: u16 = 0xd125;
 
