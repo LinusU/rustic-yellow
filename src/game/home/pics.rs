@@ -109,6 +109,16 @@ pub fn load_mon_front_sprite(cpu: &mut Cpu) {
     let pokemon_index = cpu.read_byte(wram::W_MON_H_INDEX);
     let pokedex_no = pokedex::index_to_pokedex(pokemon_index) as usize;
 
+    // Fall back to GameBoy function if the pokemon is not in the pokedex
+    // (e.g. FOSSIL_AERODACTYL, FOSSIL_KABUTOPS, MON_GHOST)
+    if pokedex_no == 0 {
+        // push de
+        cpu.stack_push(cpu.de());
+        cpu.pc += 1;
+        cpu.cycle(16);
+        return;
+    }
+
     const POKEMON_BASE_DATA: usize = (0x14 * 0x4000) | (0x5424 & 0x3fff);
     const BASE_DATA_SIZE: usize = 32;
 
