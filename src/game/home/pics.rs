@@ -109,9 +109,34 @@ pub fn load_mon_front_sprite(cpu: &mut Cpu) {
     let pokemon_index = cpu.read_byte(wram::W_MON_H_INDEX);
     let pokedex_no = pokedex::index_to_pokedex(pokemon_index) as usize;
 
+    // These images aren't in Pokemon Crystal, so use the old sprites
+    const FOSSIL_KABUTOPS: u8 = 0xb6;
+    const FOSSIL_AERODACTYL: u8 = 0xb7;
+    const MON_GHOST: u8 = 0xb8;
+
+    if pokemon_index == FOSSIL_KABUTOPS || pokemon_index == FOSSIL_AERODACTYL || pokemon_index == MON_GHOST {
+        let sprite_data = match pokemon_index {
+            FOSSIL_KABUTOPS => pokemon_sprite_compression::gen1::decompress(&crate::rom::ROM[0x02fb92..]),
+            FOSSIL_AERODACTYL => pokemon_sprite_compression::gen1::decompress(&crate::rom::ROM[0x0367a1..]),
+            MON_GHOST => pokemon_sprite_compression::gen1::decompress(&crate::rom::ROM[0x036920..]),
+            _ => unreachable!(),
+        };
+
+        let width = ((sprite_data.len() / 0x10) as f64).sqrt() as u8;
+        let sprite_data = center_pokemon_sprite(&sprite_data, width, width);
+
+        for (offset, byte) in sprite_data.iter().enumerate() {
+            cpu.write_byte(cpu.de() + offset as u16, *byte);
+        }
+
+        cpu.pc = cpu.stack_pop();
+        return
+    }
+
     // Fall back to GameBoy function if the pokemon is not in the pokedex
-    // (e.g. FOSSIL_AERODACTYL, FOSSIL_KABUTOPS, MON_GHOST)
     if pokedex_no == 0 {
+        eprintln!("Unknown pokemon index passed to load_mon_front_sprite: {}", pokemon_index);
+
         // push de
         cpu.stack_push(cpu.de());
         cpu.pc += 1;
