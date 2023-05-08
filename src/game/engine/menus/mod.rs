@@ -5,6 +5,7 @@ use crate::{
 };
 
 pub mod main_menu;
+pub mod pokedex;
 pub mod save;
 
 pub fn menu_single_choice(

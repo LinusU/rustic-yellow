@@ -80,6 +80,7 @@ impl Cpu {
             match (self.bank(), self.pc) {
                 (_, 0x0000) => break,
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
+                (_, 0x143e) => crate::game::home::pics::load_mon_front_sprite(self),
                 (_, 0x2238) => crate::game::home::audio::play_sound(self),
                 (0x01, 0x42bf) => crate::game::engine::movie::title::display_title_screen_go_to_main_menu(self),
                 (0x01, 0x5ba6) => panic!("main_menu should only be called from Rust"),
@@ -87,6 +88,7 @@ impl Cpu {
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
                 (0x1c, 0x7b91) => crate::game::engine::menus::save::save_sav_to_sram(self),
                 (0x3c, 0x4000) => crate::game::engine::pikachu::pikachu_pcm::play_pikachu_sound_clip(self),
+                (0x3d, 0x6178) => crate::game::engine::battle::init_battle::load_mon_back_pic(self),
 
                 _ => {
                     let ticks = if self.halted { 4 } else { self.step() * 4 };

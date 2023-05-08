@@ -46,6 +46,8 @@ pub const W_MENU_JOYPAD_POLL_COUNT: u16 = 0xcc34;
 /// if running on SGB or CGB, it's 1, else it's 0
 pub const W_ON_SGB: u16 = 0xcf1a;
 
+pub const W_CF91: u16 = 0xcf90;
+
 /// This is used to determine whether the default music is already playing when
 /// attempting to play the default music (in order to avoid restarting the same
 /// music) and whether the music has already been stopped when attempting to
@@ -58,6 +60,8 @@ pub const W_ON_SGB: u16 = 0xcf1a;
 /// the music).
 pub const W_LAST_MUSIC_SOUND_ID: u16 = 0xcfc9;
 
+pub const W_BATTLE_MON_SPECIES2: u16 = 0xcfd8;
+
 /// the map you will start at when the debug bit is set
 pub const W_DEFAULT_MAP: u16 = 0xd07b;
 
@@ -66,6 +70,13 @@ pub const W_DEFAULT_MAP: u16 = 0xd07b;
 pub const W_SAVE_FILE_STATUS: u16 = 0xd087;
 
 pub const W_OPTIONS_INITIALIZED: u16 = 0xd089;
+
+pub const W_SPRITE_FLIPPED: u16 = 0xd0a9;
+
+pub const W_MON_HEADER: u16 = 0xd0b7;
+pub const W_MON_H_INDEX: u16 = 0xd0b7;
+pub const W_MON_H_SPRITE_DIM: u16 = 0xd0c1;
+pub const W_MON_H_FRONT_SPRITE: u16 = 0xd0c2;
 
 /// not exactly sure what this is used for, but it seems to be used as a multipurpose temp flag value
 pub const W_CURRENT_MAP_SCRIPT_FLAGS: u16 = 0xd125;

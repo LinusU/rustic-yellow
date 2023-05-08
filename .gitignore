@@ -1,5 +1,5 @@
 /music/*.flac
 !/music/SFX_*.flac
 
-/rom_file.gb
+/poke*.gbc
 /target
