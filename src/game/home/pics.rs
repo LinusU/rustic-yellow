@@ -114,10 +114,17 @@ pub fn load_mon_front_sprite(cpu: &mut Cpu) {
     const FOSSIL_AERODACTYL: u8 = 0xb7;
     const MON_GHOST: u8 = 0xb8;
 
-    if pokemon_index == FOSSIL_KABUTOPS || pokemon_index == FOSSIL_AERODACTYL || pokemon_index == MON_GHOST {
+    if pokemon_index == FOSSIL_KABUTOPS
+        || pokemon_index == FOSSIL_AERODACTYL
+        || pokemon_index == MON_GHOST
+    {
         let sprite_data = match pokemon_index {
-            FOSSIL_KABUTOPS => pokemon_sprite_compression::gen1::decompress(&crate::rom::ROM[0x02fb92..]),
-            FOSSIL_AERODACTYL => pokemon_sprite_compression::gen1::decompress(&crate::rom::ROM[0x0367a1..]),
+            FOSSIL_KABUTOPS => {
+                pokemon_sprite_compression::gen1::decompress(&crate::rom::ROM[0x02fb92..])
+            }
+            FOSSIL_AERODACTYL => {
+                pokemon_sprite_compression::gen1::decompress(&crate::rom::ROM[0x0367a1..])
+            }
             MON_GHOST => pokemon_sprite_compression::gen1::decompress(&crate::rom::ROM[0x036920..]),
             _ => unreachable!(),
         };
@@ -130,12 +137,15 @@ pub fn load_mon_front_sprite(cpu: &mut Cpu) {
         }
 
         cpu.pc = cpu.stack_pop();
-        return
+        return;
     }
 
     // Fall back to GameBoy function if the pokemon is not in the pokedex
     if pokedex_no == 0 {
-        eprintln!("Unknown pokemon index passed to load_mon_front_sprite: {}", pokemon_index);
+        eprintln!(
+            "Unknown pokemon index passed to load_mon_front_sprite: {}",
+            pokemon_index
+        );
 
         // push de
         cpu.stack_push(cpu.de());
