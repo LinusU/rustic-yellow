@@ -1,9 +1,9 @@
 use std::path;
 
-use crate::rom::ROM;
+use crate::{rom::ROM, save_state::SaveState};
 
 pub struct MBC5 {
-    ram: Vec<u8>,
+    ram: SaveState,
     pub(crate) rombank: usize,
     rambank: usize,
     ram_on: bool,
@@ -13,7 +13,7 @@ pub struct MBC5 {
 impl MBC5 {
     pub fn new() -> MBC5 {
         MBC5 {
-            ram: vec![0; 0x8000],
+            ram: SaveState::new(),
             rombank: 1,
             rambank: 0,
             ram_on: false,
@@ -21,8 +21,7 @@ impl MBC5 {
         }
     }
 
-    pub fn replace_ram(&mut self, ram: Vec<u8>) {
-        assert_eq!(ram.len(), 0x8000);
+    pub fn replace_ram(&mut self, ram: SaveState) {
         self.ram = ram;
     }
 
@@ -32,7 +31,7 @@ impl MBC5 {
 
     pub fn save_to_disk(&mut self) {
         if let Some(ref save_path) = self.save_path {
-            std::fs::write(save_path, &self.ram).unwrap();
+            self.ram.write_to_file(save_path).unwrap();
         }
     }
 
@@ -49,7 +48,8 @@ impl MBC5 {
         if !self.ram_on {
             return 0;
         }
-        self.ram[(self.rambank * 0x2000) | ((a as usize) & 0x1FFF)]
+        self.ram
+            .byte((self.rambank * 0x2000) | ((a as usize) & 0x1FFF))
     }
 
     pub fn writerom(&mut self, a: u16, v: u8) {
@@ -67,7 +67,8 @@ impl MBC5 {
         if !self.ram_on {
             return;
         }
-        self.ram[(self.rambank * 0x2000) | ((a as usize) & 0x1FFF)] = v;
+        self.ram
+            .set_byte((self.rambank * 0x2000) | ((a as usize) & 0x1FFF), v);
     }
 }
 

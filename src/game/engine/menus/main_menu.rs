@@ -7,6 +7,7 @@ use crate::{
         ram::{hram, vram, wram},
     },
     keypad::{KeypadKey, TextEvent},
+    save_state::SaveState,
     saves,
 };
 
@@ -168,7 +169,7 @@ fn main_menu_select_save(cpu: &mut Cpu) -> bool {
 
             Some(selected) => {
                 let save = &list[selected];
-                let data = std::fs::read(&save.path).unwrap();
+                let data = SaveState::from_file(&save.path).unwrap();
 
                 if display_continue_game_info(cpu, &data) {
                     cpu.replace_ram(data);
@@ -182,7 +183,7 @@ fn main_menu_select_save(cpu: &mut Cpu) -> bool {
     }
 }
 
-fn display_continue_game_info(cpu: &mut Cpu, data: &[u8]) -> bool {
+fn display_continue_game_info(cpu: &mut Cpu, data: &SaveState) -> bool {
     let summary = super::save::load_sav_summary(data);
 
     let layer = cpu.gpu_push_layer();

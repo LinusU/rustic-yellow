@@ -4,6 +4,7 @@ use crate::{
         constants, home,
         ram::{hram, sram, wram},
     },
+    save_state::SaveState,
 };
 
 pub struct SavSummary {
@@ -13,46 +14,16 @@ pub struct SavSummary {
     pub play_time_hh_mm: (u8, u8),
 }
 
-pub fn load_sav_summary(data: &[u8]) -> SavSummary {
-    const PLAYER_NAME: usize = 0x2598;
-    const BADGES: usize = 0x2602;
-    const POKEDEX_OWNED: usize = 0x25a3;
-    const POKEDEX_OWNED_END: usize = 0x25b6;
+pub fn load_sav_summary(data: &SaveState) -> SavSummary {
     const PLAY_TIME_HH: usize = 0x2ced;
     const PLAY_TIME_MM: usize = 0x2cef;
 
-    let mut result = SavSummary {
-        player_name: String::new(),
-        num_badges: data[BADGES].count_ones(),
-        owned_mons: 0,
-        play_time_hh_mm: (data[PLAY_TIME_HH], data[PLAY_TIME_MM]),
-    };
-
-    for i in 0..(constants::text_constants::NAME_LENGTH as usize) {
-        let ch = data[PLAYER_NAME + i];
-
-        match ch {
-            0x50 => {
-                break;
-            }
-            0x80..=0x99 => {
-                result.player_name.push((b'A' + (ch - 0x80)) as char);
-            }
-            0xa0..=0xb9 => {
-                result.player_name.push((b'a' + (ch - 0xa0)) as char);
-            }
-            0xf6..=0xff => {
-                result.player_name.push((b'0' + (ch - 0xf6)) as char);
-            }
-            _ => panic!("Invalid character in player name: {:02x}", ch),
-        }
+    SavSummary {
+        player_name: data.player_name(),
+        num_badges: data.count_badges(),
+        owned_mons: data.count_owned_mons(),
+        play_time_hh_mm: (data.byte(PLAY_TIME_HH), data.byte(PLAY_TIME_MM)),
     }
-
-    for addr in POKEDEX_OWNED..POKEDEX_OWNED_END {
-        result.owned_mons += data[addr].count_ones();
-    }
-
-    result
 }
 
 pub fn load_sav(cpu: &mut Cpu) {

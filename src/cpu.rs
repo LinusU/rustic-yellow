@@ -7,6 +7,7 @@ use crate::{
     gpu::GpuLayer,
     keypad::{KeyboardEvent, KeypadKey, TextEvent},
     mmu::Mmu,
+    save_state::SaveState,
     sound2::{Music, Sfx},
 };
 use CpuFlag::{C, H, N, Z};
@@ -121,7 +122,7 @@ impl Cpu {
         self.handleinterrupt();
     }
 
-    pub fn replace_ram(&mut self, ram: Vec<u8>) {
+    pub fn replace_ram(&mut self, ram: SaveState) {
         self.mmu.mbc.replace_ram(ram);
     }
 
