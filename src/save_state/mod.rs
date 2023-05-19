@@ -3,36 +3,95 @@ use std::{
     path::PathBuf,
 };
 
-fn parse_string(data: &[u8], max_len: usize) -> String {
-    let mut result = String::new();
+mod r#box;
+mod party;
+mod species;
+mod string;
 
-    for ch in data.iter().take(max_len) {
-        match ch {
-            0x50 => break,
-            0x80..=0x99 => result.push((b'A' + (ch - 0x80)) as char),
-            0x9a => result.push('('),
-            0x9b => result.push(')'),
-            0x9c => result.push(':'),
-            0x9d => result.push(';'),
-            0x9e => result.push('['),
-            0x9f => result.push(']'),
-            0xa0..=0xb9 => result.push((b'a' + (ch - 0xa0)) as char),
-            0xe0 => result.push('\''),
-            0xe1 => result.push('𝔭'),
-            0xe2 => result.push('𝔪'),
-            0xe3 => result.push('-'),
-            0xe6 => result.push('?'),
-            0xe7 => result.push('!'),
-            0xe8 => result.push('.'),
-            0xef => result.push('♂'),
-            0xf0 => result.push('¥'),
-            0xf5 => result.push('♀'),
-            0xf6..=0xff => result.push((b'0' + (ch - 0xf6)) as char),
-            _ => panic!("Invalid character in poke string: {:02x}", ch),
-        }
+pub use party::{PartyPokemon, PartyView, PartyViewMut};
+pub use r#box::{BoxView, BoxViewMut, BoxedPokemon};
+pub use species::PokemonSpecies;
+pub use string::PokeString;
+
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
+pub struct DeterminantValues(u8, u8);
+
+impl DeterminantValues {
+    fn from_bytes(bytes: [u8; 2]) -> DeterminantValues {
+        DeterminantValues(bytes[0], bytes[1])
     }
 
-    result
+    fn hp(&self) -> u8 {
+        ((self.attack() & 1) << 3)
+            | ((self.defense() & 1) << 2)
+            | ((self.speed() & 1) << 1)
+            | (self.special() & 1)
+    }
+
+    fn attack(&self) -> u8 {
+        (self.0 & 0b1111_0000) >> 4
+    }
+
+    fn defense(&self) -> u8 {
+        self.0 & 0b0000_1111
+    }
+
+    fn speed(&self) -> u8 {
+        (self.1 & 0b1111_0000) >> 4
+    }
+
+    fn special(&self) -> u8 {
+        self.1 & 0b0000_1111
+    }
+}
+
+impl std::fmt::Debug for DeterminantValues {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DeterminantValues")
+            .field("hp", &self.hp())
+            .field("attack", &self.attack())
+            .field("defense", &self.defense())
+            .field("speed", &self.speed())
+            .field("special", &self.special())
+            .finish()
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+pub enum BoxId {
+    Current,
+    Box1,
+    Box2,
+    Box3,
+    Box4,
+    Box5,
+    Box6,
+    Box7,
+    Box8,
+    Box9,
+    Box10,
+    Box11,
+    Box12,
+}
+
+impl BoxId {
+    pub fn sram_offset(&self) -> usize {
+        match self {
+            BoxId::Current => 0x30c0,
+            BoxId::Box1 => 0x4000,
+            BoxId::Box2 => 0x4462,
+            BoxId::Box3 => 0x48c4,
+            BoxId::Box4 => 0x4d26,
+            BoxId::Box5 => 0x5188,
+            BoxId::Box6 => 0x55ea,
+            BoxId::Box7 => 0x6000,
+            BoxId::Box8 => 0x6462,
+            BoxId::Box9 => 0x68c4,
+            BoxId::Box10 => 0x6d26,
+            BoxId::Box11 => 0x7188,
+            BoxId::Box12 => 0x75ea,
+        }
+    }
 }
 
 pub struct SaveState {
@@ -63,8 +122,8 @@ impl SaveState {
         self.data[addr] = value;
     }
 
-    pub fn player_name(&self) -> String {
-        parse_string(&self.data[0x2598..], 11)
+    pub fn player_name(&self) -> PokeString {
+        PokeString::from_bytes(&self.data[0x2598..], 11)
     }
 
     pub fn count_badges(&self) -> u32 {
@@ -79,5 +138,13 @@ impl SaveState {
         }
 
         result
+    }
+
+    pub fn r#box(&self, id: BoxId) -> BoxView<'_> {
+        BoxView::new(&self.data[id.sram_offset()..])
+    }
+
+    pub fn box_mut(&mut self, id: BoxId) -> BoxViewMut<'_> {
+        BoxViewMut::new(&mut self.data[id.sram_offset()..])
     }
 }

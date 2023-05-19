@@ -27,7 +27,7 @@ pub enum GbSpeed {
 }
 
 pub struct Mmu {
-    wram: [u8; WRAM_SIZE],
+    pub wram: [u8; WRAM_SIZE],
     zram: [u8; ZRAM_SIZE],
     hdma: [u8; 4],
     pub inte: u8,

@@ -6,6 +6,45 @@ use crate::{rom::ROM, sound2::Sfx as SfxTrait};
 pub const DENIED: Sfx = Sfx::new(0x02, 0x41ef);
 pub const PRESS_AB: Sfx = Sfx::new(0x02, 0x41b0);
 
+pub const CRY_00: Sfx = Sfx::new(0x02, 0x403c);
+pub const CRY_01: Sfx = Sfx::new(0x02, 0x4045);
+pub const CRY_02: Sfx = Sfx::new(0x02, 0x404e);
+pub const CRY_03: Sfx = Sfx::new(0x02, 0x4057);
+pub const CRY_04: Sfx = Sfx::new(0x02, 0x4060);
+pub const CRY_05: Sfx = Sfx::new(0x02, 0x4069);
+pub const CRY_06: Sfx = Sfx::new(0x02, 0x4072);
+pub const CRY_07: Sfx = Sfx::new(0x02, 0x407b);
+pub const CRY_08: Sfx = Sfx::new(0x02, 0x4084);
+pub const CRY_09: Sfx = Sfx::new(0x02, 0x408d);
+pub const CRY_0A: Sfx = Sfx::new(0x02, 0x4096);
+pub const CRY_0B: Sfx = Sfx::new(0x02, 0x409f);
+pub const CRY_0C: Sfx = Sfx::new(0x02, 0x40a8);
+pub const CRY_0D: Sfx = Sfx::new(0x02, 0x40b1);
+pub const CRY_0E: Sfx = Sfx::new(0x02, 0x40ba);
+pub const CRY_0F: Sfx = Sfx::new(0x02, 0x40c3);
+pub const CRY_10: Sfx = Sfx::new(0x02, 0x40cc);
+pub const CRY_11: Sfx = Sfx::new(0x02, 0x40d5);
+pub const CRY_12: Sfx = Sfx::new(0x02, 0x40de);
+pub const CRY_13: Sfx = Sfx::new(0x02, 0x40e7);
+pub const CRY_14: Sfx = Sfx::new(0x02, 0x40f0);
+pub const CRY_15: Sfx = Sfx::new(0x02, 0x40f9);
+pub const CRY_16: Sfx = Sfx::new(0x02, 0x4102);
+pub const CRY_17: Sfx = Sfx::new(0x02, 0x410b);
+pub const CRY_18: Sfx = Sfx::new(0x02, 0x4114);
+pub const CRY_19: Sfx = Sfx::new(0x02, 0x411d);
+pub const CRY_1A: Sfx = Sfx::new(0x02, 0x4126);
+pub const CRY_1B: Sfx = Sfx::new(0x02, 0x412f);
+pub const CRY_1C: Sfx = Sfx::new(0x02, 0x4138);
+pub const CRY_1D: Sfx = Sfx::new(0x02, 0x4141);
+pub const CRY_1E: Sfx = Sfx::new(0x02, 0x414a);
+pub const CRY_1F: Sfx = Sfx::new(0x02, 0x4153);
+pub const CRY_20: Sfx = Sfx::new(0x02, 0x415c);
+pub const CRY_21: Sfx = Sfx::new(0x02, 0x4165);
+pub const CRY_22: Sfx = Sfx::new(0x02, 0x416e);
+pub const CRY_23: Sfx = Sfx::new(0x02, 0x4177);
+pub const CRY_24: Sfx = Sfx::new(0x02, 0x4180);
+pub const CRY_25: Sfx = Sfx::new(0x02, 0x4189);
+
 #[derive(Debug, Clone, Copy)]
 pub struct Sfx {
     bank: u8,
@@ -33,45 +72,47 @@ impl Sfx {
             (0x1f, 1..=19) => Some(Sfx::new(0x1f, 0x4000 + ((id as u16) * 3))),
             (0x20, 1..=19) => Some(Sfx::new(0x1f, 0x4000 + ((id as u16) * 3))),
 
+            // Cries
+            (_, 20) => Some(CRY_00),
+            (_, 23) => Some(CRY_01),
+            (_, 26) => Some(CRY_02),
+            (_, 29) => Some(CRY_03),
+            (_, 32) => Some(CRY_04),
+            (_, 35) => Some(CRY_05),
+            (_, 38) => Some(CRY_06),
+            (_, 41) => Some(CRY_07),
+            (_, 44) => Some(CRY_08),
+            (_, 47) => Some(CRY_09),
+            (_, 50) => Some(CRY_0A),
+            (_, 53) => Some(CRY_0B),
+            (_, 56) => Some(CRY_0C),
+            (_, 59) => Some(CRY_0D),
+            (_, 62) => Some(CRY_0E),
+            (_, 65) => Some(CRY_0F),
+            (_, 68) => Some(CRY_10),
+            (_, 71) => Some(CRY_11),
+            (_, 74) => Some(CRY_12),
+            (_, 77) => Some(CRY_13),
+            (_, 80) => Some(CRY_14),
+            (_, 83) => Some(CRY_15),
+            (_, 86) => Some(CRY_16),
+            (_, 89) => Some(CRY_17),
+            (_, 92) => Some(CRY_18),
+            (_, 95) => Some(CRY_19),
+            (_, 98) => Some(CRY_1A),
+            (_, 101) => Some(CRY_1B),
+            (_, 104) => Some(CRY_1C),
+            (_, 107) => Some(CRY_1D),
+            (_, 110) => Some(CRY_1E),
+            (_, 113) => Some(CRY_1F),
+            (_, 116) => Some(CRY_20),
+            (_, 119) => Some(CRY_21),
+            (_, 122) => Some(CRY_22),
+            (_, 125) => Some(CRY_23),
+            (_, 128) => Some(CRY_24),
+            (_, 131) => Some(CRY_25),
+
             // Bank 02
-            (0x02, 20) => Some(Sfx::new(0x02, 0x403c)), // SFX_Cry00_1
-            (0x02, 23) => Some(Sfx::new(0x02, 0x4045)), // SFX_Cry01_1
-            (0x02, 26) => Some(Sfx::new(0x02, 0x404e)), // SFX_Cry02_1
-            (0x02, 29) => Some(Sfx::new(0x02, 0x4057)), // SFX_Cry03_1
-            (0x02, 32) => Some(Sfx::new(0x02, 0x4060)), // SFX_Cry04_1
-            (0x02, 35) => Some(Sfx::new(0x02, 0x4069)), // SFX_Cry05_1
-            (0x02, 38) => Some(Sfx::new(0x02, 0x4072)), // SFX_Cry06_1
-            (0x02, 41) => Some(Sfx::new(0x02, 0x407b)), // SFX_Cry07_1
-            (0x02, 44) => Some(Sfx::new(0x02, 0x4084)), // SFX_Cry08_1
-            (0x02, 47) => Some(Sfx::new(0x02, 0x408d)), // SFX_Cry09_1
-            (0x02, 50) => Some(Sfx::new(0x02, 0x4096)), // SFX_Cry0A_1
-            (0x02, 53) => Some(Sfx::new(0x02, 0x409f)), // SFX_Cry0B_1
-            (0x02, 56) => Some(Sfx::new(0x02, 0x40a8)), // SFX_Cry0C_1
-            (0x02, 59) => Some(Sfx::new(0x02, 0x40b1)), // SFX_Cry0D_1
-            (0x02, 62) => Some(Sfx::new(0x02, 0x40ba)), // SFX_Cry0E_1
-            (0x02, 65) => Some(Sfx::new(0x02, 0x40c3)), // SFX_Cry0F_1
-            (0x02, 68) => Some(Sfx::new(0x02, 0x40cc)), // SFX_Cry10_1
-            (0x02, 71) => Some(Sfx::new(0x02, 0x40d5)), // SFX_Cry11_1
-            (0x02, 74) => Some(Sfx::new(0x02, 0x40de)), // SFX_Cry12_1
-            (0x02, 77) => Some(Sfx::new(0x02, 0x40e7)), // SFX_Cry13_1
-            (0x02, 80) => Some(Sfx::new(0x02, 0x40f0)), // SFX_Cry14_1
-            (0x02, 83) => Some(Sfx::new(0x02, 0x40f9)), // SFX_Cry15_1
-            (0x02, 86) => Some(Sfx::new(0x02, 0x4102)), // SFX_Cry16_1
-            (0x02, 89) => Some(Sfx::new(0x02, 0x410b)), // SFX_Cry17_1
-            (0x02, 92) => Some(Sfx::new(0x02, 0x4114)), // SFX_Cry18_1
-            (0x02, 95) => Some(Sfx::new(0x02, 0x411d)), // SFX_Cry19_1
-            (0x02, 98) => Some(Sfx::new(0x02, 0x4126)), // SFX_Cry1A_1
-            (0x02, 101) => Some(Sfx::new(0x02, 0x412f)), // SFX_Cry1B_1
-            (0x02, 104) => Some(Sfx::new(0x02, 0x4138)), // SFX_Cry1C_1
-            (0x02, 107) => Some(Sfx::new(0x02, 0x4141)), // SFX_Cry1D_1
-            (0x02, 110) => Some(Sfx::new(0x02, 0x414a)), // SFX_Cry1E_1
-            (0x02, 113) => Some(Sfx::new(0x02, 0x4153)), // SFX_Cry1F_1
-            (0x02, 116) => Some(Sfx::new(0x02, 0x415c)), // SFX_Cry20_1
-            (0x02, 119) => Some(Sfx::new(0x02, 0x4165)), // SFX_Cry21_1
-            (0x02, 122) => Some(Sfx::new(0x02, 0x416e)), // SFX_Cry22_1
-            (0x02, 125) => Some(Sfx::new(0x02, 0x4177)), // SFX_Cry23_1
-            (0x02, 128) => Some(Sfx::new(0x02, 0x4180)), // SFX_Cry24_1
-            (0x02, 131) => Some(Sfx::new(0x02, 0x4189)), // SFX_Cry25_1
             (0x02, 134) => { eprintln!("Missing sound: SFX_Get_Item1_1"); None },
             (0x02, 137) => { eprintln!("Missing sound: SFX_Get_Item2_1"); None },
             (0x02, 140) => Some(Sfx::new(0x02, 0x41a4)), // SFX_Tink_1
@@ -112,44 +153,6 @@ impl Sfx {
             (0x02, 185) => Some(Sfx::new(0x02, 0x422b)), // SFX_Safari_Zone_PA
 
             // Bank 08
-            (0x08, 20) => Some(Sfx::new(0x08, 0x403c)), // SFX_Cry00_2
-            (0x08, 23) => Some(Sfx::new(0x08, 0x4045)), // SFX_Cry01_2
-            (0x08, 26) => Some(Sfx::new(0x08, 0x404e)), // SFX_Cry02_2
-            (0x08, 29) => Some(Sfx::new(0x08, 0x4057)), // SFX_Cry03_2
-            (0x08, 32) => Some(Sfx::new(0x08, 0x4060)), // SFX_Cry04_2
-            (0x08, 35) => Some(Sfx::new(0x08, 0x4069)), // SFX_Cry05_2
-            (0x08, 38) => Some(Sfx::new(0x08, 0x4072)), // SFX_Cry06_2
-            (0x08, 41) => Some(Sfx::new(0x08, 0x407b)), // SFX_Cry07_2
-            (0x08, 44) => Some(Sfx::new(0x08, 0x4084)), // SFX_Cry08_2
-            (0x08, 47) => Some(Sfx::new(0x08, 0x408d)), // SFX_Cry09_2
-            (0x08, 50) => Some(Sfx::new(0x08, 0x4096)), // SFX_Cry0A_2
-            (0x08, 53) => Some(Sfx::new(0x08, 0x409f)), // SFX_Cry0B_2
-            (0x08, 56) => Some(Sfx::new(0x08, 0x40a8)), // SFX_Cry0C_2
-            (0x08, 59) => Some(Sfx::new(0x08, 0x40b1)), // SFX_Cry0D_2
-            (0x08, 62) => Some(Sfx::new(0x08, 0x40ba)), // SFX_Cry0E_2
-            (0x08, 65) => Some(Sfx::new(0x08, 0x40c3)), // SFX_Cry0F_2
-            (0x08, 68) => Some(Sfx::new(0x08, 0x40cc)), // SFX_Cry10_2
-            (0x08, 71) => Some(Sfx::new(0x08, 0x40d5)), // SFX_Cry11_2
-            (0x08, 74) => Some(Sfx::new(0x08, 0x40de)), // SFX_Cry12_2
-            (0x08, 77) => Some(Sfx::new(0x08, 0x40e7)), // SFX_Cry13_2
-            (0x08, 80) => Some(Sfx::new(0x08, 0x40f0)), // SFX_Cry14_2
-            (0x08, 83) => Some(Sfx::new(0x08, 0x40f9)), // SFX_Cry15_2
-            (0x08, 86) => Some(Sfx::new(0x08, 0x4102)), // SFX_Cry16_2
-            (0x08, 89) => Some(Sfx::new(0x08, 0x410b)), // SFX_Cry17_2
-            (0x08, 92) => Some(Sfx::new(0x08, 0x4114)), // SFX_Cry18_2
-            (0x08, 95) => Some(Sfx::new(0x08, 0x411d)), // SFX_Cry19_2
-            (0x08, 98) => Some(Sfx::new(0x08, 0x4126)), // SFX_Cry1A_2
-            (0x08, 101) => Some(Sfx::new(0x08, 0x412f)), // SFX_Cry1B_2
-            (0x08, 104) => Some(Sfx::new(0x08, 0x4138)), // SFX_Cry1C_2
-            (0x08, 107) => Some(Sfx::new(0x08, 0x4141)), // SFX_Cry1D_2
-            (0x08, 110) => Some(Sfx::new(0x08, 0x414a)), // SFX_Cry1E_2
-            (0x08, 113) => Some(Sfx::new(0x08, 0x4153)), // SFX_Cry1F_2
-            (0x08, 116) => Some(Sfx::new(0x08, 0x415c)), // SFX_Cry20_2
-            (0x08, 119) => Some(Sfx::new(0x08, 0x4165)), // SFX_Cry21_2
-            (0x08, 122) => Some(Sfx::new(0x08, 0x416e)), // SFX_Cry22_2
-            (0x08, 125) => Some(Sfx::new(0x08, 0x4177)), // SFX_Cry23_2
-            (0x08, 128) => Some(Sfx::new(0x08, 0x4180)), // SFX_Cry24_2
-            (0x08, 131) => Some(Sfx::new(0x08, 0x4189)), // SFX_Cry25_2
             (0x08, 134) => { eprintln!("Missing sound: SFX_Level_Up"); None },
             (0x08, 137) => { eprintln!("Missing sound: SFX_Get_Item2_2"); None },
             (0x08, 140) => Some(Sfx::new(0x08, 0x41a4)), // SFX_Tink_2
@@ -214,44 +217,6 @@ impl Sfx {
             (0x08, 233) => Some(Sfx::new(0x08, 0x42bb)), // SFX_Silph_Scope
 
             // Bank 1f
-            (0x1f, 20) => Some(Sfx::new(0x1f, 0x403c)), // SFX_Cry00_3
-            (0x1f, 23) => Some(Sfx::new(0x1f, 0x4045)), // SFX_Cry01_3
-            (0x1f, 26) => Some(Sfx::new(0x1f, 0x404e)), // SFX_Cry02_3
-            (0x1f, 29) => Some(Sfx::new(0x1f, 0x4057)), // SFX_Cry03_3
-            (0x1f, 32) => Some(Sfx::new(0x1f, 0x4060)), // SFX_Cry04_3
-            (0x1f, 35) => Some(Sfx::new(0x1f, 0x4069)), // SFX_Cry05_3
-            (0x1f, 38) => Some(Sfx::new(0x1f, 0x4072)), // SFX_Cry06_3
-            (0x1f, 41) => Some(Sfx::new(0x1f, 0x407b)), // SFX_Cry07_3
-            (0x1f, 44) => Some(Sfx::new(0x1f, 0x4084)), // SFX_Cry08_3
-            (0x1f, 47) => Some(Sfx::new(0x1f, 0x408d)), // SFX_Cry09_3
-            (0x1f, 50) => Some(Sfx::new(0x1f, 0x4096)), // SFX_Cry0A_3
-            (0x1f, 53) => Some(Sfx::new(0x1f, 0x409f)), // SFX_Cry0B_3
-            (0x1f, 56) => Some(Sfx::new(0x1f, 0x40a8)), // SFX_Cry0C_3
-            (0x1f, 59) => Some(Sfx::new(0x1f, 0x40b1)), // SFX_Cry0D_3
-            (0x1f, 62) => Some(Sfx::new(0x1f, 0x40ba)), // SFX_Cry0E_3
-            (0x1f, 65) => Some(Sfx::new(0x1f, 0x40c3)), // SFX_Cry0F_3
-            (0x1f, 68) => Some(Sfx::new(0x1f, 0x40cc)), // SFX_Cry10_3
-            (0x1f, 71) => Some(Sfx::new(0x1f, 0x40d5)), // SFX_Cry11_3
-            (0x1f, 74) => Some(Sfx::new(0x1f, 0x40de)), // SFX_Cry12_3
-            (0x1f, 77) => Some(Sfx::new(0x1f, 0x40e7)), // SFX_Cry13_3
-            (0x1f, 80) => Some(Sfx::new(0x1f, 0x40f0)), // SFX_Cry14_3
-            (0x1f, 83) => Some(Sfx::new(0x1f, 0x40f9)), // SFX_Cry15_3
-            (0x1f, 86) => Some(Sfx::new(0x1f, 0x4102)), // SFX_Cry16_3
-            (0x1f, 89) => Some(Sfx::new(0x1f, 0x410b)), // SFX_Cry17_3
-            (0x1f, 92) => Some(Sfx::new(0x1f, 0x4114)), // SFX_Cry18_3
-            (0x1f, 95) => Some(Sfx::new(0x1f, 0x411d)), // SFX_Cry19_3
-            (0x1f, 98) => Some(Sfx::new(0x1f, 0x4126)), // SFX_Cry1A_3
-            (0x1f, 101) => Some(Sfx::new(0x1f, 0x412f)), // SFX_Cry1B_3
-            (0x1f, 104) => Some(Sfx::new(0x1f, 0x4138)), // SFX_Cry1C_3
-            (0x1f, 107) => Some(Sfx::new(0x1f, 0x4141)), // SFX_Cry1D_3
-            (0x1f, 110) => Some(Sfx::new(0x1f, 0x414a)), // SFX_Cry1E_3
-            (0x1f, 113) => Some(Sfx::new(0x1f, 0x4153)), // SFX_Cry1F_3
-            (0x1f, 116) => Some(Sfx::new(0x1f, 0x415c)), // SFX_Cry20_3
-            (0x1f, 119) => Some(Sfx::new(0x1f, 0x4165)), // SFX_Cry21_3
-            (0x1f, 122) => Some(Sfx::new(0x1f, 0x416e)), // SFX_Cry22_3
-            (0x1f, 125) => Some(Sfx::new(0x1f, 0x4177)), // SFX_Cry23_3
-            (0x1f, 128) => Some(Sfx::new(0x1f, 0x4180)), // SFX_Cry24_3
-            (0x1f, 131) => Some(Sfx::new(0x1f, 0x4189)), // SFX_Cry25_3
             (0x1f, 134) => { eprintln!("Missing sound: SFX_Get_Item1_3"); None },
             (0x1f, 137) => { eprintln!("Missing sound: SFX_Get_Item2_3"); None },
             (0x1f, 140) => Some(Sfx::new(0x1f, 0x41a4)), // SFX_Tink_3
@@ -377,6 +342,15 @@ impl Sfx {
     pub fn tweak(&mut self, pitch: u8, length: i8) {
         self.pitch = pitch;
         self.length = length;
+    }
+
+    pub fn tweaked(&self, pitch: u8, length: i8) -> Self {
+        Self {
+            bank: self.bank,
+            addr: self.addr,
+            pitch,
+            length,
+        }
     }
 }
 

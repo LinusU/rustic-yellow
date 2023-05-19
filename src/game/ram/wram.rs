@@ -43,6 +43,8 @@ pub const W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM: u16 = 0xcc2b;
 /// how many times should HandleMenuInput poll the joypad state before it returns?
 pub const W_MENU_JOYPAD_POLL_COUNT: u16 = 0xcc34;
 
+pub const W_PARENT_MENU_ITEM: u16 = 0xccd3;
+
 /// if running on SGB or CGB, it's 1, else it's 0
 pub const W_ON_SGB: u16 = 0xcf1a;
 
@@ -62,6 +64,8 @@ pub const W_LAST_MUSIC_SOUND_ID: u16 = 0xcfc9;
 
 pub const W_BATTLE_MON_SPECIES2: u16 = 0xcfd8;
 
+pub const W_BATTLE_TYPE: u16 = 0xd059;
+
 /// the map you will start at when the debug bit is set
 pub const W_DEFAULT_MAP: u16 = 0xd07b;
 
@@ -72,6 +76,8 @@ pub const W_SAVE_FILE_STATUS: u16 = 0xd087;
 pub const W_OPTIONS_INITIALIZED: u16 = 0xd089;
 
 pub const W_SPRITE_FLIPPED: u16 = 0xd0a9;
+
+pub const W_NAME_LIST_TYPE: u16 = 0xd0b5;
 
 pub const W_MON_HEADER: u16 = 0xd0b7;
 pub const W_MON_H_INDEX: u16 = 0xd0b7;
@@ -122,9 +128,15 @@ pub const W_OBTAINED_BADGES: u16 = 0xd355;
 /// bit 1: If 0, no delay.
 pub const W_LETTER_PRINTING_DELAY_FLAGS: u16 = 0xd357;
 
+pub const W_PLAYER_ID: u16 = 0xd358;
+
 pub const W_CUR_MAP_TILESET: u16 = 0xd366;
 
 pub const W_PRINTER_SETTINGS: u16 = 0xd497;
+
+/// bits 0-6: box number \
+/// bit 7: whether the player has changed boxes before
+pub const W_CURRENT_BOX_NUM: u16 = 0xd59f;
 
 /// bit 0: the player has received Lapras in the Silph Co. building
 /// bit 1: set in various places, but doesn't appear to have an effect

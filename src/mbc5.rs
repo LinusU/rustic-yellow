@@ -21,6 +21,14 @@ impl MBC5 {
         }
     }
 
+    pub fn borrow_sram(&self) -> &SaveState {
+        &self.ram
+    }
+
+    pub fn borrow_sram_mut(&mut self) -> &mut SaveState {
+        &mut self.ram
+    }
+
     pub fn replace_ram(&mut self, ram: SaveState) {
         self.ram = ram;
     }
@@ -69,11 +77,5 @@ impl MBC5 {
         }
         self.ram
             .set_byte((self.rambank * 0x2000) | ((a as usize) & 0x1FFF), v);
-    }
-}
-
-impl Drop for MBC5 {
-    fn drop(&mut self) {
-        self.save_to_disk();
     }
 }

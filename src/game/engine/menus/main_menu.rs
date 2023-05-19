@@ -191,7 +191,12 @@ fn display_continue_game_info(cpu: &mut Cpu, data: &SaveState) -> bool {
     home::text::text_box_border(cpu.gpu_mut_layer(layer), 4, 7, 14, 8);
 
     home::text::place_string(cpu.gpu_mut_layer(layer), 5, 9, "PLAYER");
-    home::text::place_string(cpu.gpu_mut_layer(layer), 12, 9, &summary.player_name);
+    home::text::place_string(
+        cpu.gpu_mut_layer(layer),
+        12,
+        9,
+        &format!("{}", summary.player_name),
+    );
 
     home::text::place_string(cpu.gpu_mut_layer(layer), 5, 11, "BADGES");
     home::text::place_string(

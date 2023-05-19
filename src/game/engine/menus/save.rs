@@ -4,11 +4,11 @@ use crate::{
         constants, home,
         ram::{hram, sram, wram},
     },
-    save_state::SaveState,
+    save_state::{PokeString, SaveState},
 };
 
 pub struct SavSummary {
-    pub player_name: String,
+    pub player_name: PokeString,
     pub num_badges: u32,
     pub owned_mons: u32,
     pub play_time_hh_mm: (u8, u8),
