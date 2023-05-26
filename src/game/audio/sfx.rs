@@ -113,15 +113,15 @@ impl Sfx {
             (_, 131) => Some(CRY_25),
 
             // Bank 02
-            (0x02, 134) => { eprintln!("Missing sound: SFX_Get_Item1_1"); None },
-            (0x02, 137) => { eprintln!("Missing sound: SFX_Get_Item2_1"); None },
+            (0x02, 134) => { log::error!("Missing sound: SFX_Get_Item1_1"); None },
+            (0x02, 137) => { log::error!("Missing sound: SFX_Get_Item2_1"); None },
             (0x02, 140) => Some(Sfx::new(0x02, 0x41a4)), // SFX_Tink_1
             (0x02, 141) => Some(Sfx::new(0x02, 0x41a7)), // SFX_Heal_HP_1
             (0x02, 142) => Some(Sfx::new(0x02, 0x41aa)), // SFX_Heal_Ailment_1
             (0x02, 143) => Some(Sfx::new(0x02, 0x41ad)), // SFX_Start_Menu_1
             (0x02, 144) => Some(Sfx::new(0x02, 0x41b0)), // SFX_Press_AB_1
-            (0x02, 145) => { eprintln!("Missing sound: SFX_Pokedex_Rating_1"); None },
-            (0x02, 148) => { eprintln!("Missing sound: SFX_Get_Key_Item_1"); None },
+            (0x02, 145) => { log::error!("Missing sound: SFX_Pokedex_Rating_1"); None },
+            (0x02, 148) => { log::error!("Missing sound: SFX_Get_Key_Item_1"); None },
             (0x02, 151) => Some(Sfx::new(0x02, 0x41c5)), // SFX_Poisoned_1
             (0x02, 152) => Some(Sfx::new(0x02, 0x41c8)), // SFX_Trade_Machine_1
             (0x02, 153) => Some(Sfx::new(0x02, 0x41cb)), // SFX_Turn_On_PC_1
@@ -149,12 +149,12 @@ impl Sfx {
             (0x02, 180) => Some(Sfx::new(0x02, 0x421c)), // SFX_Collision_1
             (0x02, 181) => Some(Sfx::new(0x02, 0x421f)), // SFX_Go_Outside_1
             (0x02, 182) => Some(Sfx::new(0x02, 0x4222)), // SFX_Save_1
-            (0x02, 184) => { eprintln!("Missing sound: SFX_Pokeflute"); None },
+            (0x02, 184) => { log::error!("Missing sound: SFX_Pokeflute"); None },
             (0x02, 185) => Some(Sfx::new(0x02, 0x422b)), // SFX_Safari_Zone_PA
 
             // Bank 08
-            (0x08, 134) => { eprintln!("Missing sound: SFX_Level_Up"); None },
-            (0x08, 137) => { eprintln!("Missing sound: SFX_Get_Item2_2"); None },
+            (0x08, 134) => { log::error!("Missing sound: SFX_Level_Up"); None },
+            (0x08, 137) => { log::error!("Missing sound: SFX_Get_Item2_2"); None },
             (0x08, 140) => Some(Sfx::new(0x08, 0x41a4)), // SFX_Tink_2
             (0x08, 141) => Some(Sfx::new(0x08, 0x41a7)), // SFX_Heal_HP_2
             (0x08, 142) => Some(Sfx::new(0x08, 0x41aa)), // SFX_Heal_Ailment_2
@@ -165,7 +165,7 @@ impl Sfx {
             (0x08, 149) => Some(Sfx::new(0x08, 0x41bf)), // SFX_Faint_Thud
             (0x08, 151) => Some(Sfx::new(0x08, 0x41c5)), // SFX_Run
             (0x08, 152) => Some(Sfx::new(0x08, 0x41c8)), // SFX_Dex_Page_Added
-            (0x08, 154) => { eprintln!("Missing sound: SFX_Caught_Mon"); None },
+            (0x08, 154) => { log::error!("Missing sound: SFX_Caught_Mon"); None },
             (0x08, 157) => Some(Sfx::new(0x08, 0x41d7)), // SFX_Peck
             (0x08, 158) => Some(Sfx::new(0x08, 0x41da)), // SFX_Faint_Fall
             (0x08, 159) => Some(Sfx::new(0x08, 0x41dd)), // SFX_Battle_09
@@ -212,20 +212,20 @@ impl Sfx {
             (0x08, 221) => Some(Sfx::new(0x08, 0x4297)), // SFX_Battle_32
             (0x08, 223) => Some(Sfx::new(0x08, 0x429d)), // SFX_Battle_33
             (0x08, 225) => Some(Sfx::new(0x08, 0x42a3)), // SFX_Battle_34
-            (0x08, 228) => { eprintln!("Missing sound: SFX_Battle_35"); None },
+            (0x08, 228) => { log::error!("Missing sound: SFX_Battle_35"); None },
             (0x08, 230) => Some(Sfx::new(0x08, 0x42b2)), // SFX_Battle_36
             (0x08, 233) => Some(Sfx::new(0x08, 0x42bb)), // SFX_Silph_Scope
 
             // Bank 1f
-            (0x1f, 134) => { eprintln!("Missing sound: SFX_Get_Item1_3"); None },
-            (0x1f, 137) => { eprintln!("Missing sound: SFX_Get_Item2_3"); None },
+            (0x1f, 134) => { log::error!("Missing sound: SFX_Get_Item1_3"); None },
+            (0x1f, 137) => { log::error!("Missing sound: SFX_Get_Item2_3"); None },
             (0x1f, 140) => Some(Sfx::new(0x1f, 0x41a4)), // SFX_Tink_3
             (0x1f, 141) => Some(Sfx::new(0x1f, 0x41a7)), // SFX_Heal_HP_3
             (0x1f, 142) => Some(Sfx::new(0x1f, 0x41aa)), // SFX_Heal_Ailment_3
             (0x1f, 143) => Some(Sfx::new(0x1f, 0x41ad)), // SFX_Start_Menu_3
             (0x1f, 144) => Some(Sfx::new(0x1f, 0x41b0)), // SFX_Press_AB_3
-            (0x1f, 145) => { eprintln!("Missing sound: SFX_Pokedex_Rating_3"); None },
-            (0x1f, 148) => { eprintln!("Missing sound: SFX_Get_Key_Item_3"); None },
+            (0x1f, 145) => { log::error!("Missing sound: SFX_Pokedex_Rating_3"); None },
+            (0x1f, 148) => { log::error!("Missing sound: SFX_Get_Key_Item_3"); None },
             (0x1f, 151) => Some(Sfx::new(0x1f, 0x41c5)), // SFX_Poisoned_3
             (0x1f, 152) => Some(Sfx::new(0x1f, 0x41c8)), // SFX_Trade_Machine_3
             (0x1f, 153) => Some(Sfx::new(0x1f, 0x41cb)), // SFX_Turn_On_PC_3
@@ -303,8 +303,8 @@ impl Sfx {
             (0x20, 125) => Some(Sfx::new(0x20, 0x4177)), // SFX_Cry23_4
             (0x20, 128) => Some(Sfx::new(0x20, 0x4180)), // SFX_Cry24_4
             (0x20, 131) => Some(Sfx::new(0x20, 0x4189)), // SFX_Cry25_4
-            (0x20, 134) => { eprintln!("Missing sound: SFX_Get_Item1_4"); None },
-            (0x20, 137) => { eprintln!("Missing sound: SFX_Get_Item2_4"); None },
+            (0x20, 134) => { log::error!("Missing sound: SFX_Get_Item1_4"); None },
+            (0x20, 137) => { log::error!("Missing sound: SFX_Get_Item2_4"); None },
             (0x20, 140) => Some(Sfx::new(0x20, 0x41a4)), // SFX_Tink_4
             (0x20, 141) => Some(Sfx::new(0x20, 0x41a7)), // SFX_Heal_HP_4
             (0x20, 142) => Some(Sfx::new(0x20, 0x41aa)), // SFX_Heal_Ailment_4
@@ -315,7 +315,7 @@ impl Sfx {
             (0x20, 147) => Some(Sfx::new(0x20, 0x41b9)), // SFX_Surfing_Crash
             (0x20, 148) => Some(Sfx::new(0x20, 0x41bc)), // SFX_Unknown_802cc
             (0x20, 149) => Some(Sfx::new(0x20, 0x41bf)), // SFX_Surfing_Land
-            (0x20, 150) => { eprintln!("Missing sound: SFX_Get_Item2_4_2"); None },
+            (0x20, 150) => { log::error!("Missing sound: SFX_Get_Item2_4_2"); None },
 
             _ => None
         }

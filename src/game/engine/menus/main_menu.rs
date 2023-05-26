@@ -19,7 +19,7 @@ pub fn main_menu(cpu: &mut Cpu) {
     let has_saves = match saves::list_save_files() {
         Ok(files) => !files.is_empty(),
         Err(e) => {
-            eprintln!("Error listing save files: {}", e);
+            log::error!("Error listing save files: {}", e);
             false
         }
     };
@@ -141,7 +141,7 @@ fn main_menu_select_save(cpu: &mut Cpu) -> bool {
         }
         Ok(files) => files,
         Err(error) => {
-            eprintln!("Error listing save files: {}", error);
+            log::error!("Error listing save files: {}", error);
             return false;
         }
     };

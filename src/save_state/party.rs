@@ -184,7 +184,7 @@ impl PartyView<'_> {
         }
 
         if self.data[1 + index] == 0xff {
-            eprintln!("List terminated before expected length");
+            log::error!("List terminated before expected length");
             return None;
         }
 

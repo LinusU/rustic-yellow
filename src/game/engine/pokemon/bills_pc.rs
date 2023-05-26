@@ -291,7 +291,7 @@ fn bills_pc_menu_withdraw(cpu: &mut Cpu) {
     if let Some(poke_choice) = pick_pokemon(cpu, (3, 1), &pokemons) {
         let (box_id, box_idx) = &pointers[poke_choice];
 
-        eprintln!("box_id: {:?}, box_idx: {:?}", box_id, box_idx);
+        log::debug!("box_id: {:?}, box_idx: {:?}", box_id, box_idx);
         let pokemon = if *box_id == BoxId::Current {
             BoxViewMut::new(&mut cpu.mmu.wram[0x1a7f..]).swap_remove(*box_idx)
         } else {

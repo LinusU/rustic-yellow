@@ -80,7 +80,7 @@ pub fn center_pokemon_sprite(input: &[u8], w: u8, h: u8) -> [u8; 7 * 7 * 16] {
             }
         }
         _ => {
-            eprintln!("Unknown dimensions: {}x{}", w, h);
+            log::error!("Unknown dimensions: {}x{}", w, h);
         }
     }
 
@@ -142,7 +142,7 @@ pub fn load_mon_front_sprite(cpu: &mut Cpu) {
 
     // Fall back to GameBoy function if the pokemon is not in the pokedex
     if pokedex_no == 0 {
-        eprintln!(
+        log::error!(
             "Unknown pokemon index passed to load_mon_front_sprite: {}",
             pokemon_index
         );

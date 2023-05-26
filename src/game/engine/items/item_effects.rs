@@ -7,7 +7,7 @@ use crate::{
 const WRAM_BOX_DATA_START: usize = 0x1a7f;
 
 pub fn switch_to_non_full_box(cpu: &mut Cpu) -> Result<(), ()> {
-    eprintln!("Switching to non-full box");
+    log::debug!("Switching to non-full box");
     let current_box = cpu.read_byte(wram::W_CURRENT_BOX_NUM);
 
     let initialized = (current_box >> 7) != 0;
@@ -17,7 +17,7 @@ pub fn switch_to_non_full_box(cpu: &mut Cpu) -> Result<(), ()> {
 
     // If this is the first time changing boxes, we first reset all boxes
     if !initialized {
-        eprintln!("Resetting all boxes");
+        log::info!("Resetting all boxes");
         sram.box_mut(BoxId::Box1).clear();
         sram.box_mut(BoxId::Box2).clear();
         sram.box_mut(BoxId::Box3).clear();
@@ -55,13 +55,13 @@ pub fn switch_to_non_full_box(cpu: &mut Cpu) -> Result<(), ()> {
         };
 
         if !sram.r#box(box_id).full() {
-            eprintln!("Switching to Box{}", test + 1);
+            log::debug!("Switching to Box{}", test + 1);
 
             const BOX_BYTE_SIZE: usize = (wram::W_BOX_DATA_END - wram::W_BOX_DATA_START) as usize;
-            eprintln!("BOX_BYTE_SIZE: {}", BOX_BYTE_SIZE);
+            log::debug!("BOX_BYTE_SIZE: {}", BOX_BYTE_SIZE);
 
             let new_box_sram_addr = box_id.sram_offset();
-            eprintln!("new_box_sram_addr: {:x}", new_box_sram_addr);
+            log::debug!("new_box_sram_addr: {:x}", new_box_sram_addr);
 
             let old_box_sram_addr = match current_box_number {
                 0 => BoxId::Box1.sram_offset(),
@@ -78,24 +78,24 @@ pub fn switch_to_non_full_box(cpu: &mut Cpu) -> Result<(), ()> {
                 11 => BoxId::Box12.sram_offset(),
                 _ => unreachable!(),
             };
-            eprintln!("old_box_sram_addr: {:x}", old_box_sram_addr);
+            log::debug!("old_box_sram_addr: {:x}", old_box_sram_addr);
 
             // Copy current box from WRAM to SRAM
-            eprintln!("Copying current box from WRAM to SRAM");
+            log::debug!("Copying current box from WRAM to SRAM");
             for i in 0..BOX_BYTE_SIZE {
                 let value = cpu.mmu.wram[WRAM_BOX_DATA_START + i];
                 cpu.borrow_sram_mut().set_byte(old_box_sram_addr + i, value);
             }
 
             // Copy new box from SRAM to WRAM
-            eprintln!("Copying new box from SRAM to WRAM");
+            log::debug!("Copying new box from SRAM to WRAM");
             for i in 0..BOX_BYTE_SIZE {
                 let value = cpu.borrow_sram().byte(new_box_sram_addr + i);
                 cpu.mmu.wram[WRAM_BOX_DATA_START + i] = value;
             }
 
             // Clear new box in SRAM
-            eprintln!("Clearing new box in SRAM");
+            log::debug!("Clearing new box in SRAM");
             cpu.borrow_sram_mut().box_mut(box_id).clear();
 
             cpu.write_byte(wram::W_CURRENT_BOX_NUM, test | 0b1000_0000);
@@ -104,13 +104,13 @@ pub fn switch_to_non_full_box(cpu: &mut Cpu) -> Result<(), ()> {
         }
     }
 
-    eprintln!("No non-full box found");
+    log::warn!("No non-full box found");
 
     Err(())
 }
 
 pub fn hook_send_new_mon_to_box_end(cpu: &mut Cpu) {
-    eprintln!("A pokemon has been sent to the box");
+    log::info!("A pokemon has been sent to the box");
 
     // If the current box is full, switch to a non-full box
     if BoxView::new(&cpu.mmu.wram[WRAM_BOX_DATA_START..]).full() {
