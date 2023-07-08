@@ -27,6 +27,8 @@ fn create_window_builder() -> glium::glutin::window::WindowBuilder {
 }
 
 fn main() {
+    env_logger::init();
+
     let render_delay = Arc::new(AtomicU64::new(16_743));
 
     let (sender1, receiver1) = mpsc::channel();

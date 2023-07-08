@@ -160,8 +160,8 @@ impl SfxTrait<MusicDecoder> for Music {
             Music::GymLeaderBattle => open_music("25 - Battle! (Gym Leader).flac"),
             Music::TrainerBattle => open_music("08 - Battle! (Trainer).flac"),
             Music::WildBattle => open_music("13 - Battle! (Wild Pokémon).flac"),
-            Music::FinalBattle => open_music("51 Final Battle! (Rival).flac"),
-            Music::DefeatedTrainer => open_music("50 - Final Battle! (Rival).flac"),
+            Music::FinalBattle => open_music("50 - Final Battle! (Rival).flac"),
+            Music::DefeatedTrainer => open_music("09 - Victory! (Trainer).flac"),
             Music::DefeatedWildMon => open_music("14 - Victory! (Wild Pokémon).flac"),
             Music::DefeatedGymLeader => open_music("26 - Victory! (Gym Leader).flac"),
             // Bank 1f

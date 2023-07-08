@@ -1,0 +1,11 @@
+pub const PIKAHAPPY_LEVELUP: u8 = 1;
+pub const PIKAHAPPY_USEDITEM: u8 = 2;
+pub const PIKAHAPPY_USEDXITEM: u8 = 3;
+pub const PIKAHAPPY_GYMLEADER: u8 = 4;
+pub const PIKAHAPPY_USEDTMHM: u8 = 5;
+pub const PIKAHAPPY_WALKING: u8 = 6;
+pub const PIKAHAPPY_DEPOSITED: u8 = 7;
+pub const PIKAHAPPY_FAINTED: u8 = 8;
+pub const PIKAHAPPY_PSNFNT: u8 = 9;
+pub const PIKAHAPPY_CARELESSTRAINER: u8 = 10;
+pub const PIKAHAPPY_TRADE: u8 = 11;

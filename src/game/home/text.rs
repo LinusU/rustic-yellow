@@ -1,4 +1,7 @@
-use crate::gpu::{GpuAtlas, GpuLayer, GpuTile};
+use crate::{
+    gpu::{GpuAtlas, GpuLayer, GpuTile},
+    save_state::PokeString,
+};
 
 const BOX_TOP_LEFT: GpuTile = GpuTile::new(GpuAtlas::BoxBorder, 0, 0);
 const BOX_TOP_RIGHT: GpuTile = GpuTile::new(GpuAtlas::BoxBorder, 2, 0);
@@ -45,11 +48,21 @@ pub fn place_char(layer: &mut GpuLayer, x: usize, y: usize, chr: char) {
         'q'..='z' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('q' as usize), 3),
         'é' => GpuTile::new(GpuAtlas::Font, 10, 3),
         ' ' => GpuTile::new(GpuAtlas::Font, 15, 3),
+        '𝗟' => GpuTile::new(GpuAtlas::Font, 14, 5),
+        '\'' => GpuTile::new(GpuAtlas::Font, 0, 6),
+        '𝔭' => GpuTile::new(GpuAtlas::Font, 1, 6),
+        '𝔪' => GpuTile::new(GpuAtlas::Font, 2, 6),
         '-' => GpuTile::new(GpuAtlas::Font, 3, 6),
         '?' => GpuTile::new(GpuAtlas::Font, 6, 6),
         '!' => GpuTile::new(GpuAtlas::Font, 7, 6),
+        '.' => GpuTile::new(GpuAtlas::Font, 8, 6),
         '▷' => GpuTile::new(GpuAtlas::Font, 12, 6),
         '▶' => GpuTile::new(GpuAtlas::Font, 13, 6),
+        '♂' => GpuTile::new(GpuAtlas::Font, 15, 6),
+        '¥' => GpuTile::new(GpuAtlas::Font, 0, 7),
+        '/' => GpuTile::new(GpuAtlas::Font, 3, 7),
+        ',' => GpuTile::new(GpuAtlas::Font, 4, 7),
+        '♀' => GpuTile::new(GpuAtlas::Font, 5, 7),
         '0'..='9' => GpuTile::new(GpuAtlas::Font, (chr as usize) - ('0' as usize) + 6, 7),
         _ => panic!("Invalid character: {}", chr),
     };
@@ -60,5 +73,21 @@ pub fn place_char(layer: &mut GpuLayer, x: usize, y: usize, chr: char) {
 pub fn place_string(layer: &mut GpuLayer, x: usize, y: usize, string: &str) {
     for (idx, chr) in string.chars().enumerate() {
         place_char(layer, x + idx, y, chr);
+    }
+}
+
+pub fn place_poke_string(layer: &mut GpuLayer, mut x: usize, y: usize, string: &PokeString) {
+    for byte in string {
+        match byte {
+            0x80..=0xff => {
+                let offset = (byte as usize) - 0x80;
+                let tile = GpuTile::new(GpuAtlas::Font, offset % 16, offset / 16);
+
+                layer.set_background(x, y, tile);
+                x += 1;
+            }
+
+            _ => todo!("poke string: {:02x}", byte),
+        }
     }
 }

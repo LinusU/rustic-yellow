@@ -11,6 +11,7 @@ mod keypad;
 mod mbc5;
 mod mmu;
 mod rom;
+mod save_state;
 mod saves;
 mod serial;
 mod sound;

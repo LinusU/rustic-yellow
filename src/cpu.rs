@@ -7,6 +7,7 @@ use crate::{
     gpu::GpuLayer,
     keypad::{KeyboardEvent, KeypadKey, TextEvent},
     mmu::Mmu,
+    save_state::SaveState,
     sound2::{Music, Sfx},
 };
 use CpuFlag::{C, H, N, Z};
@@ -36,7 +37,7 @@ pub struct Cpu {
     pub(crate) setdi: u32,
     pub(crate) setei: u32,
 
-    mmu: Mmu,
+    pub(crate) mmu: Mmu,
 }
 
 impl Cpu {
@@ -85,10 +86,13 @@ impl Cpu {
                 (0x01, 0x42bf) => crate::game::engine::movie::title::display_title_screen_go_to_main_menu(self),
                 (0x01, 0x5ba6) => panic!("main_menu should only be called from Rust"),
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
+                (0x03, 0x6807) => crate::game::engine::items::item_effects::hook_send_new_mon_to_box_end(self),
+                (0x08, 0x5495) => crate::game::engine::pokemon::bills_pc::bills_pc_menu(self),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
                 (0x1c, 0x7b91) => crate::game::engine::menus::save::save_sav_to_sram(self),
                 (0x3c, 0x4000) => crate::game::engine::pikachu::pikachu_pcm::play_pikachu_sound_clip(self),
                 (0x3d, 0x6178) => crate::game::engine::battle::init_battle::load_mon_back_pic(self),
+                (0x3d, 0x674d) => crate::game::engine::events::give_pokemon::hook_give_pokemon_next_end(self),
 
                 _ => {
                     let ticks = if self.halted { 4 } else { self.step() * 4 };
@@ -121,7 +125,15 @@ impl Cpu {
         self.handleinterrupt();
     }
 
-    pub fn replace_ram(&mut self, ram: Vec<u8>) {
+    pub fn borrow_sram(&self) -> &SaveState {
+        self.mmu.mbc.borrow_sram()
+    }
+
+    pub fn borrow_sram_mut(&mut self) -> &mut SaveState {
+        self.mmu.mbc.borrow_sram_mut()
+    }
+
+    pub fn replace_ram(&mut self, ram: SaveState) {
         self.mmu.mbc.replace_ram(ram);
     }
 
@@ -818,7 +830,7 @@ impl Cpu {
     pub fn alu_inc(&mut self, a: u8) -> u8 {
         let r = a.wrapping_add(1);
         self.set_flag(Z, r == 0);
-        self.set_flag(H, (a & 0x0F) + 1 > 0x0F);
+        self.set_flag(H, (a & 0x0F) == 0x0F);
         self.set_flag(N, false);
         r
     }

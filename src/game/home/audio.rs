@@ -27,18 +27,18 @@ pub fn play_sound(cpu: &mut Cpu) {
 
         cpu.play_sfx(sfx);
     } else {
-        eprintln!(
+        log::warn!(
             "Don't know what to play: {:02x}:{:04x} (id = {})",
             bank,
             0x4000 + (cpu.a as u16) * 3,
             cpu.a,
         );
 
-        // eprintln!("W_AUDIO_ROM_BANK: {:02x}", cpu.read_byte(wram::W_AUDIO_ROM_BANK));
-        // eprintln!("W_AUDIO_SAVED_ROM_BANK: {:02x}", cpu.read_byte(wram::W_AUDIO_SAVED_ROM_BANK));
-        // eprintln!("W_NEW_SOUND_ID: {:02x}", cpu.read_byte(wram::W_NEW_SOUND_ID));
-        // eprintln!("W_LAST_MUSIC_SOUND_ID: {:02x}", cpu.read_byte(wram::W_LAST_MUSIC_SOUND_ID));
-        // eprintln!("CPU: {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}", cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l);
+        log::debug!("W_AUDIO_ROM_BANK: {:02x}", cpu.read_byte(wram::W_AUDIO_ROM_BANK));
+        log::debug!("W_AUDIO_SAVED_ROM_BANK: {:02x}", cpu.read_byte(wram::W_AUDIO_SAVED_ROM_BANK));
+        log::debug!("W_NEW_SOUND_ID: {:02x}", cpu.read_byte(wram::W_NEW_SOUND_ID));
+        log::debug!("W_LAST_MUSIC_SOUND_ID: {:02x}", cpu.read_byte(wram::W_LAST_MUSIC_SOUND_ID));
+        log::debug!("CPU: {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}", cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l);
     }
 
     // Run GameBoy code as well so that everything works like normally

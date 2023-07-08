@@ -24,6 +24,7 @@ enum PrioType {
 pub enum GpuAtlas {
     BoxBorder,
     Font,
+    PokemonIcons,
 }
 
 #[derive(PartialEq, Eq, Copy, Clone)]
@@ -117,6 +118,7 @@ pub struct Gpu {
     layers: Vec<GpuLayer>,
     atlas_box_border: Vec<u8>,
     atlas_font: Vec<u8>,
+    atlas_pokemon_icons: Vec<u8>,
 }
 
 impl Gpu {
@@ -167,6 +169,7 @@ impl Gpu {
             layers: vec![],
             atlas_box_border: load_png(include_bytes!("../gfx/box_border.png")),
             atlas_font: load_png(include_bytes!("../gfx/font.png")),
+            atlas_pokemon_icons: load_png(include_bytes!("../gfx/pokemon_icons.png")),
         }
     }
 
@@ -477,6 +480,7 @@ impl Gpu {
                     let (src, src_w) = match tile.atlas {
                         GpuAtlas::BoxBorder => (&self.atlas_box_border[..], 96),
                         GpuAtlas::Font => (&self.atlas_font[..], 512),
+                        GpuAtlas::PokemonIcons => (&self.atlas_pokemon_icons[..], 1024),
                     };
 
                     for dy in 0..32 {

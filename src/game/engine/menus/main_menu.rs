@@ -7,6 +7,7 @@ use crate::{
         ram::{hram, vram, wram},
     },
     keypad::{KeypadKey, TextEvent},
+    save_state::SaveState,
     saves,
 };
 
@@ -18,7 +19,7 @@ pub fn main_menu(cpu: &mut Cpu) {
     let has_saves = match saves::list_save_files() {
         Ok(files) => !files.is_empty(),
         Err(e) => {
-            eprintln!("Error listing save files: {}", e);
+            log::error!("Error listing save files: {}", e);
             false
         }
     };
@@ -140,7 +141,7 @@ fn main_menu_select_save(cpu: &mut Cpu) -> bool {
         }
         Ok(files) => files,
         Err(error) => {
-            eprintln!("Error listing save files: {}", error);
+            log::error!("Error listing save files: {}", error);
             return false;
         }
     };
@@ -168,7 +169,7 @@ fn main_menu_select_save(cpu: &mut Cpu) -> bool {
 
             Some(selected) => {
                 let save = &list[selected];
-                let data = std::fs::read(&save.path).unwrap();
+                let data = SaveState::from_file(&save.path).unwrap();
 
                 if display_continue_game_info(cpu, &data) {
                     cpu.replace_ram(data);
@@ -182,7 +183,7 @@ fn main_menu_select_save(cpu: &mut Cpu) -> bool {
     }
 }
 
-fn display_continue_game_info(cpu: &mut Cpu, data: &[u8]) -> bool {
+fn display_continue_game_info(cpu: &mut Cpu, data: &SaveState) -> bool {
     let summary = super::save::load_sav_summary(data);
 
     let layer = cpu.gpu_push_layer();
@@ -190,7 +191,12 @@ fn display_continue_game_info(cpu: &mut Cpu, data: &[u8]) -> bool {
     home::text::text_box_border(cpu.gpu_mut_layer(layer), 4, 7, 14, 8);
 
     home::text::place_string(cpu.gpu_mut_layer(layer), 5, 9, "PLAYER");
-    home::text::place_string(cpu.gpu_mut_layer(layer), 12, 9, &summary.player_name);
+    home::text::place_string(
+        cpu.gpu_mut_layer(layer),
+        12,
+        9,
+        &format!("{}", summary.player_name),
+    );
 
     home::text::place_string(cpu.gpu_mut_layer(layer), 5, 11, "BADGES");
     home::text::place_string(
