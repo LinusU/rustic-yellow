@@ -1,8 +1,17 @@
+use clap::Parser;
 use glium::glutin::platform::run_return::EventLoopExtRunReturn;
-use rustic_yellow::{Game, KeyboardEvent};
+use rustic_yellow::{Game, KeyboardEvent, PokemonSpecies};
 use std::sync::mpsc::{self, Receiver, SyncSender};
 use std::sync::{atomic::AtomicU64, Arc};
 use std::thread;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Which Pokemon to start with
+    #[arg(long, default_value = "Pikachu")]
+    starter: String,
+}
 
 #[cfg(target_os = "windows")]
 fn create_window_builder() -> glium::glutin::window::WindowBuilder {
@@ -29,6 +38,9 @@ fn create_window_builder() -> glium::glutin::window::WindowBuilder {
 fn main() {
     env_logger::init();
 
+    let args = Args::parse();
+    let starter: PokemonSpecies = args.starter.parse().unwrap();
+
     let render_delay = Arc::new(AtomicU64::new(16_743));
 
     let (sender1, receiver1) = mpsc::channel();
@@ -50,7 +62,7 @@ fn main() {
     )
     .unwrap();
 
-    let gamethread = thread::spawn(move || run_game(sender2, receiver1));
+    let gamethread = thread::spawn(move || run_game(sender2, receiver1, starter));
 
     let periodic = timer_periodic(render_delay.clone());
 
@@ -193,8 +205,12 @@ fn recalculate_screen(
     target.finish().unwrap();
 }
 
-fn run_game(sender: SyncSender<Vec<u8>>, receiver: Receiver<KeyboardEvent>) {
-    Game::new(sender, receiver).boot();
+fn run_game(
+    sender: SyncSender<Vec<u8>>,
+    receiver: Receiver<KeyboardEvent>,
+    starter: PokemonSpecies,
+) {
+    Game::new(sender, receiver, starter).boot();
 }
 
 fn timer_periodic(delay: Arc<AtomicU64>) -> Receiver<()> {

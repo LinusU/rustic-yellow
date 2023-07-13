@@ -43,7 +43,30 @@ pub const W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM: u16 = 0xcc2b;
 /// how many times should HandleMenuInput poll the joypad state before it returns?
 pub const W_MENU_JOYPAD_POLL_COUNT: u16 = 0xcc34;
 
+/// offset of the current top menu item from the beginning of the list
+/// keeps track of what section of the list is on screen
+pub const W_LIST_SCROLL_OFFSET: u16 = 0xcc36;
+
+/// if non-zero, skip waiting for a button press after displaying text in DisplayTextID
+pub const W_DO_NOT_WAIT_FOR_BUTTON_PRESS_AFTER_DISPLAYING_TEXT: u16 = 0xcc3c;
+
+/// 0 = player's party \
+/// 1 = enemy party \
+/// 2 = current box \
+/// 3 = daycare \
+/// 4 = in-battle mon
+///
+/// AddPartyMon uses it slightly differently.
+/// If the lower nybble is 0, the mon is added to the player's party, else the enemy's.
+/// If the entire value is 0, then the player is allowed to name the mon.
+pub const W_MON_DATA_LOCATION: u16 = 0xcc49;
+
 pub const W_PARENT_MENU_ITEM: u16 = 0xccd3;
+
+/// Set buttons are ignored.
+pub const W_JOY_IGNORE: u16 = 0xcd6b;
+
+pub const W_CD6D: u16 = 0xcd6d;
 
 /// if running on SGB or CGB, it's 1, else it's 0
 pub const W_ON_SGB: u16 = 0xcf1a;
@@ -64,6 +87,13 @@ pub const W_LAST_MUSIC_SOUND_ID: u16 = 0xcfc9;
 
 pub const W_BATTLE_MON_SPECIES2: u16 = 0xcfd8;
 
+/// in a wild battle, this is the species of pokemon \
+/// in a trainer battle, this is the trainer class + OPP_ID_OFFSET
+pub const W_CUR_OPPONENT: u16 = 0xd058;
+
+/// in normal battle, this is 0 \
+/// in old man battle, this is 1 \
+/// in safari battle, this is 2
 pub const W_BATTLE_TYPE: u16 = 0xd059;
 
 /// the map you will start at when the debug bit is set
@@ -84,8 +114,13 @@ pub const W_MON_H_INDEX: u16 = 0xd0b7;
 pub const W_MON_H_SPRITE_DIM: u16 = 0xd0c1;
 pub const W_MON_H_FRONT_SPRITE: u16 = 0xd0c2;
 
+/// used as a Pokemon and Item storage value. Also used as an output value for CountSetBits
+pub const W_D11E: u16 = 0xd11e;
+
 /// not exactly sure what this is used for, but it seems to be used as a multipurpose temp flag value
 pub const W_CURRENT_MAP_SCRIPT_FLAGS: u16 = 0xd125;
+
+pub const W_CUR_ENEMY_LVL: u16 = 0xd126;
 
 pub const W_LINK_STATE: u16 = 0xd12a;
 
@@ -138,6 +173,11 @@ pub const W_PRINTER_SETTINGS: u16 = 0xd497;
 /// bit 7: whether the player has changed boxes before
 pub const W_CURRENT_BOX_NUM: u16 = 0xd59f;
 
+pub const W_PALLET_TOWN_CUR_SCRIPT: u16 = 0xd5f0;
+
+pub const W_RIVAL_STARTER: u16 = 0xd714;
+pub const W_PLAYER_STARTER: u16 = 0xd716;
+
 /// bit 0: the player has received Lapras in the Silph Co. building
 /// bit 1: set in various places, but doesn't appear to have an effect
 /// bit 2: the player has healed pokemon at a pokemon center at least once
@@ -153,6 +193,8 @@ pub const W_D72E: u16 = 0xd72d;
 /// bit 6: print text with no delay between each letter \
 /// bit 7: set if joypad states are being simulated in the overworld or an NPC's movement is being scripted
 pub const W_D730: u16 = 0xd730;
+
+pub const W_EVENT_FLAGS: u16 = 0xd746;
 
 pub const W_PLAY_TIME_HOURS: u16 = 0xda40;
 pub const W_PLAY_TIME_MAXED: u16 = 0xda41;

@@ -9,6 +9,7 @@ use crate::{
     mmu::Mmu,
     save_state::SaveState,
     sound2::{Music, Sfx},
+    PokemonSpecies,
 };
 use CpuFlag::{C, H, N, Z};
 
@@ -38,12 +39,15 @@ pub struct Cpu {
     pub(crate) setei: u32,
 
     pub(crate) mmu: Mmu,
+
+    pub(crate) starter: PokemonSpecies,
 }
 
 impl Cpu {
     pub fn new(
         update_screen: SyncSender<Vec<u8>>,
         keyboard_events: Receiver<KeyboardEvent>,
+        starter: PokemonSpecies,
     ) -> Cpu {
         Cpu {
             a: 0x11,
@@ -63,6 +67,8 @@ impl Cpu {
             setei: 0,
 
             mmu: Mmu::new(update_screen, keyboard_events),
+
+            starter,
         }
     }
 
@@ -87,6 +93,8 @@ impl Cpu {
                 (0x01, 0x5ba6) => panic!("main_menu should only be called from Rust"),
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
                 (0x03, 0x6807) => crate::game::engine::items::item_effects::hook_send_new_mon_to_box_end(self),
+                (0x06, 0x4f0a) => crate::game::scripts::pallete_town::pallet_town_script4(self),
+                (0x07, 0x4b40) => crate::game::scripts::oaks_lab::oaks_lab_text18(self),
                 (0x08, 0x5495) => crate::game::engine::pokemon::bills_pc::bills_pc_menu(self),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
                 (0x1c, 0x7b91) => crate::game::engine::menus::save::save_sav_to_sram(self),

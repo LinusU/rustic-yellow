@@ -18,6 +18,10 @@ impl PokeString {
     pub fn iter(&self) -> std::iter::Copied<std::slice::Iter<'_, u8>> {
         self.into_iter()
     }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
 impl<'a> IntoIterator for &'a PokeString {
