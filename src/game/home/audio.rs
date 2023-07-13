@@ -6,6 +6,7 @@ use crate::{
     },
 };
 
+#[rustfmt::skip]
 pub fn play_sound(cpu: &mut Cpu) {
     // Note: Not sure why we are reading W_AUDIO_SAVED_ROM_BANK instead of
     // W_AUDIO_ROM_BANK, but if we don't we sometimes play the wrong audio...
