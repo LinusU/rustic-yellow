@@ -1,5 +1,6 @@
 #[rustfmt::skip]
 macro_rules! predef_id {
+    (CopyUncompressedPicToTilemap) => { 0x01 };
     (_RunPaletteCommand) => { 0x45 };
     (LoadSAV) => { 0x52 };
 }

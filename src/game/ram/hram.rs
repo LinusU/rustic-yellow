@@ -29,3 +29,5 @@ pub const H_VBLANK_OCCURRED: u16 = 0xffd6;
 /// `1` = water tile `$14` is animated \
 /// `2` = water tile `$14` and flower tile `$03` are animated
 pub const H_TILE_ANIMATIONS: u16 = 0xffd7;
+
+pub const H_START_TILE_ID: u16 = 0xffe1;

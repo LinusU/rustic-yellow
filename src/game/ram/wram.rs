@@ -63,6 +63,9 @@ pub const W_MON_DATA_LOCATION: u16 = 0xcc49;
 
 pub const W_PARENT_MENU_ITEM: u16 = 0xccd3;
 
+// number of times remaining that AI action can occur
+pub const W_AI_COUNT: u16 = 0xccdf;
+
 /// Set buttons are ignored.
 pub const W_JOY_IGNORE: u16 = 0xcd6b;
 
@@ -85,7 +88,36 @@ pub const W_CF91: u16 = 0xcf90;
 /// the music).
 pub const W_LAST_MUSIC_SOUND_ID: u16 = 0xcfc9;
 
+pub const W_ENEMY_MOVE_NUM: u16 = 0xcfcb;
+pub const W_ENEMY_MOVE_EFFECT: u16 = 0xcfcc;
+pub const W_ENEMY_MOVE_POWER: u16 = 0xcfcd;
+pub const W_ENEMY_MOVE_TYPE: u16 = 0xcfce;
+pub const W_ENEMY_MOVE_ACCURACY: u16 = 0xcfcf;
+pub const W_ENEMY_MOVE_MAX_PP: u16 = 0xcfd0;
+pub const W_PLAYER_MOVE_NUM: u16 = 0xcfd1;
+pub const W_PLAYER_MOVE_EFFECT: u16 = 0xcfd2;
+pub const W_PLAYER_MOVE_POWER: u16 = 0xcfd3;
+pub const W_PLAYER_MOVE_TYPE: u16 = 0xcfd4;
+pub const W_PLAYER_MOVE_ACCURACY: u16 = 0xcfd5;
+pub const W_PLAYER_MOVE_MAX_PP: u16 = 0xcfd6;
+
+pub const W_ENEMY_MON_SPECIES2: u16 = 0xcfd7;
 pub const W_BATTLE_MON_SPECIES2: u16 = 0xcfd8;
+
+pub const W_ENEMY_MON_NICK: u16 = 0xcfd9;
+
+pub const W_ENEMY_MON_PARTY_POS: u16 = 0xcfe7;
+
+pub const W_TRAINER_CLASS: u16 = 0xd030;
+
+pub const W_TRAINER_PIC_POINTER: u16 = 0xd032;
+
+pub const W_IS_IN_BATTLE: u16 = 0xd056;
+
+// which entry in LoneAttacks to use
+// it's actually the same thing as ^
+pub const W_LONE_ATTACK_NO: u16 = 0xd05b;
+pub const W_GYM_LEADER_NO: u16 = 0xd05b;
 
 /// in a wild battle, this is the species of pokemon \
 /// in a trainer battle, this is the trainer class + OPP_ID_OFFSET
@@ -114,6 +146,8 @@ pub const W_MON_H_INDEX: u16 = 0xd0b7;
 pub const W_MON_H_SPRITE_DIM: u16 = 0xd0c1;
 pub const W_MON_H_FRONT_SPRITE: u16 = 0xd0c2;
 
+pub const W_SAVED_TILE_ANIMATIONS: u16 = 0xd0d3;
+
 /// used as a Pokemon and Item storage value. Also used as an output value for CountSetBits
 pub const W_D11E: u16 = 0xd11e;
 
@@ -123,6 +157,9 @@ pub const W_CURRENT_MAP_SCRIPT_FLAGS: u16 = 0xd125;
 pub const W_CUR_ENEMY_LVL: u16 = 0xd126;
 
 pub const W_LINK_STATE: u16 = 0xd12a;
+
+// after a battle, you have at least 3 steps before a random battle can occur
+pub const W_NUMBER_OF_NO_RANDOM_BATTLE_STEPS_LEFT: u16 = 0xd13b;
 
 pub const W_PLAYER_NAME: u16 = 0xd157;
 
@@ -165,6 +202,10 @@ pub const W_LETTER_PRINTING_DELAY_FLAGS: u16 = 0xd357;
 
 pub const W_PLAYER_ID: u16 = 0xd358;
 
+// offset subtracted from FadePal4 to get the background and object palettes for the current map
+// normally, it is 0. it is 6 when Flash is needed, causing FadePal2 to be used instead of FadePal4
+pub const W_MAP_PAL_OFFSET: u16 = 0xd35c;
+
 pub const W_CUR_MAP_TILESET: u16 = 0xd366;
 
 pub const W_PRINTER_SETTINGS: u16 = 0xd497;
@@ -193,6 +234,25 @@ pub const W_D72E: u16 = 0xd72d;
 /// bit 6: print text with no delay between each letter \
 /// bit 7: set if joypad states are being simulated in the overworld or an NPC's movement is being scripted
 pub const W_D730: u16 = 0xd730;
+
+// bit 0: play time being counted
+// bit 1: remnant of debug mode; only set by the debug build.
+// if it is set:
+// 1. skips most of Prof. Oak's speech, and uses NINTEN as the player's name and SONY as the rival's name
+// 2. does not have the player start in floor two of the player's house (instead sending them to [wLastMap])
+// 3. allows wild battles to be avoided by holding down B
+// furthermore, in the debug build:
+// 4. allows trainers to be avoided by holding down B
+// 5. skips Safari Zone step counter by holding down B
+// 6. skips the NPC who blocks Route 3 before beating Brock by holding down B
+// 7. skips Cerulean City rival battle by holding down B
+// 8. skips Pokémon Tower rival battle by holding down B
+// bit 2: the target warp is a fly warp (bit 3 set or blacked out) or a dungeon warp (bit 4 set)
+// bit 3: used warp pad, escape rope, dig, teleport, or fly, so the target warp is a "fly warp"
+// bit 4: jumped into hole (Pokemon Mansion, Seafoam Islands, Victory Road) or went down waterfall (Seafoam Islands), so the target warp is a "dungeon warp"
+// bit 5: currently being forced to ride bike (cycling road)
+// bit 6: map destination is [wLastBlackoutMap] (usually the last used pokemon center, but could be the player's house)
+pub const W_D732: u16 = 0xd731;
 
 pub const W_EVENT_FLAGS: u16 = 0xd746;
 
