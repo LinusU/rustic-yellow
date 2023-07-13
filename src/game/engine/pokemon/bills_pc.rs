@@ -6,25 +6,20 @@ use crate::{
             gfx_constants::{SCREEN_HEIGHT, SCREEN_WIDTH},
             pikachu_emotion_constants::PIKAHAPPY_DEPOSITED,
         },
-        engine::{
-            events,
-            items::item_effects::add_pokemon_to_box,
-            menus::{self, pokedex::index_to_pokedex},
-            pikachu,
-        },
-        home, macros,
-        ram::{hram, wram},
+        engine::{events, items::item_effects::add_pokemon_to_box, menus, pikachu},
+        home,
     },
     gpu::{GpuAtlas, GpuTile},
     keypad::KeypadKey,
-    save_state::{BoxId, BoxView, BoxViewMut, BoxedPokemon, PartyPokemon, PartyView, PartyViewMut},
+    save_state::{BoxId, BoxedPokemon},
 };
 
 fn all_boxed_pokemons(cpu: &mut Cpu) -> Vec<((BoxId, usize), BoxedPokemon)> {
     let mut result = Vec::new();
 
     result.extend(
-        BoxView::new(&cpu.mmu.wram[0x1a7f..])
+        cpu.borrow_wram()
+            .r#box()
             .iter()
             .enumerate()
             .map(|(i, p)| ((BoxId::Current, i), p)),
@@ -271,7 +266,7 @@ pub fn bills_pc_menu(cpu: &mut Cpu) {
 }
 
 fn bills_pc_menu_withdraw(cpu: &mut Cpu) {
-    let party_len = PartyView::new(&cpu.mmu.wram[0x1162..]).len();
+    let party_len = cpu.borrow_wram().party().len();
 
     if party_len == 6 {
         menus::menu_display_text(cpu, &["You can't take", "any more POKéMON."]);
@@ -293,7 +288,7 @@ fn bills_pc_menu_withdraw(cpu: &mut Cpu) {
 
         log::debug!("box_id: {:?}, box_idx: {:?}", box_id, box_idx);
         let pokemon = if *box_id == BoxId::Current {
-            BoxViewMut::new(&mut cpu.mmu.wram[0x1a7f..]).swap_remove(*box_idx)
+            cpu.borrow_wram_mut().box_mut().swap_remove(*box_idx)
         } else {
             cpu.borrow_sram_mut().box_mut(*box_id).swap_remove(*box_idx)
         };
@@ -314,14 +309,16 @@ fn bills_pc_menu_withdraw(cpu: &mut Cpu) {
             home::pokemon::play_cry(cpu, pokemon.species);
         }
 
-        PartyViewMut::new(&mut cpu.mmu.wram[0x1162..]).push(pokemon.into());
+        cpu.borrow_wram_mut().party_mut().push(pokemon.into());
 
         menus::menu_display_text(cpu, &[&first_line, "taken out.", &third_line]);
     }
 }
 
 fn bills_pc_menu_deposit(cpu: &mut Cpu) {
-    let pokemons = PartyView::new(&cpu.mmu.wram[0x1162..])
+    let pokemons = cpu
+        .borrow_wram()
+        .party()
         .iter()
         .map(Into::into)
         .collect::<Vec<BoxedPokemon>>();
@@ -332,13 +329,11 @@ fn bills_pc_menu_deposit(cpu: &mut Cpu) {
     }
 
     if let Some(poke_choice) = pick_pokemon(cpu, (3, 1), &pokemons) {
-        let pokemon = PartyView::new(&cpu.mmu.wram[0x1162..])
-            .get(poke_choice)
-            .unwrap();
+        let pokemon = cpu.borrow_wram().party().get(poke_choice).unwrap();
 
         match add_pokemon_to_box(cpu, pokemon.into()) {
             Ok(()) => {
-                let mut party = PartyViewMut::new(&mut cpu.mmu.wram[0x1162..]);
+                let mut party = cpu.borrow_wram_mut().party_mut();
                 let pokemon = party.remove(poke_choice);
 
                 let first_line = format!(
@@ -390,7 +385,7 @@ fn bills_pc_menu_release(cpu: &mut Cpu) {
             let (box_id, box_idx) = &pointers[poke_choice];
 
             let pokemon = if *box_id == BoxId::Current {
-                BoxViewMut::new(&mut cpu.mmu.wram[0x1a7f..]).swap_remove(*box_idx)
+                cpu.borrow_wram_mut().box_mut().swap_remove(*box_idx)
             } else {
                 cpu.borrow_sram_mut().box_mut(*box_id).swap_remove(*box_idx)
             };

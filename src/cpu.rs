@@ -4,6 +4,7 @@ use std::{
 };
 
 use crate::{
+    game_state::GameState,
     gpu::GpuLayer,
     keypad::{KeyboardEvent, KeypadKey, TextEvent},
     mmu::Mmu,
@@ -139,6 +140,14 @@ impl Cpu {
 
     pub fn borrow_sram_mut(&mut self) -> &mut SaveState {
         self.mmu.mbc.borrow_sram_mut()
+    }
+
+    pub fn borrow_wram(&self) -> &GameState {
+        self.mmu.borrow_wram()
+    }
+
+    pub fn borrow_wram_mut(&mut self) -> &mut GameState {
+        self.mmu.borrow_wram_mut()
     }
 
     pub fn replace_ram(&mut self, ram: SaveState) {

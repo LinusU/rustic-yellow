@@ -1,7 +1,7 @@
 use crate::{
     cpu::Cpu,
     game::ram::wram,
-    save_state::{BoxId, BoxView, BoxViewMut, BoxedPokemon},
+    save_state::{BoxId, BoxedPokemon},
 };
 
 const WRAM_BOX_DATA_START: usize = 0x1a7f;
@@ -83,7 +83,7 @@ pub fn switch_to_non_full_box(cpu: &mut Cpu) -> Result<(), ()> {
             // Copy current box from WRAM to SRAM
             log::debug!("Copying current box from WRAM to SRAM");
             for i in 0..BOX_BYTE_SIZE {
-                let value = cpu.mmu.wram[WRAM_BOX_DATA_START + i];
+                let value = cpu.borrow_wram().byte(WRAM_BOX_DATA_START + i);
                 cpu.borrow_sram_mut().set_byte(old_box_sram_addr + i, value);
             }
 
@@ -91,7 +91,8 @@ pub fn switch_to_non_full_box(cpu: &mut Cpu) -> Result<(), ()> {
             log::debug!("Copying new box from SRAM to WRAM");
             for i in 0..BOX_BYTE_SIZE {
                 let value = cpu.borrow_sram().byte(new_box_sram_addr + i);
-                cpu.mmu.wram[WRAM_BOX_DATA_START + i] = value;
+                cpu.borrow_wram_mut()
+                    .set_byte(WRAM_BOX_DATA_START + i, value);
             }
 
             // Clear new box in SRAM
@@ -113,7 +114,7 @@ pub fn hook_send_new_mon_to_box_end(cpu: &mut Cpu) {
     log::info!("A pokemon has been sent to the box");
 
     // If the current box is full, switch to a non-full box
-    if BoxView::new(&cpu.mmu.wram[WRAM_BOX_DATA_START..]).full() {
+    if cpu.borrow_wram().r#box().full() {
         let _ = switch_to_non_full_box(cpu);
     }
 
@@ -122,7 +123,7 @@ pub fn hook_send_new_mon_to_box_end(cpu: &mut Cpu) {
 }
 
 pub fn add_pokemon_to_box(cpu: &mut Cpu, pokemon: BoxedPokemon) -> Result<(), ()> {
-    let mut current = BoxViewMut::new(&mut cpu.mmu.wram[WRAM_BOX_DATA_START..]);
+    let mut current = cpu.borrow_wram_mut().box_mut();
 
     if !current.full() {
         current.push(pokemon);
@@ -133,7 +134,7 @@ pub fn add_pokemon_to_box(cpu: &mut Cpu, pokemon: BoxedPokemon) -> Result<(), ()
     } else {
         switch_to_non_full_box(cpu)?;
 
-        let mut current = BoxViewMut::new(&mut cpu.mmu.wram[WRAM_BOX_DATA_START..]);
+        let mut current = cpu.borrow_wram_mut().box_mut();
         current.push(pokemon);
     }
 
