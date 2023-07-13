@@ -3,7 +3,7 @@ use std::{
     sync::mpsc::{Receiver, SyncSender},
 };
 
-use crate::{cpu::Cpu, keypad::KeyboardEvent, rom::ROM};
+use crate::{cpu::Cpu, keypad::KeyboardEvent, rom::ROM, PokemonSpecies};
 
 pub mod audio;
 pub mod constants;
@@ -12,6 +12,7 @@ pub mod engine;
 pub mod home;
 pub mod macros;
 pub mod ram;
+pub mod scripts;
 
 pub fn resources_root() -> Option<PathBuf> {
     if std::env::var_os("CARGO").is_some() {
@@ -38,13 +39,14 @@ impl Game {
     pub fn new(
         update_screen: SyncSender<Vec<u8>>,
         keyboard_events: Receiver<KeyboardEvent>,
+        starter: PokemonSpecies,
     ) -> Self {
         assert_eq!(ROM[0x143], 0x80);
         assert_eq!(ROM[0x147], 0x1b);
         assert_eq!(ROM[0x149], 0x03);
 
         Self {
-            cpu: Cpu::new(update_screen, keyboard_events),
+            cpu: Cpu::new(update_screen, keyboard_events, starter),
         }
     }
 

@@ -3,6 +3,7 @@
 pub use crate::game::Game;
 pub use crate::gpu::{SCREEN_H, SCREEN_W};
 pub use crate::keypad::{KeyboardEvent, KeyboardKey};
+pub use crate::save_state::PokemonSpecies;
 
 pub(crate) mod cpu;
 pub(crate) mod game;
