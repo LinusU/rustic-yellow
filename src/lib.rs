@@ -7,6 +7,7 @@ pub use crate::save_state::PokemonSpecies;
 
 pub(crate) mod cpu;
 pub(crate) mod game;
+mod game_state;
 mod gpu;
 mod keypad;
 mod mbc5;
