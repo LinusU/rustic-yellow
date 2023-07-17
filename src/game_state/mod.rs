@@ -55,6 +55,10 @@ impl GameState {
         PartyViewMut::new(&mut self.data[PARTY_DATA_START..])
     }
 
+    pub fn set_enemy_mon_species2(&mut self, value: u8) {
+        self.data[0x0fd7] = value;
+    }
+
     pub fn set_cur_opponent(&mut self, value: u8) {
         self.data[0x1058] = value;
     }

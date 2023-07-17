@@ -20,26 +20,13 @@ pub fn init_battle(cpu: &mut Cpu) {
 }
 
 pub fn init_opponent(cpu: &mut Cpu) {
-    cpu.pc = 0x5ff8;
+    let opponent = cpu.borrow_wram().cur_opponent();
+    log::debug!("Starting battle with Trainer {}", opponent);
 
-    // ld a, [wCurOpponent]
-    cpu.a = cpu.read_byte(wram::W_CUR_OPPONENT);
-    cpu.pc += 3;
-    cpu.cycle(16);
+    cpu.write_byte(wram::W_CF91, opponent);
+    cpu.borrow_wram_mut().set_enemy_mon_species2(opponent);
 
-    // ld [wcf91], a
-    cpu.write_byte(wram::W_CF91, cpu.a);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // ld [wEnemyMonSpecies2], a
-    cpu.write_byte(wram::W_ENEMY_MON_SPECIES2, cpu.a);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // jr InitBattleCommon
-    cpu.cycle(12);
-    return init_battle_common(cpu);
+    init_battle_common(cpu)
 }
 
 fn determine_wild_opponent(cpu: &mut Cpu) {
