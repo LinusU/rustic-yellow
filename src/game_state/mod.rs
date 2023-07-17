@@ -82,6 +82,10 @@ impl GameState {
         self.data[0x135c]
     }
 
+    pub fn set_map_pal_offset(&mut self, value: u8) {
+        self.data[0x135c] = value;
+    }
+
     /// bit 0: If 0, limit the delay to 1 frame. Note that this has no effect if
     ///        the delay has been disabled entirely through bit 1 of this variable
     ///        or bit 6 of wd730. \
@@ -113,6 +117,10 @@ impl GameState {
 
     pub fn set_enemy_mon_party_pos(&mut self, value: u8) {
         self.data[0x0fe7] = value;
+    }
+
+    pub fn is_in_battle(&self) -> u8 {
+        self.data[0x1056]
     }
 
     pub fn set_is_in_battle(&mut self, value: u8) {
