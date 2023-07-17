@@ -850,98 +850,25 @@ fn _init_battle_common(cpu: &mut Cpu) {
 }
 
 pub fn _load_trainer_pic(cpu: &mut Cpu) {
-    cpu.pc = 0x615a;
-
-    // wd033-wd034 contain pointer to pic
-    // ld a, [wTrainerPicPointer]
-    cpu.a = cpu.read_byte(wram::W_TRAINER_PIC_POINTER);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // ld e, a
-    cpu.e = cpu.a;
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // ld a, [wTrainerPicPointer + 1]
-    cpu.a = cpu.read_byte(wram::W_TRAINER_PIC_POINTER + 1);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // de contains pointer to trainer pic
-    // ld d, a
-    cpu.d = cpu.a;
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // ld a, [wLinkState]
-    cpu.a = cpu.read_byte(wram::W_LINK_STATE);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // and a
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::C, false);
-    cpu.set_flag(CpuFlag::H, false);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // this is where all the trainer pics are (not counting Red's)
-    // ld a, BANK("Pics 6")
-    cpu.a = 0x13;
-    cpu.pc += 2;
-    cpu.cycle(8);
-
-    // jr z, .loadSprite
-    if cpu.flag(CpuFlag::Z) {
-        cpu.cycle(12);
-        return _load_trainer_pic_load_sprite(cpu);
+    let bank = if cpu.read_byte(wram::W_LINK_STATE) == 0 {
+        // this is where all the trainer pics are (not counting Red's)
+        0x13 // BANK("Pics 6")
     } else {
-        cpu.pc += 2;
-        cpu.cycle(8);
+        0x04 // BANK(RedPicFront)
+    };
+
+    let addr = cpu.borrow_wram().trainer_pic_pointer() as usize;
+
+    log::debug!("Loading trainer pic at {:02x}:{:04x}", bank, addr);
+
+    let pic = (bank * 0x4000) | (addr & 0x3FFF);
+    let pic = pokemon_sprite_compression::gen1::decompress(&crate::rom::ROM[pic..]);
+
+    for (offset, byte) in pic.iter().enumerate() {
+        cpu.write_byte(vram::V_FRONT_PIC + offset as u16, *byte);
     }
 
-    // ld a, BANK(RedPicFront)
-    cpu.a = 0x04;
-    cpu.pc += 2;
-    cpu.cycle(8);
-
-    _load_trainer_pic_load_sprite(cpu);
-}
-
-fn _load_trainer_pic_load_sprite(cpu: &mut Cpu) {
-    cpu.pc = 0x616c;
-
-    // call UncompressSpriteFromDE
-    {
-        cpu.pc += 3;
-        let pc = cpu.pc;
-        // cpu.stack_push(pc);
-        cpu.cycle(24);
-        // uncompress_sprite_from_de(cpu);
-        cpu.call(0x36e3);
-        cpu.pc = pc;
-    }
-
-    // ld de, vFrontPic
-    cpu.set_de(vram::V_FRONT_PIC);
-    cpu.pc += 3;
-    cpu.cycle(12);
-
-    // ld a, $77
-    cpu.a = 0x77;
-    cpu.pc += 2;
-    cpu.cycle(8);
-
-    // ld c, a
-    cpu.c = cpu.a;
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // jp LoadUncompressedSpriteData
-    cpu.cycle(16);
-    cpu.jump(0x144b);
+    cpu.pc = cpu.stack_pop();
 }
 
 /// Assumes the monster's attributes have been loaded with GetMonHeader.

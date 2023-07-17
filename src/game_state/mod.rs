@@ -54,4 +54,8 @@ impl GameState {
     pub fn party_mut(&mut self) -> PartyViewMut<'_> {
         PartyViewMut::new(&mut self.data[PARTY_DATA_START..])
     }
+
+    pub fn trainer_pic_pointer(&self) -> u16 {
+        self.data[0x1032] as u16 | ((self.data[0x1033] as u16) << 8)
+    }
 }
