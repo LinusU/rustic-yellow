@@ -50,6 +50,8 @@ pub const W_LIST_SCROLL_OFFSET: u16 = 0xcc36;
 /// if non-zero, skip waiting for a button press after displaying text in DisplayTextID
 pub const W_DO_NOT_WAIT_FOR_BUTTON_PRESS_AFTER_DISPLAYING_TEXT: u16 = 0xcc3c;
 
+pub const W_PREDEF_HL: u16 = 0xcc4f;
+
 /// 0 = player's party \
 /// 1 = enemy party \
 /// 2 = current box \
@@ -68,6 +70,11 @@ pub const W_AI_COUNT: u16 = 0xccdf;
 
 /// Set buttons are ignored.
 pub const W_JOY_IGNORE: u16 = 0xcd6b;
+
+/// Size of downscaled mon pic used in pokeball entering/exiting animation \
+/// $00 = 5×5 \
+/// $01 = 3×3
+pub const W_DOWNSCALED_MON_SIZE: u16 = 0xcd6c;
 
 pub const W_CD6D: u16 = 0xcd6d;
 

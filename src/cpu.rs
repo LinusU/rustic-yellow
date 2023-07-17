@@ -104,6 +104,9 @@ impl Cpu {
                 (0x3d, 0x5ff8) => crate::game::engine::battle::init_battle::init_opponent(self),
                 (0x3d, 0x615a) => crate::game::engine::battle::init_battle::_load_trainer_pic(self),
                 (0x3d, 0x6178) => crate::game::engine::battle::init_battle::load_mon_back_pic(self),
+                (0x3d, 0x61a6) => crate::game::engine::battle::init_battle::animate_sending_out_mon(self),
+                (0x3d, 0x61f9) => crate::game::engine::battle::init_battle::copy_uncompressed_pic_to_tilemap(self),
+                (0x3d, 0x6203) => crate::game::engine::battle::init_battle::copy_uncompressed_pic_to_hl(self),
                 (0x3d, 0x674d) => crate::game::engine::events::give_pokemon::hook_give_pokemon_next_end(self),
 
                 _ => {

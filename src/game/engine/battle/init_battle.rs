@@ -2,8 +2,8 @@ use crate::{
     cpu::{Cpu, CpuFlag},
     game::{
         constants::{
-            input_constants, palette_constants, pikachu_emotion_constants, pokemon_constants,
-            trainer_constants,
+            gfx_constants, input_constants, palette_constants, pikachu_emotion_constants,
+            pokemon_constants, trainer_constants,
         },
         engine::menus::pokedex,
         home, macros,
@@ -316,5 +316,94 @@ pub fn load_mon_back_pic(cpu: &mut Cpu) {
     }
 
     // ret
+    cpu.pc = cpu.stack_pop();
+}
+
+/// Animates the mon "growing" out of the pokeball
+pub fn animate_sending_out_mon(cpu: &mut Cpu) {
+    log::debug!("Animate sending out mon");
+
+    cpu.h = cpu.read_byte(wram::W_PREDEF_HL);
+    cpu.l = cpu.read_byte(wram::W_PREDEF_HL + 1);
+
+    let start_tile_id = cpu.read_byte(hram::H_START_TILE_ID);
+    cpu.write_byte(hram::H_BASE_TILE_ID, start_tile_id);
+
+    let is_in_battle = cpu.read_byte(wram::W_IS_IN_BATTLE);
+
+    if is_in_battle == 0 {
+        cpu.set_bc(-(gfx_constants::SCREEN_WIDTH as i16 * 6 + 3) as u16);
+    } else {
+        cpu.write_byte(cpu.hl(), is_in_battle.wrapping_add(0x4c));
+
+        cpu.call(0x3ddb); // Delay3
+
+        cpu.set_bc(-(gfx_constants::SCREEN_WIDTH as i16 * 2 + 1) as u16);
+        cpu.set_hl(cpu.hl().wrapping_add(cpu.bc()));
+
+        cpu.write_byte(wram::W_DOWNSCALED_MON_SIZE, 1);
+
+        cpu.b = 3;
+        cpu.c = 3;
+
+        macros::predef::predef_call!(cpu, CopyDownscaledMonTiles);
+
+        cpu.c = 4;
+        cpu.call(0x372f); // DelayFrames
+
+        cpu.set_bc(-(gfx_constants::SCREEN_WIDTH as i16 * 2 + 1) as u16);
+        cpu.set_hl(cpu.hl().wrapping_add(cpu.bc()));
+
+        cpu.write_byte(wram::W_DOWNSCALED_MON_SIZE, 0);
+
+        cpu.b = 5;
+        cpu.c = 5;
+
+        macros::predef::predef_call!(cpu, CopyDownscaledMonTiles);
+
+        cpu.c = 5;
+        cpu.call(0x372f); // DelayFrames
+
+        cpu.set_bc(-(gfx_constants::SCREEN_WIDTH as i16 * 2 + 1) as u16);
+    }
+
+    cpu.set_hl(cpu.hl().wrapping_add(cpu.bc()));
+
+    cpu.a = cpu.read_byte(hram::H_BASE_TILE_ID);
+    cpu.a = cpu.a.wrapping_add(0x31);
+
+    copy_uncompressed_pic_to_hl(cpu)
+}
+
+pub fn copy_uncompressed_pic_to_tilemap(cpu: &mut Cpu) {
+    cpu.h = cpu.read_byte(wram::W_PREDEF_HL);
+    cpu.l = cpu.read_byte(wram::W_PREDEF_HL + 1);
+    cpu.a = cpu.read_byte(hram::H_START_TILE_ID);
+
+    copy_uncompressed_pic_to_hl(cpu)
+}
+
+pub fn copy_uncompressed_pic_to_hl(cpu: &mut Cpu) {
+    let flipped = cpu.read_byte(wram::W_SPRITE_FLIPPED) != 0;
+
+    let target = cpu.hl();
+    let mut tile_id = cpu.a;
+
+    for x in 0..7 {
+        let mut addr = target;
+
+        if flipped {
+            addr += 6 - x;
+        } else {
+            addr += x;
+        };
+
+        for _ in 0..7 {
+            cpu.write_byte(addr, tile_id);
+            addr += gfx_constants::SCREEN_WIDTH as u16;
+            tile_id = tile_id.wrapping_add(1);
+        }
+    }
+
     cpu.pc = cpu.stack_pop();
 }

@@ -1,3 +1,5 @@
+pub const H_BASE_TILE_ID: u16 = 0xff8b;
+
 // these values are copied to rSCX, rSCY, and rWY during V-blank
 pub const H_SCX: u16 = 0xffae;
 pub const H_SCY: u16 = 0xffaf;
