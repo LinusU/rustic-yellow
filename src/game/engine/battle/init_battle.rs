@@ -12,31 +12,11 @@ use crate::{
 };
 
 pub fn init_battle(cpu: &mut Cpu) {
-    cpu.pc = 0x5ff2;
-
-    // ld a, [wCurOpponent]
-    cpu.a = cpu.read_byte(wram::W_CUR_OPPONENT);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // and a
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::C, false);
-    cpu.set_flag(CpuFlag::H, false);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // jr z, DetermineWildOpponent
-    if cpu.flag(CpuFlag::Z) {
-        cpu.cycle(12);
-        return determine_wild_opponent(cpu);
+    if cpu.borrow_wram().cur_opponent() == 0 {
+        determine_wild_opponent(cpu)
     } else {
-        cpu.pc += 2;
-        cpu.cycle(8);
+        init_opponent(cpu)
     }
-
-    init_opponent(cpu);
 }
 
 pub fn init_opponent(cpu: &mut Cpu) {
