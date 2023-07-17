@@ -57,202 +57,60 @@ fn determine_wild_opponent(cpu: &mut Cpu) {
 }
 
 fn init_battle_common(cpu: &mut Cpu) {
-    cpu.pc = 0x601d;
+    // Save Map Pal Offset
+    let map_pal_offset = cpu.borrow_wram().map_pal_offset();
+    cpu.stack_push((map_pal_offset as u16) << 8);
 
-    // ld a, [wMapPalOffset]
-    cpu.a = cpu.read_byte(wram::W_MAP_PAL_OFFSET);
-    cpu.pc += 3;
-    cpu.cycle(16);
+    // Save Letter Printing Delay Flags
+    let letter_printing_delay_flags = cpu.borrow_wram().letter_printing_delay_flags();
+    cpu.stack_push((letter_printing_delay_flags as u16) << 8);
 
-    // push af
-    cpu.stack_push(cpu.af());
-    cpu.pc += 1;
-    cpu.cycle(16);
+    // Reset Letter Printing Delay Flags
+    cpu.borrow_wram_mut()
+        .set_letter_printing_delay_flags(letter_printing_delay_flags & !(1 << 1));
 
-    // ld hl, wLetterPrintingDelayFlags
-    cpu.set_hl(wram::W_LETTER_PRINTING_DELAY_FLAGS);
-    cpu.pc += 3;
-    cpu.cycle(12);
+    cpu.call(0x6236); // InitBattleVariables
 
-    // ld a, [hl]
-    cpu.a = cpu.read_byte(cpu.hl());
-    cpu.pc += 1;
-    cpu.cycle(8);
+    let enemy = cpu.borrow_wram().enemy_mon_species2();
+    log::debug!("init_battle_common: enemy={}", enemy);
 
-    // push af
-    cpu.stack_push(cpu.af());
-    cpu.pc += 1;
-    cpu.cycle(16);
-
-    // res 1, [hl]
-    {
-        let value = cpu.read_byte(cpu.hl());
-        cpu.write_byte(cpu.hl(), value & !(1 << 1));
-    }
-    cpu.pc += 2;
-    cpu.cycle(16);
-
-    // call InitBattleVariables
-    {
-        cpu.pc += 3;
-        let pc = cpu.pc;
-        // cpu.stack_push(pc);
-        cpu.cycle(24);
-        // init_battle_variables(cpu);
-        cpu.call(0x6236);
-        cpu.pc = pc;
-    }
-
-    // ld a, [wEnemyMonSpecies2]
-    cpu.a = cpu.read_byte(wram::W_ENEMY_MON_SPECIES2);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // sub OPP_ID_OFFSET
-    cpu.set_flag(
-        CpuFlag::H,
-        (cpu.a & 0x0f) < (trainer_constants::OPP_ID_OFFSET & 0x0f),
-    );
-    cpu.set_flag(CpuFlag::C, cpu.a < trainer_constants::OPP_ID_OFFSET);
-    cpu.a = cpu.a.wrapping_sub(trainer_constants::OPP_ID_OFFSET);
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::N, true);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // jp c, InitWildBattle
-    if cpu.flag(CpuFlag::C) {
-        cpu.cycle(16);
+    if enemy < trainer_constants::OPP_ID_OFFSET {
+        log::debug!("init_battle_common: wild battle");
         return init_wild_battle(cpu);
-    } else {
-        cpu.pc += 3;
-        cpu.cycle(12);
     }
 
-    // ld [wTrainerClass], a
-    cpu.write_byte(wram::W_TRAINER_CLASS, cpu.a);
-    cpu.pc += 3;
-    cpu.cycle(16);
+    cpu.borrow_wram_mut().set_trainer_class(enemy - trainer_constants::OPP_ID_OFFSET);
 
-    // call GetTrainerInformation
-    {
-        cpu.pc += 3;
-        let pc = cpu.pc;
-        // cpu.stack_push(pc);
-        cpu.cycle(24);
-        // get_trainer_information(cpu);
-        cpu.call(0x3563);
-        cpu.pc = pc;
-    }
+    log::debug!("GetTrainerInformation({})", enemy - trainer_constants::OPP_ID_OFFSET);
+    cpu.call(0x3563); // GetTrainerInformation
 
-    // callfar ReadTrainer
-    macros::farcall::callfar(cpu, 0x0e, 0x5bb6);
+    macros::farcall::callfar(cpu, 0x0e, 0x5bb6); // ReadTrainer
+    macros::farcall::callfar(cpu, 0x0f, 0x6db8); // DoBattleTransitionAndInitBattleVariables
 
-    // callfar DoBattleTransitionAndInitBattleVariables
-    macros::farcall::callfar(cpu, 0x0f, 0x6db8);
+    cpu.stack_push(0x0001);
+    _load_trainer_pic(cpu);
 
-    // call _LoadTrainerPic
-    {
-        cpu.pc += 3;
-        let pc = cpu.pc;
-        cpu.stack_push(pc);
-        cpu.cycle(24);
-        _load_trainer_pic(cpu);
-        cpu.pc = pc;
-    }
+    cpu.borrow_wram_mut().set_enemy_mon_species2(0);
+    cpu.write_byte(hram::H_START_TILE_ID, 0);
+    cpu.borrow_wram_mut().set_ai_count(0xff);
 
-    // xor a
-    cpu.a = 0;
-    cpu.set_flag(CpuFlag::Z, true);
-    cpu.set_flag(CpuFlag::C, false);
-    cpu.set_flag(CpuFlag::H, false);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // ld [wEnemyMonSpecies2], a
-    cpu.write_byte(wram::W_ENEMY_MON_SPECIES2, cpu.a);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // ldh [hStartTileID], a
-    cpu.write_byte(hram::H_START_TILE_ID, cpu.a);
-    cpu.pc += 2;
-    cpu.cycle(12);
-
-    // dec a
-    cpu.set_flag(CpuFlag::H, (cpu.a & 0x0f) == 0x00);
-    cpu.a = cpu.a.wrapping_sub(1);
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::N, true);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // ld [wAICount], a
-    cpu.write_byte(wram::W_AI_COUNT, cpu.a);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // hlcoord 12, 0
     cpu.set_hl(macros::coords::coord!(12, 0));
-    cpu.pc += 3;
-    cpu.cycle(12);
 
-    // predef CopyUncompressedPicToTilemap
     macros::predef::predef_call!(cpu, CopyUncompressedPicToTilemap);
 
-    // ld a, $ff
-    cpu.a = 0xff;
-    cpu.pc += 2;
-    cpu.cycle(8);
-
-    // ld [wEnemyMonPartyPos], a
-    cpu.write_byte(wram::W_ENEMY_MON_PARTY_POS, cpu.a);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // ld a, $2
-    cpu.a = 0x2;
-    cpu.pc += 2;
-    cpu.cycle(8);
-
-    // ld [wIsInBattle], a
-    cpu.write_byte(wram::W_IS_IN_BATTLE, cpu.a);
-    cpu.pc += 3;
-    cpu.cycle(16);
+    cpu.borrow_wram_mut().set_enemy_mon_party_pos(0xff);
+    cpu.borrow_wram_mut().set_is_in_battle(2);
 
     // Is this a major story battle?
-    // ld a, [wLoneAttackNo]
-    cpu.a = cpu.read_byte(wram::W_LONE_ATTACK_NO);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // and a
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::C, false);
-    cpu.set_flag(CpuFlag::H, false);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // jp z, _InitBattleCommon
-    if cpu.flag(CpuFlag::Z) {
-        cpu.cycle(16);
-        return _init_battle_common(cpu);
-    } else {
-        cpu.pc += 3;
-        cpu.cycle(12);
+    if cpu.borrow_wram().gym_leader_no() != 0 {
+        // useless since already in bank 3d
+        macros::farcall::callabd_modify_pikachu_happiness(
+            cpu,
+            pikachu_emotion_constants::PIKAHAPPY_GYMLEADER,
+        );
     }
 
-    // useless since already in bank 3d
-    macros::farcall::callabd_modify_pikachu_happiness(
-        cpu,
-        pikachu_emotion_constants::PIKAHAPPY_GYMLEADER,
-    );
-
-    // jp _InitBattleCommon
-    cpu.cycle(16);
-    return _init_battle_common(cpu);
+    _init_battle_common(cpu)
 }
 
 fn init_wild_battle(cpu: &mut Cpu) {

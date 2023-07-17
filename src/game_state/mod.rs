@@ -76,8 +76,57 @@ impl GameState {
         self.data[0x113b]
     }
 
+    /// Offset subtracted from FadePal4 to get the background and object palettes for the current map
+    /// normally, it is 0. It is 6 when Flash is needed, causing FadePal2 to be used instead of FadePal4
+    pub fn map_pal_offset(&self) -> u8 {
+        self.data[0x135c]
+    }
+
+    /// bit 0: If 0, limit the delay to 1 frame. Note that this has no effect if
+    ///        the delay has been disabled entirely through bit 1 of this variable
+    ///        or bit 6 of wd730. \
+    /// bit 1: If 0, no delay.
+    pub fn letter_printing_delay_flags(&self) -> u8 {
+        self.data[0x1357]
+    }
+
+    pub fn set_letter_printing_delay_flags(&mut self, value: u8) {
+        self.data[0x1357] = value;
+    }
+
+    pub fn enemy_mon_species2(&self) -> u8 {
+        self.data[0x0fd7]
+    }
+
     pub fn set_enemy_mon_species2(&mut self, value: u8) {
         self.data[0x0fd7] = value;
+    }
+
+    pub fn set_trainer_class(&mut self, value: u8) {
+        self.data[0x1030] = value;
+    }
+
+    /// number of times remaining that AI action can occur
+    pub fn set_ai_count(&mut self, value: u8) {
+        self.data[0x0cdf] = value;
+    }
+
+    pub fn set_enemy_mon_party_pos(&mut self, value: u8) {
+        self.data[0x0fe7] = value;
+    }
+
+    pub fn set_is_in_battle(&mut self, value: u8) {
+        self.data[0x1056] = value;
+    }
+
+    pub fn gym_leader_no(&self) -> u8 {
+        self.data[0x105b]
+    }
+
+    /// in a wild battle, this is the species of pokemon \
+    /// in a trainer battle, this is the trainer class + OPP_ID_OFFSET
+    pub fn cur_opponent(&self) -> u8 {
+        self.data[0x1058]
     }
 
     pub fn set_cur_opponent(&mut self, value: u8) {
