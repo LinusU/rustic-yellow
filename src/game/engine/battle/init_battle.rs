@@ -30,94 +30,27 @@ pub fn init_opponent(cpu: &mut Cpu) {
 }
 
 fn determine_wild_opponent(cpu: &mut Cpu) {
-    cpu.pc = 0x6003;
+    // Allow wild battles to be avoided by holding down B in debug mode
+    if cpu.borrow_wram().debug_mode() {
+        let held = cpu.read_byte(hram::H_JOY_HELD);
 
-    // ld a, [wd732]
-    cpu.a = cpu.read_byte(wram::W_D732);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // bit 1, a
-    cpu.set_flag(CpuFlag::Z, (cpu.a & (1 << 1)) == 0);
-    cpu.set_flag(CpuFlag::H, true);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.pc += 2;
-    cpu.cycle(8);
-
-    // jr z, .notDebug
-    if cpu.flag(CpuFlag::Z) {
-        cpu.cycle(12);
-        return determine_wild_opponent_not_debug(cpu);
-    } else {
-        cpu.pc += 2;
-        cpu.cycle(8);
+        if (held & input_constants::B_BUTTON) != 0 {
+            cpu.pc = cpu.stack_pop();
+            return;
+        }
     }
 
-    // ldh a, [hJoyHeld]
-    cpu.a = cpu.read_byte(hram::H_JOY_HELD);
-    cpu.pc += 2;
-    cpu.cycle(12);
-
-    // bit BIT_B_BUTTON, a
-    cpu.set_flag(
-        CpuFlag::Z,
-        (cpu.a & (1 << input_constants::BIT_B_BUTTON)) == 0,
-    );
-    cpu.set_flag(CpuFlag::H, true);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.pc += 2;
-    cpu.cycle(8);
-
-    // ret nz
-    if !cpu.flag(CpuFlag::Z) {
+    if cpu.borrow_wram().number_of_no_random_battle_steps_left() != 0 {
         cpu.pc = cpu.stack_pop();
-        cpu.cycle(20);
         return;
-    } else {
-        cpu.pc += 1;
-        cpu.cycle(8);
     }
 
-    determine_wild_opponent_not_debug(cpu);
-}
+    macros::farcall::callfar(cpu, 0x04, 0x783a); // TryDoWildEncounter
 
-fn determine_wild_opponent_not_debug(cpu: &mut Cpu) {
-    cpu.pc = 0x600f;
-
-    // ld a, [wNumberOfNoRandomBattleStepsLeft]
-    cpu.a = cpu.read_byte(wram::W_NUMBER_OF_NO_RANDOM_BATTLE_STEPS_LEFT);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // and a
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::C, false);
-    cpu.set_flag(CpuFlag::H, false);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // ret nz
+    // TryDoWildEncounter returns success in Z
     if !cpu.flag(CpuFlag::Z) {
         cpu.pc = cpu.stack_pop();
-        cpu.cycle(20);
         return;
-    } else {
-        cpu.pc += 1;
-        cpu.cycle(8);
-    }
-
-    // callfar TryDoWildEncounter
-    macros::farcall::callfar(cpu, 0x04, 0x783a);
-
-    // ret nz
-    if !cpu.flag(CpuFlag::Z) {
-        cpu.pc = cpu.stack_pop();
-        cpu.cycle(20);
-        return;
-    } else {
-        cpu.pc += 1;
-        cpu.cycle(8);
     }
 
     init_battle_common(cpu);
