@@ -55,6 +55,10 @@ impl GameState {
         PartyViewMut::new(&mut self.data[PARTY_DATA_START..])
     }
 
+    pub fn set_cur_opponent(&mut self, value: u8) {
+        self.data[0x1058] = value;
+    }
+
     pub fn trainer_pic_pointer(&self) -> u16 {
         self.data[0x1032] as u16 | ((self.data[0x1033] as u16) << 8)
     }
