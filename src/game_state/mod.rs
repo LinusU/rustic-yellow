@@ -262,4 +262,25 @@ impl GameState {
         self.data[0x0ce6] = (digit3 << 4) | digit2;
         self.data[0x0ce7] = (digit1 << 4) | digit0;
     }
+
+    /// The desired fade counter reload value is stored here prior to calling
+    /// PlaySound in order to cause the current music to fade out before the new
+    /// music begins playing. Storing 0 causes no fade out to occur and the new music
+    /// to begin immediately.
+    ///
+    /// This variable has another use related to fade-out, as well. PlaySound stores
+    /// the sound ID of the music that should be played after the fade-out is finished
+    /// in this variable. FadeOutAudio checks if it's non-zero every V-Blank and
+    /// fades out the current audio if it is. Once it has finished fading out the
+    /// audio, it zeroes this variable and starts playing the sound ID stored in it.
+    // pub const W_AUDIO_FADE_OUT_CONTROL: u16 = 0xcfc6;
+    pub fn set_audio_fade_out_control(&mut self, value: u8) {
+        self.data[0x0fc6] = value;
+    }
+
+    /// Low health alarm counter/enable. \
+    /// high bit = enable, others = timer to cycle frequencies
+    pub fn set_low_health_alarm(&mut self, value: u8) {
+        self.data[0x1082] = value;
+    }
 }

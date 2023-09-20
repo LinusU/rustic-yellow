@@ -93,6 +93,7 @@ impl Cpu {
                 (0x01, 0x42bf) => crate::game::engine::movie::title::display_title_screen_go_to_main_menu(self),
                 (0x01, 0x5ba6) => panic!("main_menu should only be called from Rust"),
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
+                (0x02, 0x5064) => crate::game::audio::play_battle_music::play_battle_music(self),
                 (0x03, 0x6807) => crate::game::engine::items::item_effects::hook_send_new_mon_to_box_end(self),
                 (0x06, 0x4f0a) => crate::game::scripts::pallete_town::pallet_town_script4(self),
                 (0x07, 0x4b40) => crate::game::scripts::oaks_lab::oaks_lab_text18(self),
