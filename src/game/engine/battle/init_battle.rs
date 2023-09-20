@@ -69,7 +69,7 @@ fn init_battle_common(cpu: &mut Cpu) {
     cpu.borrow_wram_mut()
         .set_letter_printing_delay_flags(letter_printing_delay_flags & !(1 << 1));
 
-    cpu.call(0x6236); // InitBattleVariables
+    super::init_battle_variables::init_battle_variables(cpu);
 
     let enemy = cpu.borrow_wram().enemy_mon_species2();
     log::debug!("init_battle_common: enemy={}", enemy);

@@ -1,7 +1,11 @@
-use crate::save_state::{BoxView, BoxViewMut, PartyView, PartyViewMut};
+use crate::{
+    save_state::{BoxView, BoxViewMut, PartyView, PartyViewMut},
+    PokemonSpecies,
+};
 
 const WRAM_SIZE: usize = 0x8000;
 
+const BATTLE_MON_START: usize = 0x1013;
 const BOX_DATA_START: usize = 0x1a7f;
 const PARTY_DATA_START: usize = 0x1162;
 
@@ -15,6 +19,35 @@ fn fill_random(slice: &mut [u8], start: u32) {
     for v in slice.iter_mut() {
         x = x.wrapping_mul(A).wrapping_add(C);
         *v = ((x >> 23) & 0xFF) as u8;
+    }
+}
+
+#[repr(u8)]
+pub enum BattleResult {
+    Win = 0,
+    Lose = 1,
+    Draw = 2,
+}
+
+#[repr(u8)]
+pub enum CriticalHitOrOhko {
+    NormalAttack = 0,
+    CriticalHit = 1,
+    SuccessfulOhko = 2,
+    FailedOhko = 0xff,
+}
+
+pub struct BattleMonViewMut<'a> {
+    data: &'a mut [u8],
+}
+
+impl BattleMonViewMut<'_> {
+    pub fn new(data: &mut [u8]) -> BattleMonViewMut<'_> {
+        BattleMonViewMut { data }
+    }
+
+    pub fn set_species(&mut self, value: Option<PokemonSpecies>) {
+        self.data[0] = value.map_or(0, |s| s.into_index());
     }
 }
 
@@ -37,6 +70,10 @@ impl GameState {
 
     pub fn set_byte(&mut self, addr: usize, value: u8) {
         self.data[addr] = value;
+    }
+
+    pub fn battle_mon_mut(&mut self) -> BattleMonViewMut<'_> {
+        BattleMonViewMut::new(&mut self.data[0x1013..])
     }
 
     pub fn r#box(&self) -> BoxView<'_> {
@@ -143,5 +180,86 @@ impl GameState {
 
     pub fn trainer_pic_pointer(&self) -> u16 {
         self.data[0x1032] as u16 | ((self.data[0x1033] as u16) << 8)
+    }
+
+    /// This has overlapping related uses. \
+    /// When the player tries to use an item or use certain field moves, 0 is stored
+    /// when the attempt fails and 1 is stored when the attempt succeeds. \
+    /// In addition, some items store 2 for certain types of failures, but this
+    /// cannot happen in battle. \
+    /// In battle, a non-zero value indicates the player has taken their turn using
+    /// something other than a move (e.g. using an item or switching pokemon). \
+    /// So, when an item is successfully used in battle, this value becomes non-zero
+    /// and the player is not allowed to make a move and the two uses are compatible.
+    pub fn set_action_result_or_took_battle_turn(&mut self, value: u8) {
+        self.data[0x0d6a] = value;
+    }
+
+    pub fn battle_result(&self) -> BattleResult {
+        unsafe { std::mem::transmute(self.data[0x0f0b]) }
+    }
+
+    pub fn set_battle_result(&mut self, value: BattleResult) {
+        self.data[0x0f0b] = value as u8;
+    }
+
+    /// Offset of the current top menu item from the beginning of the list.
+    ///
+    /// Keeps track of what section of the list is on screen.
+    pub fn set_list_scroll_offset(&mut self, value: u8) {
+        self.data[0x0c36] = value;
+    }
+
+    pub fn set_critical_hit_or_ohko(&mut self, value: CriticalHitOrOhko) {
+        self.data[0x105d] = value as u8;
+    }
+
+    /// Flags that indicate which party members should be be given exp when GainExperience is called.
+    pub fn set_party_gain_exp_flags(&mut self, value: u8) {
+        self.data[0x1057] = value;
+    }
+
+    /// Index in party of currently battling mon.
+    pub fn set_player_mon_number(&mut self, value: u8) {
+        self.data[0x0c2f] = value;
+    }
+
+    /// True when an item or move that allows escape from battle was used.
+    pub fn set_escaped_from_battle(&mut self, value: bool) {
+        self.data[0x1077] = value as u8;
+    }
+
+    pub fn set_player_hp_bar_color(&mut self, value: u8) {
+        self.data[0x0f1c] = value;
+    }
+
+    pub fn set_enemy_hp_bar_color(&mut self, value: u8) {
+        self.data[0x0f1d] = value;
+    }
+
+    /// 1 flag for each party member indicating whether it can evolve. \
+    /// The purpose of these flags is to track which mons levelled up during the
+    /// current battle at the end of the battle when evolution occurs. \
+    /// Other methods of evolution simply set it by calling TryEvolvingMon.
+    pub fn set_can_evolve_flags(&mut self, value: u8) {
+        self.data[0x0cd3] = value;
+    }
+
+    pub fn set_force_evolution(&mut self, value: bool) {
+        self.data[0x0cd4] = value as u8;
+    }
+
+    /// Total amount of money made using Pay Day during the current battle.
+    pub fn set_total_pay_day_money(&mut self, value: u32) {
+        let digit0 = (value % 10) as u8;
+        let digit1 = ((value / 10) % 10) as u8;
+        let digit2 = ((value / 100) % 10) as u8;
+        let digit3 = ((value / 1000) % 10) as u8;
+        let digit4 = ((value / 10000) % 10) as u8;
+        let digit5 = ((value / 100000) % 10) as u8;
+
+        self.data[0x0ce5] = (digit5 << 4) | digit4;
+        self.data[0x0ce6] = (digit3 << 4) | digit2;
+        self.data[0x0ce7] = (digit1 << 4) | digit0;
     }
 }

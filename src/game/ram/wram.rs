@@ -33,19 +33,27 @@ pub const W_MENU_WATCHED_KEYS: u16 = 0xcc29;
 pub const W_LAST_MENU_ITEM: u16 = 0xcc2a;
 
 /// It is mainly used by the party menu to remember the cursor position while the
-/// menu isn't active.
+/// menu isn't active. \
 /// It is also used to remember the cursor position of mon lists (for the
 /// withdraw/deposit/release actions) in Bill's PC so that it doesn't get lost
 /// when you choose a mon from the list and a sub-menu is shown. It's reset when
 /// you return to the main Bill's PC menu.
 pub const W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM: u16 = 0xcc2b;
 
+/// It is used by the bag list to remember the cursor position while the menu
+/// isn't active.
+pub const W_BAG_SAVED_MENU_ITEM: u16 = 0xcc2c;
+
+/// It is used by the start menu to remember the cursor position while the menu
+/// isn't active. \
+/// The battle menu uses it so that the cursor position doesn't get lost when
+/// a sub-menu is shown. It's reset at the start of each battle.
+pub const W_BATTLE_AND_START_SAVED_MENU_ITEM: u16 = 0xcc2d;
+
+pub const W_PLAYER_MOVE_LIST_INDEX: u16 = 0xcc2e;
+
 /// how many times should HandleMenuInput poll the joypad state before it returns?
 pub const W_MENU_JOYPAD_POLL_COUNT: u16 = 0xcc34;
-
-/// offset of the current top menu item from the beginning of the list
-/// keeps track of what section of the list is on screen
-pub const W_LIST_SCROLL_OFFSET: u16 = 0xcc36;
 
 /// if non-zero, skip waiting for a button press after displaying text in DisplayTextID
 pub const W_DO_NOT_WAIT_FOR_BUTTON_PRESS_AFTER_DISPLAYING_TEXT: u16 = 0xcc3c;
@@ -65,8 +73,66 @@ pub const W_MON_DATA_LOCATION: u16 = 0xcc49;
 
 pub const W_PARENT_MENU_ITEM: u16 = 0xccd3;
 
+/// if [wAILayer2Encouragement] != 1, the second AI layer is not applied
+pub const W_AI_LAYER2_ENCOURAGEMENT: u16 = 0xccd5;
+
+/// current HP of player and enemy substitutes
+pub const W_PLAYER_SUBSTITUTE_HP: u16 = 0xccd7;
+pub const W_ENEMY_SUBSTITUTE_HP: u16 = 0xccd8;
+
+/// The player's selected move during a test battle. \
+/// InitBattleVariables sets it to the move Pound.
+pub const W_TEST_BATTLE_PLAYER_SELECTED_MOVE: u16 = 0xccd9;
+
+/// 0=regular, 1=mimic, 2=above message box (relearn, heal pp..)
+pub const W_MOVE_MENU_TYPE: u16 = 0xccdb;
+
+pub const W_PLAYER_SELECTED_MOVE: u16 = 0xccdc;
+pub const W_ENEMY_SELECTED_MOVE: u16 = 0xccdd;
+
+pub const W_LINK_BATTLE_RANDOM_NUMBER_LIST_INDEX: u16 = 0xccde;
+
 // number of times remaining that AI action can occur
 pub const W_AI_COUNT: u16 = 0xccdf;
+
+pub const W_ENEMY_MOVE_LIST_INDEX: u16 = 0xcce2;
+
+/// The enemy mon's HP when it was switched in or when the current player mon
+/// was switched in, which was more recent.
+///
+/// It's used to determine the message to print when switching out the player mon.
+pub const W_LAST_SWITCH_IN_ENEMY_MON_HP: u16 = 0xcce3;
+
+pub const W_SAFARI_ESCAPE_FACTOR: u16 = 0xcce8;
+pub const W_SAFARI_BAIT_FACTOR: u16 = 0xcce9;
+
+pub const W_TRANSFORMED_ENEMY_MON_ORIGINAL_DVS: u16 = 0xcceb;
+
+pub const W_MON_IS_DISOBEDIENT: u16 = 0xcced;
+
+pub const W_PLAYER_DISABLED_MOVE_NUMBER: u16 = 0xccee;
+pub const W_ENEMY_DISABLED_MOVE_NUMBER: u16 = 0xccef;
+
+/// When running in the scope of HandlePlayerMonFainted, it equals 1. \
+/// When running in the scope of HandleEnemyMonFainted, it equals 0.
+pub const W_IN_HANDLE_PLAYER_MON_FAINTED: u16 = 0xccf0;
+
+pub const W_PLAYER_USED_MOVE: u16 = 0xccf1;
+pub const W_ENEMY_USED_MOVE: u16 = 0xccf2;
+
+pub const W_ENEMY_MON_MINIMIZED: u16 = 0xccf3;
+
+pub const W_MOVE_DIDNT_MISS: u16 = 0xccf4;
+
+/// Flags that indicate which party members have fought the current enemy mon
+pub const W_PARTY_FOUGHT_CURRENT_ENEMY_FLAGS: u16 = 0xccf5;
+
+pub const W_LOW_HEALTH_ALARM_DISABLED: u16 = 0xccf6;
+
+pub const W_PLAYER_MON_MINIMIZED: u16 = 0xccf7;
+
+/// Number of hits by enemy in attacks like Double Slap, etc.
+pub const W_ENEMY_NUM_HITS: u16 = 0xcd05;
 
 /// Set buttons are ignored.
 pub const W_JOY_IGNORE: u16 = 0xcd6b;
@@ -209,9 +275,7 @@ pub const W_LETTER_PRINTING_DELAY_FLAGS: u16 = 0xd357;
 
 pub const W_PLAYER_ID: u16 = 0xd358;
 
-// offset subtracted from FadePal4 to get the background and object palettes for the current map
-// normally, it is 0. it is 6 when Flash is needed, causing FadePal2 to be used instead of FadePal4
-pub const W_MAP_PAL_OFFSET: u16 = 0xd35c;
+pub const W_CUR_MAP: u16 = 0xd35d;
 
 pub const W_CUR_MAP_TILESET: u16 = 0xd366;
 

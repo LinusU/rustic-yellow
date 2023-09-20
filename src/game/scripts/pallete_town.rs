@@ -14,7 +14,7 @@ pub fn pallet_town_script4(cpu: &mut Cpu) {
         wram::W_JOY_IGNORE,
         !(input_constants::A_BUTTON | input_constants::B_BUTTON),
     );
-    cpu.write_byte(wram::W_LIST_SCROLL_OFFSET, 0);
+    cpu.borrow_wram_mut().set_list_scroll_offset(0);
     cpu.write_byte(wram::W_BATTLE_TYPE, battle_constants::BATTLE_TYPE_PIKACHU);
     cpu.borrow_wram_mut().set_cur_opponent(starter_index);
     cpu.write_byte(wram::W_CUR_ENEMY_LVL, 5);
