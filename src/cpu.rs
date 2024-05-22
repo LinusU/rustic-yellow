@@ -98,6 +98,7 @@ impl Cpu {
                 (0x06, 0x4f0a) => crate::game::scripts::pallete_town::pallet_town_script4(self),
                 (0x07, 0x4b40) => crate::game::scripts::oaks_lab::oaks_lab_text18(self),
                 (0x08, 0x5495) => crate::game::engine::pokemon::bills_pc::bills_pc_menu(self),
+                (0x0f, 0x59ac) => crate::game::engine::battle::core::is_ghost_battle(self),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
                 (0x1c, 0x7b91) => crate::game::engine::menus::save::save_sav_to_sram(self),
                 (0x3c, 0x4000) => crate::game::engine::pikachu::pikachu_pcm::play_pikachu_sound_clip(self),

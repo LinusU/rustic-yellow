@@ -168,6 +168,10 @@ impl GameState {
         self.data[0x105b]
     }
 
+    pub fn cur_map(&self) -> u8 {
+        self.data[0x135d]
+    }
+
     /// in a wild battle, this is the species of pokemon \
     /// in a trainer battle, this is the trainer class + OPP_ID_OFFSET
     pub fn cur_opponent(&self) -> u8 {
