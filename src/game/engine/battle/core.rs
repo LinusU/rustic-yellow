@@ -1,8 +1,11 @@
 use crate::{
     cpu::{Cpu, CpuFlag},
-    game::constants::{
-        item_constants::SILPH_SCOPE,
-        map_constants::{POKEMON_TOWER_1F, POKEMON_TOWER_7F},
+    game::{
+        constants::{
+            item_constants::SILPH_SCOPE,
+            map_constants::{POKEMON_TOWER_1F, POKEMON_TOWER_7F},
+        },
+        home,
     },
 };
 
@@ -29,8 +32,8 @@ pub fn is_ghost_battle(cpu: &mut Cpu) {
     // If we have the Silph Scope, then we are not in a ghost battle.
     {
         cpu.b = SILPH_SCOPE;
-        cpu.call(0x3422); // IsItemInBag
-        log::debug!("is_item_in_bag(SILPH_SCOPE) == {}", !cpu.flag(CpuFlag::Z));
+        cpu.stack_push(0x0001);
+        home::map_objects::is_item_in_bag(cpu);
     }
 
     log::debug!("is_ghost_battle() == {}", cpu.flag(CpuFlag::Z));

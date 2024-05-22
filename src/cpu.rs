@@ -90,6 +90,7 @@ impl Cpu {
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
                 (_, 0x143e) => crate::game::home::pics::load_mon_front_sprite(self),
                 (_, 0x2238) => crate::game::home::audio::play_sound(self),
+                (_, 0x3422) => crate::game::home::map_objects::is_item_in_bag(self),
                 (0x01, 0x42bf) => crate::game::engine::movie::title::display_title_screen_go_to_main_menu(self),
                 (0x01, 0x5ba6) => panic!("main_menu should only be called from Rust"),
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
