@@ -59,6 +59,8 @@ pub const W_MENU_JOYPAD_POLL_COUNT: u16 = 0xcc34;
 pub const W_DO_NOT_WAIT_FOR_BUTTON_PRESS_AFTER_DISPLAYING_TEXT: u16 = 0xcc3c;
 
 pub const W_PREDEF_HL: u16 = 0xcc4f;
+pub const W_PREDEF_DE: u16 = 0xcc51;
+pub const W_PREDEF_BC: u16 = 0xcc53;
 
 /// 0 = player's party \
 /// 1 = enemy party \

@@ -6,6 +6,7 @@ pub mod map_objects;
 pub mod palettes;
 pub mod pics;
 pub mod pokemon;
+pub mod predef;
 pub mod print_text;
 pub mod text;
 pub mod vblank;
