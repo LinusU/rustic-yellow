@@ -97,6 +97,7 @@ impl Cpu {
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
                 (0x02, 0x5064) => crate::game::audio::play_battle_music::play_battle_music(self),
                 (0x03, 0x6807) => crate::game::engine::items::item_effects::hook_send_new_mon_to_box_end(self),
+                (0x03, 0x7735) => crate::game::engine::items::get_bag_item_quantity::get_quantity_of_item_in_bag(self),
                 (0x06, 0x4f0a) => crate::game::scripts::pallete_town::pallet_town_script4(self),
                 (0x07, 0x4b40) => crate::game::scripts::oaks_lab::oaks_lab_text18(self),
                 (0x08, 0x5495) => crate::game::engine::pokemon::bills_pc::bills_pc_menu(self),

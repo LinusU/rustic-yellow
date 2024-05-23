@@ -247,6 +247,8 @@ pub const W_POKEDEX_OWNED: u16 = 0xd2f6;
 pub const W_POKEDEX_OWNED_END: u16 = 0xd309;
 pub const W_POKEDEX_SEEN_END: u16 = 0xd31c;
 
+pub const W_NUM_BAG_ITEMS: u16 = 0xd31c;
+
 /// bit 7 = battle animation
 ///   0: On
 ///   1: Off
