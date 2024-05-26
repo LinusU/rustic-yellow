@@ -73,6 +73,10 @@ pub const W_PREDEF_BC: u16 = 0xcc53;
 /// If the entire value is 0, then the player is allowed to name the mon.
 pub const W_MON_DATA_LOCATION: u16 = 0xcc49;
 
+/// which NPC movement script pointer is being used \
+/// 0 if an NPC movement script is not running
+pub const W_NPC_MOVEMENT_SCRIPT_POINTER_TABLE_NUM: u16 = 0xcc57;
+
 pub const W_PARENT_MENU_ITEM: u16 = 0xccd3;
 
 /// if [wAILayer2Encouragement] != 1, the second AI layer is not applied
@@ -223,6 +227,8 @@ pub const W_MON_H_FRONT_SPRITE: u16 = 0xd0c2;
 
 pub const W_SAVED_TILE_ANIMATIONS: u16 = 0xd0d3;
 
+pub const W_REPEL_REMAINING_STEPS: u16 = 0xd0da;
+
 /// used as a Pokemon and Item storage value. Also used as an output value for CountSetBits
 pub const W_D11E: u16 = 0xd11e;
 
@@ -239,6 +245,7 @@ pub const W_NUMBER_OF_NO_RANDOM_BATTLE_STEPS_LEFT: u16 = 0xd13b;
 pub const W_PLAYER_NAME: u16 = 0xd157;
 
 pub const W_PARTY_DATA_START: u16 = 0xd162;
+pub const W_PARTY_MON1_LEVEL: u16 = 0xd18b;
 pub const W_PARTY_DATA_END: u16 = 0xd2f6;
 
 pub const W_MAIN_DATA_START: u16 = 0xd2f6;
@@ -285,6 +292,8 @@ pub const W_CUR_MAP_TILESET: u16 = 0xd366;
 
 pub const W_PRINTER_SETTINGS: u16 = 0xd497;
 
+pub const W_GRASS_TILE: u16 = 0xd534;
+
 /// bits 0-6: box number \
 /// bit 7: whether the player has changed boxes before
 pub const W_CURRENT_BOX_NUM: u16 = 0xd59f;
@@ -310,6 +319,13 @@ pub const W_D72E: u16 = 0xd72d;
 /// bit 7: set if joypad states are being simulated in the overworld or an NPC's movement is being scripted
 pub const W_D730: u16 = 0xd730;
 
+/// bit 0: check if the player is standing on a door and make him walk down a step if so \
+/// bit 1: the player is currently stepping down from a door \
+/// bit 2: standing on a warp \
+/// bit 6: jumping down a ledge / fishing animation \
+/// bit 7: player sprite spinning due to spin tiles (Rocket hideout / Viridian Gym)
+pub const W_D736: u16 = 0xd735;
+
 // bit 0: play time being counted
 // bit 1: remnant of debug mode; only set by the debug build.
 // if it is set:
@@ -330,6 +346,12 @@ pub const W_D730: u16 = 0xd730;
 pub const W_D732: u16 = 0xd731;
 
 pub const W_EVENT_FLAGS: u16 = 0xd746;
+
+pub const W_GRASS_RATE: u16 = 0xd886;
+pub const W_GRASS_MONS: u16 = 0xd887;
+
+pub const W_WATER_RATE: u16 = 0xd8a3;
+pub const W_WATER_MONS: u16 = 0xd8a4;
 
 pub const W_PLAY_TIME_HOURS: u16 = 0xda40;
 pub const W_PLAY_TIME_MAXED: u16 = 0xda41;

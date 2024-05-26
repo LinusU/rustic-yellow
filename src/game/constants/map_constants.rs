@@ -1,3 +1,5 @@
+pub const FIRST_INDOOR_MAP: u8 = 0x25;
+
 pub const POKEMON_TOWER_1F: u8 = 0x8e;
 pub const POKEMON_TOWER_7F: u8 = 0x94;
 

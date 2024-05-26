@@ -1,4 +1,5 @@
 pub const H_BASE_TILE_ID: u16 = 0xff8b;
+pub const H_SPRITE_INDEX_OR_TEXT_ID: u16 = 0xff8c;
 
 // these values are copied to rSCX, rSCY, and rWY during V-blank
 pub const H_SCX: u16 = 0xffae;
@@ -20,6 +21,9 @@ pub const H_AUTO_BG_TRANSFER_ENABLED: u16 = 0xffba;
 /// the destination address of the automatic background transfer \
 /// size: 2 bytes
 pub const H_AUTO_BG_TRANSFER_DEST: u16 = 0xffbc;
+
+pub const H_RANDOM_ADD: u16 = 0xffd3;
+pub const H_RANDOM_SUB: u16 = 0xffd4;
 
 /// V-blank sets this to 0 each time it runs.
 /// So, by setting it to a nonzero value and waiting for it to become 0 again,

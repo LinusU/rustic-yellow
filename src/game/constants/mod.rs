@@ -11,4 +11,5 @@ pub mod pikachu_emotion_constants;
 pub mod pokemon_constants;
 pub mod serial_constants;
 pub mod text_constants;
+pub mod tileset_constants;
 pub mod trainer_constants;
