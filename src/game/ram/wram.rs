@@ -187,6 +187,8 @@ pub const W_ENEMY_MON_NICK: u16 = 0xcfd9;
 
 pub const W_ENEMY_MON_PARTY_POS: u16 = 0xcfe7;
 
+pub const W_BATTLE_MON_PP: u16 = 0xd02c;
+
 pub const W_TRAINER_CLASS: u16 = 0xd030;
 
 pub const W_TRAINER_PIC_POINTER: u16 = 0xd032;
@@ -245,7 +247,10 @@ pub const W_NUMBER_OF_NO_RANDOM_BATTLE_STEPS_LEFT: u16 = 0xd13b;
 pub const W_PLAYER_NAME: u16 = 0xd157;
 
 pub const W_PARTY_DATA_START: u16 = 0xd162;
+pub const W_PARTY_MON1: u16 = 0xd16a;
+pub const W_PARTY_MON1_PP: u16 = 0xd187;
 pub const W_PARTY_MON1_LEVEL: u16 = 0xd18b;
+pub const W_PARTY_MON2: u16 = 0xd196;
 pub const W_PARTY_DATA_END: u16 = 0xd2f6;
 
 pub const W_MAIN_DATA_START: u16 = 0xd2f6;

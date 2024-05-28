@@ -51,6 +51,36 @@ impl BattleMonViewMut<'_> {
     }
 }
 
+pub struct BattleStatusView<'a> {
+    data: &'a [u8],
+}
+
+impl BattleStatusView<'_> {
+    pub fn new(data: &[u8]) -> BattleStatusView<'_> {
+        BattleStatusView { data }
+    }
+
+    pub fn storing_energy(&self) -> bool {
+        self.data[0] & 1 != 0
+    }
+
+    pub fn thrashing_about(&self) -> bool {
+        self.data[0] & 2 != 0
+    }
+
+    pub fn attacking_multiple_times(&self) -> bool {
+        self.data[0] & 4 != 0
+    }
+
+    pub fn using_rage(&self) -> bool {
+        self.data[1] & 64 != 0
+    }
+
+    pub fn transformed(&self) -> bool {
+        self.data[2] & 8 != 0
+    }
+}
+
 pub struct GameState {
     data: [u8; WRAM_SIZE],
 }
@@ -135,6 +165,14 @@ impl GameState {
         self.data[0x1357] = value;
     }
 
+    pub fn player_move_list_index(&self) -> u8 {
+        self.data[0x0c2e]
+    }
+
+    pub fn player_mon_number(&self) -> u8 {
+        self.data[0x0c2f]
+    }
+
     pub fn enemy_mon_species2(&self) -> u8 {
         self.data[0x0fd7]
     }
@@ -166,6 +204,10 @@ impl GameState {
 
     pub fn gym_leader_no(&self) -> u8 {
         self.data[0x105b]
+    }
+
+    pub fn player_battle_status(&self) -> BattleStatusView<'_> {
+        BattleStatusView::new(&self.data[0x1061..])
     }
 
     pub fn cur_map(&self) -> u8 {

@@ -106,6 +106,7 @@ impl Cpu {
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
                 (0x1c, 0x7b91) => crate::game::engine::menus::save::save_sav_to_sram(self),
                 (0x3c, 0x4000) => crate::game::engine::pikachu::pikachu_pcm::play_pikachu_sound_clip(self),
+                (0x3d, 0x42db) => crate::game::engine::battle::decrement_pp::decrement_pp(self),
                 (0x3d, 0x5ff2) => crate::game::engine::battle::init_battle::init_battle(self),
                 (0x3d, 0x5ff8) => crate::game::engine::battle::init_battle::init_opponent(self),
                 (0x3d, 0x615a) => crate::game::engine::battle::init_battle::_load_trainer_pic(self),
