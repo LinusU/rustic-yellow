@@ -76,3 +76,12 @@ pub fn enter_map(cpu: &mut Cpu) {
     // Fallthrough to OverworldLoop
     cpu.pc = 0x0242;
 }
+
+// Handle the player jumping down a ledge in the overworld.
+pub fn handle_mid_jump(cpu: &mut Cpu) {
+    if (cpu.read_byte(wram::W_D736) & (1 << 6)) != 0 {
+        macros::farcall::farcall(cpu, 0x1c, 0x48df); // _HandleMidJump
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
