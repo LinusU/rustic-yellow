@@ -308,6 +308,24 @@ pub const W_PALLET_TOWN_CUR_SCRIPT: u16 = 0xd5f0;
 pub const W_RIVAL_STARTER: u16 = 0xd714;
 pub const W_PLAYER_STARTER: u16 = 0xd716;
 
+/// bit 0: if not set, the 3 minimum steps between random battles have passed \
+/// bit 1: prevent audio fade out
+pub const W_D72C: u16 = 0xd72b;
+
+/// This variable is used for temporary flags and as the destination map when
+/// warping to the Trade Center or Colosseum.
+///
+/// bit 0: sprite facing directions have been initialised in the Trade Center \
+/// bit 3: do scripted warp (used to warp back to Lavender Town from the top of the pokemon tower) \
+/// bit 4: on a dungeon warp \
+/// bit 5: don't make NPCs face the player when spoken to
+///
+/// Bits 6 and 7 are set by scripts when starting major battles in the storyline,
+/// but they do not appear to affect anything. Bit 6 is reset after all battles
+/// and bit 7 is reset after trainer battles (but it's only set before trainer
+/// battles anyway).
+pub const W_D72D: u16 = 0xd72c;
+
 /// bit 0: the player has received Lapras in the Silph Co. building
 /// bit 1: set in various places, but doesn't appear to have an effect
 /// bit 2: the player has healed pokemon at a pokemon center at least once

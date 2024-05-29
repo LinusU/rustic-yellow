@@ -88,6 +88,7 @@ impl Cpu {
             match (self.bank(), self.pc) {
                 (_, 0x0000) => break,
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
+                (_, 0x01d7) => crate::game::home::overworld::enter_map(self),
                 (_, 0x143e) => crate::game::home::pics::load_mon_front_sprite(self),
                 (_, 0x2238) => crate::game::home::audio::play_sound(self),
                 (_, 0x3422) => crate::game::home::map_objects::is_item_in_bag(self),

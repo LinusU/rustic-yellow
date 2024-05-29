@@ -9,6 +9,15 @@ const BATTLE_MON_START: usize = 0x1013;
 const BOX_DATA_START: usize = 0x1a7f;
 const PARTY_DATA_START: usize = 0x1162;
 
+/// bit 0: using Strength outside of battle \
+/// bit 1: set by IsSurfingAllowed when surfing's allowed, but the caller resets it after checking the result \
+/// bit 3: received Old Rod \
+/// bit 4: received Good Rod \
+/// bit 5: received Super Rod \
+/// bit 6: gave one of the Saffron guards a drink \
+/// bit 7: set by ItemUseCardKey, which is leftover code from a previous implementation of the Card Key
+const W_D728: usize = 0x1727;
+
 fn fill_random(slice: &mut [u8], start: u32) {
     // Simple LCG to generate (non-cryptographic) random values
     // Each distinct invocation should use a different start value
@@ -143,6 +152,10 @@ impl GameState {
         self.data[0x113b]
     }
 
+    pub fn set_number_of_no_random_battle_steps_left(&mut self, value: u8) {
+        self.data[0x113b] = value;
+    }
+
     /// Offset subtracted from FadePal4 to get the background and object palettes for the current map
     /// normally, it is 0. It is 6 when Flash is needed, causing FadePal2 to be used instead of FadePal4
     pub fn map_pal_offset(&self) -> u8 {
@@ -171,6 +184,10 @@ impl GameState {
 
     pub fn player_mon_number(&self) -> u8 {
         self.data[0x0c2f]
+    }
+
+    pub fn set_joy_ignore(&mut self, value: u8) {
+        self.data[0x0d6b] = value;
     }
 
     pub fn enemy_mon_species2(&self) -> u8 {
@@ -328,5 +345,15 @@ impl GameState {
     /// high bit = enable, others = timer to cycle frequencies
     pub fn set_low_health_alarm(&mut self, value: u8) {
         self.data[0x1082] = value;
+    }
+
+    pub fn set_using_strength_out_of_battle(&mut self, value: bool) {
+        let current = self.data[W_D728];
+
+        if value {
+            self.data[W_D728] = current | 1;
+        } else {
+            self.data[W_D728] = current & !1;
+        }
     }
 }
