@@ -297,6 +297,9 @@ pub const W_CUR_MAP_TILESET: u16 = 0xd366;
 
 pub const W_PRINTER_SETTINGS: u16 = 0xd497;
 
+pub const W_SIGN_COORDS: u16 = 0xd4b0;
+pub const W_SIGN_TEXT_IDS: u16 = 0xd4d0;
+
 pub const W_GRASS_TILE: u16 = 0xd534;
 
 /// bits 0-6: box number \

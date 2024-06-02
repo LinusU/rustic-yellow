@@ -1,6 +1,9 @@
 use crate::{
-    cpu::Cpu,
-    game::{macros, ram::wram},
+    cpu::{Cpu, CpuFlag},
+    game::{
+        macros,
+        ram::{hram, wram},
+    },
 };
 
 /// Load a new map
@@ -75,6 +78,46 @@ pub fn enter_map(cpu: &mut Cpu) {
 
     // Fallthrough to OverworldLoop
     cpu.pc = 0x0242;
+}
+
+/// search if a player is facing a sign
+/// In: d = sign y, e = sign x
+/// Out: flag C = facing sign
+pub fn sign_loop(cpu: &mut Cpu) {
+    // start of sign coordinates
+    cpu.set_hl(wram::W_SIGN_COORDS);
+
+    // number of signs in the map
+    cpu.b = cpu.borrow_wram().num_signs();
+    cpu.c = 0;
+
+    let facing_sign = loop {
+        cpu.c += 1;
+
+        let sign_y = cpu.read_byte(cpu.hl());
+        let sign_x = cpu.read_byte(cpu.hl() + 1);
+
+        cpu.set_hl(cpu.hl() + 2);
+
+        if sign_y == cpu.d && sign_x == cpu.e {
+            // store sign text ID
+            let text_id = cpu.read_byte(wram::W_SIGN_TEXT_IDS + ((cpu.c - 1) as u16));
+            cpu.write_byte(hram::H_SPRITE_INDEX_OR_TEXT_ID, text_id);
+
+            break true;
+        }
+
+        cpu.b -= 1;
+
+        if cpu.b == 0 {
+            break false;
+        }
+    };
+
+    cpu.set_flag(CpuFlag::C, facing_sign);
+    log::debug!("sign_loop(y = {}, x = {}) == {}", cpu.d, cpu.e, facing_sign);
+
+    cpu.pc = cpu.stack_pop(); // ret
 }
 
 // Handle the player jumping down a ledge in the overworld.

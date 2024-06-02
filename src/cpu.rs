@@ -89,6 +89,7 @@ impl Cpu {
                 (_, 0x0000) => break,
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
                 (_, 0x01d7) => crate::game::home::overworld::enter_map(self),
+                (_, 0x09f2) => crate::game::home::overworld::sign_loop(self),
                 (_, 0x0fe1) => crate::game::home::overworld::handle_mid_jump(self),
                 (_, 0x143e) => crate::game::home::pics::load_mon_front_sprite(self),
                 (_, 0x2238) => crate::game::home::audio::play_sound(self),

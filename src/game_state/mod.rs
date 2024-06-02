@@ -347,6 +347,11 @@ impl GameState {
         self.data[0x1082] = value;
     }
 
+    /// Number of signs in the current map (up to 16)
+    pub fn num_signs(&self) -> u8 {
+        self.data[0x14af]
+    }
+
     pub fn set_using_strength_out_of_battle(&mut self, value: bool) {
         let current = self.data[W_D728];
 
