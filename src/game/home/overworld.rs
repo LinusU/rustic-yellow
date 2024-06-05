@@ -84,6 +84,52 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+/// function to check if there is a sign or sprite in front of the player \
+/// if so, carry is set. otherwise, carry is cleared
+pub fn is_sprite_or_sign_in_front_of_player(cpu: &mut Cpu) {
+    cpu.write_byte(hram::H_SPRITE_INDEX_OR_TEXT_ID, 0);
+    cpu.a = cpu.borrow_wram().num_signs();
+
+    // and a, a
+    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::C, false);
+
+    if cpu.a > 0 {
+        // if there are signs
+        // get the coordinates in front of the player in de
+        macros::predef::predef_call!(cpu, GetTileAndCoordsInFrontOfPlayer);
+
+        // call SignLoop
+        cpu.call(0x09f2);
+
+        if cpu.flag(CpuFlag::C) {
+            cpu.pc = cpu.stack_pop(); // ret
+            log::debug!("is_sprite_or_sign_in_front_of_player() == true (sign in front of player)");
+            return;
+        }
+    }
+
+    // check if the player is front of a counter in a pokemon center, pokemart, etc. and if so, extend the range at which he can talk to the NPC
+    // get the tile in front of the player in c
+    macros::predef::predef_call!(cpu, GetTileAndCoordsInFrontOfPlayer);
+    let tile_in_front_of_player = cpu.c;
+
+    // list of tiles that extend talking range (counter tiles)
+    let talking_over_tiles = cpu.borrow_wram().tileset_talking_over_tiles();
+
+    if talking_over_tiles.contains(&tile_in_front_of_player) {
+        // talking range in pixels (long range)
+        cpu.d = 0x20;
+
+        log::debug!("is_sprite_or_sign_in_front_of_player() (counter tile in front of player)");
+        is_sprite_in_front_of_player2(cpu)
+    } else {
+        is_sprite_in_front_of_player(cpu)
+    }
+}
+
 /// sets carry flag if a sprite is in front of the player, resets if not
 pub fn is_sprite_in_front_of_player(cpu: &mut Cpu) {
     // talking range in pixels (normal range)

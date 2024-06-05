@@ -358,6 +358,10 @@ impl GameState {
         self.data[0x1529] = direction;
     }
 
+    pub fn tileset_talking_over_tiles(&self) -> [u8; 3] {
+        [self.data[0x1531], self.data[0x1532], self.data[0x1533]]
+    }
+
     pub fn set_using_strength_out_of_battle(&mut self, value: bool) {
         let current = self.data[W_D728];
 
