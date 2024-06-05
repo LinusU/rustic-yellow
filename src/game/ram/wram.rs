@@ -7,6 +7,8 @@ pub const W_FREQUENCY_MODIFIER: u16 = 0xc0f1;
 pub const W_TEMPO_MODIFIER: u16 = 0xc0f2;
 
 pub const W_SPRITE_DATA_START: u16 = 0xc100;
+pub const W_SPRITE01_STATE_DATA1: u16 = 0xc110;
+pub const W_SPRITE_PLAYER_STATE_DATA1_FACING_DIRECTION: u16 = 0xc109;
 pub const W_SPRITE_DATA_END: u16 = 0xc300;
 
 pub const W_TILE_MAP: u16 = 0xc3a0;
@@ -294,6 +296,8 @@ pub const W_PLAYER_ID: u16 = 0xd358;
 pub const W_CUR_MAP: u16 = 0xd35d;
 
 pub const W_CUR_MAP_TILESET: u16 = 0xd366;
+
+pub const W_D436: u16 = 0xd435;
 
 pub const W_PRINTER_SETTINGS: u16 = 0xd497;
 

@@ -1,6 +1,10 @@
 use crate::{
     cpu::{Cpu, CpuFlag},
     game::{
+        constants::sprite_data_constants::{
+            PLAYER_DIR_DOWN, PLAYER_DIR_LEFT, PLAYER_DIR_RIGHT, PLAYER_DIR_UP, SPRITE_FACING_DOWN,
+            SPRITE_FACING_LEFT, SPRITE_FACING_RIGHT, SPRITE_FACING_UP,
+        },
         macros,
         ram::{hram, wram},
     },
@@ -78,6 +82,114 @@ pub fn enter_map(cpu: &mut Cpu) {
 
     // Fallthrough to OverworldLoop
     cpu.pc = 0x0242;
+}
+
+/// sets carry flag if a sprite is in front of the player, resets if not
+pub fn is_sprite_in_front_of_player(cpu: &mut Cpu) {
+    // talking range in pixels (normal range)
+    cpu.d = 0x10;
+
+    // fallthrough
+    is_sprite_in_front_of_player2(cpu)
+}
+
+pub fn is_sprite_in_front_of_player2(cpu: &mut Cpu) {
+    log::trace!("is_sprite_in_front_of_player2(range = {})", cpu.d);
+
+    // Y and X position of player sprite
+    cpu.b = 0x3c;
+    cpu.c = 0x40;
+
+    let direction = match cpu.read_byte(wram::W_SPRITE_PLAYER_STATE_DATA1_FACING_DIRECTION) {
+        SPRITE_FACING_UP => {
+            cpu.b -= cpu.d;
+            PLAYER_DIR_UP
+        }
+        SPRITE_FACING_DOWN => {
+            cpu.b += cpu.d;
+            PLAYER_DIR_DOWN
+        }
+        SPRITE_FACING_LEFT => {
+            cpu.c -= cpu.d;
+            PLAYER_DIR_LEFT
+        }
+        SPRITE_FACING_RIGHT => {
+            cpu.c += cpu.d;
+            PLAYER_DIR_RIGHT
+        }
+        fd => unreachable!("Unknown player sprite direction: {}", fd),
+    };
+
+    cpu.borrow_wram_mut().set_player_direction(direction);
+
+    cpu.set_hl(wram::W_SPRITE01_STATE_DATA1);
+
+    // yellow does not have the "if sprites are existant" check
+    cpu.e = 0x01;
+    cpu.d = 0x0f;
+
+    is_sprite_in_front_of_player2_sprite_loop(cpu);
+}
+
+fn is_sprite_in_front_of_player2_sprite_loop(cpu: &mut Cpu) {
+    // image (0 if no sprite)
+    if cpu.read_byte(cpu.hl()) == 0 {
+        return is_sprite_in_front_of_player2_next_sprite(cpu);
+    }
+
+    // sprite visibility
+    if cpu.read_byte(cpu.hl() + 2) == 0xff {
+        return is_sprite_in_front_of_player2_next_sprite(cpu);
+    }
+
+    // Y location
+    if cpu.read_byte(cpu.hl() + 4) != cpu.b {
+        return is_sprite_in_front_of_player2_next_sprite(cpu);
+    }
+
+    // X location
+    if cpu.read_byte(cpu.hl() + 6) != cpu.c {
+        return is_sprite_in_front_of_player2_next_sprite(cpu);
+    }
+
+    // hl + 1 = x#SPRITESTATEDATA1_MOVEMENTSTATUS
+    // set flag to make the sprite face the player
+    {
+        let value = cpu.read_byte(cpu.hl() + 1);
+        cpu.write_byte(cpu.hl() + 1, value | (1 << 7));
+    }
+
+    cpu.write_byte(hram::H_SPRITE_INDEX_OR_TEXT_ID, cpu.e);
+
+    if cpu.e == 0xf {
+        cpu.write_byte(wram::W_D436, 0xff);
+    }
+
+    cpu.set_flag(CpuFlag::Z, cpu.e == 0xf);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.set_flag(CpuFlag::H, false);
+    cpu.set_flag(CpuFlag::C, true);
+
+    log::debug!("is_sprite_in_front_of_player2() == {}", true);
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
+fn is_sprite_in_front_of_player2_next_sprite(cpu: &mut Cpu) {
+    cpu.l += 0x10;
+    cpu.e += 1;
+    cpu.d -= 1;
+
+    if cpu.d > 0 {
+        return is_sprite_in_front_of_player2_sprite_loop(cpu);
+    }
+
+    cpu.set_flag(CpuFlag::Z, true);
+    cpu.set_flag(CpuFlag::C, false);
+    cpu.set_flag(CpuFlag::H, false);
+    cpu.set_flag(CpuFlag::N, false);
+
+    log::trace!("is_sprite_in_front_of_player2() == {}", false);
+    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// search if a player is facing a sign

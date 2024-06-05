@@ -352,6 +352,12 @@ impl GameState {
         self.data[0x14af]
     }
 
+    /// If the player is moving, the current direction \
+    /// If the player is not moving, the last the direction in which the player moved
+    pub fn set_player_direction(&mut self, direction: u8) {
+        self.data[0x1529] = direction;
+    }
+
     pub fn set_using_strength_out_of_battle(&mut self, value: bool) {
         let current = self.data[W_D728];
 

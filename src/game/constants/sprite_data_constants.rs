@@ -1,0 +1,14 @@
+pub const SPRITE_FACING_DOWN: u8 = 0x00;
+pub const SPRITE_FACING_UP: u8 = 0x04;
+pub const SPRITE_FACING_LEFT: u8 = 0x08;
+pub const SPRITE_FACING_RIGHT: u8 = 0x0c;
+
+const PLAYER_DIR_BIT_RIGHT: u8 = 0;
+const PLAYER_DIR_BIT_LEFT: u8 = 1;
+const PLAYER_DIR_BIT_DOWN: u8 = 2;
+const PLAYER_DIR_BIT_UP: u8 = 3;
+
+pub const PLAYER_DIR_RIGHT: u8 = 1 << PLAYER_DIR_BIT_RIGHT;
+pub const PLAYER_DIR_LEFT: u8 = 1 << PLAYER_DIR_BIT_LEFT;
+pub const PLAYER_DIR_DOWN: u8 = 1 << PLAYER_DIR_BIT_DOWN;
+pub const PLAYER_DIR_UP: u8 = 1 << PLAYER_DIR_BIT_UP;
