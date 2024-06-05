@@ -96,15 +96,12 @@ pub fn is_sprite_or_sign_in_front_of_player(cpu: &mut Cpu) {
     cpu.set_flag(CpuFlag::H, true);
     cpu.set_flag(CpuFlag::C, false);
 
+    // if there are signs
     if cpu.a > 0 {
-        // if there are signs
         // get the coordinates in front of the player in de
         macros::predef::predef_call!(cpu, GetTileAndCoordsInFrontOfPlayer);
 
-        // call SignLoop
-        cpu.call(0x09f2);
-
-        if cpu.flag(CpuFlag::C) {
+        if sign_loop(cpu, cpu.d, cpu.e) {
             cpu.pc = cpu.stack_pop(); // ret
             log::debug!("is_sprite_or_sign_in_front_of_player() == true (sign in front of player)");
             return;
@@ -239,43 +236,23 @@ fn is_sprite_in_front_of_player2_next_sprite(cpu: &mut Cpu) {
 }
 
 /// search if a player is facing a sign
-/// In: d = sign y, e = sign x
-/// Out: flag C = facing sign
-pub fn sign_loop(cpu: &mut Cpu) {
-    // start of sign coordinates
-    cpu.set_hl(wram::W_SIGN_COORDS);
+fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
+    let num_signs = cpu.borrow_wram().num_signs() as u16;
 
-    // number of signs in the map
-    cpu.b = cpu.borrow_wram().num_signs();
-    cpu.c = 0;
+    for idx in 0..num_signs {
+        let sign_y = cpu.read_byte(wram::W_SIGN_COORDS + (idx * 2));
+        let sign_x = cpu.read_byte(wram::W_SIGN_COORDS + (idx * 2) + 1);
 
-    let facing_sign = loop {
-        cpu.c += 1;
-
-        let sign_y = cpu.read_byte(cpu.hl());
-        let sign_x = cpu.read_byte(cpu.hl() + 1);
-
-        cpu.set_hl(cpu.hl() + 2);
-
-        if sign_y == cpu.d && sign_x == cpu.e {
+        if sign_y == y && sign_x == x {
             // store sign text ID
-            let text_id = cpu.read_byte(wram::W_SIGN_TEXT_IDS + ((cpu.c - 1) as u16));
+            let text_id = cpu.read_byte(wram::W_SIGN_TEXT_IDS + idx);
             cpu.write_byte(hram::H_SPRITE_INDEX_OR_TEXT_ID, text_id);
 
-            break true;
+            return true;
         }
+    }
 
-        cpu.b -= 1;
-
-        if cpu.b == 0 {
-            break false;
-        }
-    };
-
-    cpu.set_flag(CpuFlag::C, facing_sign);
-    log::debug!("sign_loop(y = {}, x = {}) == {}", cpu.d, cpu.e, facing_sign);
-
-    cpu.pc = cpu.stack_pop(); // ret
+    false
 }
 
 // Handle the player jumping down a ledge in the overworld.
