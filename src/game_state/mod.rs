@@ -4,6 +4,7 @@ use crate::{
 };
 
 const WRAM_SIZE: usize = 0x8000;
+const ZRAM_SIZE: usize = 0x7F;
 
 const BATTLE_MON_START: usize = 0x1013;
 const BOX_DATA_START: usize = 0x1a7f;
@@ -92,6 +93,7 @@ impl BattleStatusView<'_> {
 
 pub struct GameState {
     data: [u8; WRAM_SIZE],
+    high_ram: [u8; ZRAM_SIZE],
 }
 
 impl GameState {
@@ -100,7 +102,10 @@ impl GameState {
 
         fill_random(&mut data, 42);
 
-        GameState { data }
+        GameState {
+            data,
+            high_ram: [0; ZRAM_SIZE],
+        }
     }
 
     pub fn byte(&self, addr: usize) -> u8 {
@@ -109,6 +114,14 @@ impl GameState {
 
     pub fn set_byte(&mut self, addr: usize, value: u8) {
         self.data[addr] = value;
+    }
+
+    pub fn high_ram_byte(&self, addr: usize) -> u8 {
+        self.high_ram[addr]
+    }
+
+    pub fn set_high_ram_byte(&mut self, addr: usize, value: u8) {
+        self.high_ram[addr] = value;
     }
 
     pub fn battle_mon_mut(&mut self) -> BattleMonViewMut<'_> {
@@ -292,6 +305,10 @@ impl GameState {
         self.data[0x1077] = value as u8;
     }
 
+    pub fn predef_parent_bank(&self) -> u8 {
+        self.data[0x0f12]
+    }
+
     pub fn set_player_hp_bar_color(&mut self, value: u8) {
         self.data[0x0f1c] = value;
     }
@@ -347,6 +364,22 @@ impl GameState {
         self.data[0x1082] = value;
     }
 
+    /// Pointer to the upper left corner of the current view in the tile block map
+    pub fn set_current_tile_block_map_view_pointer(&mut self, value: u16) {
+        self.data[0x135e] = (value >> 8) as u8;
+        self.data[0x135f] = value as u8;
+    }
+
+    /// Player's Y position on the current map
+    pub fn set_y_coord(&mut self, value: u8) {
+        self.data[0x1360] = value;
+    }
+
+    /// Player's X position on the current map
+    pub fn set_x_coord(&mut self, value: u8) {
+        self.data[0x1361] = value;
+    }
+
     /// Number of signs in the current map (up to 16)
     pub fn num_signs(&self) -> u8 {
         self.data[0x14af]
@@ -370,5 +403,13 @@ impl GameState {
         } else {
             self.data[W_D728] = current & !1;
         }
+    }
+
+    pub fn loaded_rom_bank(&self) -> u8 {
+        self.high_ram[0x38]
+    }
+
+    pub fn set_loaded_rom_bank(&mut self, value: u8) {
+        self.high_ram[0x38] = value;
     }
 }

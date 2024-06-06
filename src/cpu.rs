@@ -94,6 +94,7 @@ impl Cpu {
                 (_, 0x0983) => crate::game::home::overworld::is_sprite_in_front_of_player(self),
                 (_, 0x0985) => crate::game::home::overworld::is_sprite_in_front_of_player2(self),
                 (_, 0x0fe1) => crate::game::home::overworld::handle_mid_jump(self),
+                (_, 0x10d5) => crate::game::home::overworld::load_destination_warp_position(self),
                 (_, 0x143e) => crate::game::home::pics::load_mon_front_sprite(self),
                 (_, 0x2238) => crate::game::home::audio::play_sound(self),
                 (_, 0x3422) => crate::game::home::map_objects::is_item_in_bag(self),

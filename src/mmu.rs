@@ -11,9 +11,6 @@ use crate::{
     timer::Timer,
 };
 
-const WRAM_SIZE: usize = 0x8000;
-const ZRAM_SIZE: usize = 0x7F;
-
 #[derive(PartialEq)]
 enum DMAType {
     NoDMA,
@@ -29,7 +26,6 @@ pub enum GbSpeed {
 
 pub struct Mmu {
     wram: GameState,
-    zram: [u8; ZRAM_SIZE],
     hdma: [u8; 4],
     pub inte: u8,
     pub intf: u8,
@@ -53,7 +49,6 @@ impl Mmu {
     pub fn new(update_screen: SyncSender<Vec<u8>>, keypad_events: Receiver<KeyboardEvent>) -> Mmu {
         let mut mmu = Mmu {
             wram: GameState::new(),
-            zram: [0; ZRAM_SIZE],
             hdma: [0; 4],
             inte: 0,
             intf: 0,
@@ -152,7 +147,7 @@ impl Mmu {
             0xFF51..=0xFF55 => self.hdma_read(address),
             0xFF68..=0xFF6B => self.gpu.rb(address),
             0xFF70 => self.wrambank as u8,
-            0xFF80..=0xFFFE => self.zram[address as usize & 0x007F],
+            0xFF80..=0xFFFE => self.wram.high_ram_byte(address as usize & 0x007F),
             0xFFFF => self.inte,
             // _ => 0xFF,
             _ => panic!("Unimplemented read from {:04X}", address),
@@ -183,7 +178,7 @@ impl Mmu {
             0xFF68..=0xFF6B => self.gpu.wb(address, value),
             0xFF0F => self.intf = value,
             0xFF70 => { self.wrambank = match value & 0x7 { 0 => 1, n => n as usize }; },
-            0xFF80..=0xFFFE => self.zram[address as usize & 0x007F] = value,
+            0xFF80..=0xFFFE => self.wram.set_high_ram_byte(address as usize & 0x007F, value),
             0xFFFF => self.inte = value,
             _ => panic!("Invalid write to address {:#06X}", address),
         };

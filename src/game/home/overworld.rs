@@ -1,9 +1,12 @@
 use crate::{
     cpu::{Cpu, CpuFlag},
     game::{
-        constants::sprite_data_constants::{
-            PLAYER_DIR_DOWN, PLAYER_DIR_LEFT, PLAYER_DIR_RIGHT, PLAYER_DIR_UP, SPRITE_FACING_DOWN,
-            SPRITE_FACING_LEFT, SPRITE_FACING_RIGHT, SPRITE_FACING_UP,
+        constants::{
+            hardware_constants::MBC1_ROM_BANK,
+            sprite_data_constants::{
+                PLAYER_DIR_DOWN, PLAYER_DIR_LEFT, PLAYER_DIR_RIGHT, PLAYER_DIR_UP,
+                SPRITE_FACING_DOWN, SPRITE_FACING_LEFT, SPRITE_FACING_RIGHT, SPRITE_FACING_UP,
+            },
         },
         macros,
         ram::{hram, wram},
@@ -260,6 +263,47 @@ pub fn handle_mid_jump(cpu: &mut Cpu) {
     if (cpu.read_byte(wram::W_D736) & (1 << 6)) != 0 {
         macros::farcall::farcall(cpu, 0x1c, 0x48df); // _HandleMidJump
     }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
+/// Load position data for destination warp when switching maps
+///
+/// INPUT: \
+/// a = ID of destination warp within destination map \
+/// hl = pointer to warp data
+pub fn load_destination_warp_position(cpu: &mut Cpu) {
+    let warp_id = cpu.a;
+    let warp_data = cpu.hl();
+
+    log::debug!(
+        "load_destination_warp_position(warp_id={}, warp_data={:04x})",
+        warp_id,
+        warp_data
+    );
+
+    let saved_bank = cpu.borrow_wram().loaded_rom_bank();
+
+    // Load bank
+    let bank = cpu.borrow_wram().predef_parent_bank();
+    cpu.borrow_wram_mut().set_loaded_rom_bank(bank);
+    cpu.write_byte(MBC1_ROM_BANK, bank);
+
+    // Read data
+    let src = warp_data + (warp_id * 4) as u16;
+    let pointer = u16::from_be_bytes([cpu.read_byte(src), cpu.read_byte(src + 1)]);
+    let y = cpu.read_byte(src + 2);
+    let x = cpu.read_byte(src + 3);
+
+    // Write data
+    let wram = cpu.borrow_wram_mut();
+    wram.set_current_tile_block_map_view_pointer(pointer);
+    wram.set_y_coord(y);
+    wram.set_x_coord(x);
+
+    // Restore bank
+    cpu.borrow_wram_mut().set_loaded_rom_bank(saved_bank);
+    cpu.write_byte(MBC1_ROM_BANK, saved_bank);
 
     cpu.pc = cpu.stack_pop(); // ret
 }
