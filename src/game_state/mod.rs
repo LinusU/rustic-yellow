@@ -371,13 +371,44 @@ impl GameState {
     }
 
     /// Player's Y position on the current map
+    pub fn y_coord(&self) -> u8 {
+        self.data[0x1360]
+    }
+
     pub fn set_y_coord(&mut self, value: u8) {
         self.data[0x1360] = value;
     }
 
     /// Player's X position on the current map
+    pub fn x_coord(&self) -> u8 {
+        self.data[0x1361]
+    }
+
     pub fn set_x_coord(&mut self, value: u8) {
         self.data[0x1361] = value;
+    }
+
+    /// Player's Y position (by block)
+    pub fn set_y_block_coord(&mut self, value: u8) {
+        self.data[0x1362] = value;
+    }
+
+    /// Player's X position (by block)
+    pub fn set_x_block_coord(&mut self, value: u8) {
+        self.data[0x1363] = value;
+    }
+
+    pub fn cur_map_tileset(&self) -> u8 {
+        self.data[0x1366]
+    }
+
+    pub fn set_cur_map_tileset(&mut self, value: u8) {
+        self.data[0x1366] = value;
+    }
+
+    /// If $ff, the player's coordinates are not updated when entering the map
+    pub fn destination_warp_id(&self) -> u8 {
+        self.data[0x142e]
     }
 
     /// Number of signs in the current map (up to 16)
@@ -405,11 +436,28 @@ impl GameState {
         }
     }
 
+    pub fn previous_tileset(&self) -> u8 {
+        self.high_ram[0x0b]
+    }
+
     pub fn loaded_rom_bank(&self) -> u8 {
         self.high_ram[0x38]
     }
 
     pub fn set_loaded_rom_bank(&mut self, value: u8) {
         self.high_ram[0x38] = value;
+    }
+
+    /// Controls which tiles are animated.
+    ///
+    /// 0 = no animations (breaks Surf) \
+    /// 1 = water tile $14 is animated \
+    /// 2 = water tile $14 and flower tile $03 are animated
+    pub fn set_tile_animations(&mut self, value: u8) {
+        self.high_ram[0x57] = value;
+    }
+
+    pub fn set_moving_bg_tiles_counter1(&mut self, value: u8) {
+        self.high_ram[0x58] = value;
     }
 }

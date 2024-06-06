@@ -4,5 +4,6 @@ pub mod gfx;
 pub mod items;
 pub mod menus;
 pub mod movie;
+pub mod overworld;
 pub mod pikachu;
 pub mod pokemon;

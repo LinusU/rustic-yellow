@@ -103,6 +103,7 @@ impl Cpu {
                 (0x01, 0x5ba6) => panic!("main_menu should only be called from Rust"),
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
                 (0x02, 0x5064) => crate::game::audio::play_battle_music::play_battle_music(self),
+                (0x03, 0x44f4) => crate::game::engine::overworld::tilesets::load_tileset_header(self),
                 (0x03, 0x6807) => crate::game::engine::items::item_effects::hook_send_new_mon_to_box_end(self),
                 (0x03, 0x7735) => crate::game::engine::items::get_bag_item_quantity::get_quantity_of_item_in_bag(self),
                 (0x04, 0x783a) => crate::game::engine::battle::wild_encounters::try_do_wild_encounter(self),
