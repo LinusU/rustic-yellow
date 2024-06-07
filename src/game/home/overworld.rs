@@ -268,14 +268,7 @@ pub fn handle_mid_jump(cpu: &mut Cpu) {
 }
 
 /// Load position data for destination warp when switching maps
-///
-/// INPUT: \
-/// a = ID of destination warp within destination map \
-/// hl = pointer to warp data
-pub fn load_destination_warp_position(cpu: &mut Cpu) {
-    let warp_id = cpu.a;
-    let warp_data = cpu.hl();
-
+pub fn load_destination_warp_position(cpu: &mut Cpu, warp_id: u8, warp_data: u16) {
     log::debug!(
         "load_destination_warp_position(warp_id={}, warp_data={:04x})",
         warp_id,
@@ -304,6 +297,4 @@ pub fn load_destination_warp_position(cpu: &mut Cpu) {
     // Restore bank
     cpu.borrow_wram_mut().set_loaded_rom_bank(saved_bank);
     cpu.write_byte(MBC1_ROM_BANK, saved_bank);
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
