@@ -268,6 +268,22 @@ pub fn handle_mid_jump(cpu: &mut Cpu) {
     cpu.pc = cpu.stack_pop(); // ret
 }
 
+/// Zero out sprite state data for sprites 01..=14 \
+/// Sprite 15 is used for Pikachu
+pub fn zero_sprite_state_data(cpu: &mut Cpu) {
+    log::debug!("zero_sprite_state_data()");
+
+    const SPRITE_COUNT: u16 = 14;
+    const DATA_SIZE: u16 = 0x10;
+
+    for i in 0..(SPRITE_COUNT * DATA_SIZE) {
+        cpu.write_byte(wram::W_SPRITE01_STATE_DATA1 + i, 0);
+        cpu.write_byte(wram::W_SPRITE01_STATE_DATA2 + i, 0);
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Disable SPRITESTATEDATA1_IMAGEINDEX (set to $ff) for sprites 01..=14
 pub fn disable_regular_sprites(cpu: &mut Cpu) {
     log::debug!("disable_regular_sprites()");

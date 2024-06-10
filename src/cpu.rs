@@ -94,6 +94,7 @@ impl Cpu {
                 (_, 0x0983) => crate::game::home::overworld::is_sprite_in_front_of_player(self),
                 (_, 0x0985) => crate::game::home::overworld::is_sprite_in_front_of_player2(self),
                 (_, 0x0fe1) => crate::game::home::overworld::handle_mid_jump(self),
+                (_, 0x1050) => crate::game::home::overworld::zero_sprite_state_data(self),
                 (_, 0x1060) => crate::game::home::overworld::disable_regular_sprites(self),
                 (_, 0x106f) => crate::game::home::overworld::load_sprite(self),
                 (_, 0x10ba) => crate::game::home::overworld::check_for_user_interruption(self),
