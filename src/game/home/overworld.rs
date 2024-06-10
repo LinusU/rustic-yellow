@@ -268,6 +268,17 @@ pub fn handle_mid_jump(cpu: &mut Cpu) {
     cpu.pc = cpu.stack_pop(); // ret
 }
 
+/// Disable SPRITESTATEDATA1_IMAGEINDEX (set to $ff) for sprites 01..=14
+pub fn disable_regular_sprites(cpu: &mut Cpu) {
+    log::debug!("disable_regular_sprites()");
+
+    for i in 0..14 {
+        cpu.write_byte(wram::W_SPRITE01_STATE_DATA1_IMAGE_INDEX + (i * 0x10), 0xff);
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Input:
 /// c = 2x index into MAP_SPRITE_DATA and W_MAP_SPRITE_EXTRA_DATA
 /// hl = pointer to last part (arg 7) of object_event
