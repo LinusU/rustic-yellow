@@ -3,12 +3,13 @@ use crate::{
     game::{
         constants::{
             hardware_constants::MBC1_ROM_BANK,
+            input_constants::{A_BUTTON, B_BUTTON, D_UP, SELECT, START},
             sprite_data_constants::{
                 PLAYER_DIR_DOWN, PLAYER_DIR_LEFT, PLAYER_DIR_RIGHT, PLAYER_DIR_UP,
                 SPRITE_FACING_DOWN, SPRITE_FACING_LEFT, SPRITE_FACING_RIGHT, SPRITE_FACING_UP,
             },
         },
-        macros,
+        home, macros,
         ram::{hram, wram},
     },
 };
@@ -265,6 +266,42 @@ pub fn handle_mid_jump(cpu: &mut Cpu) {
     }
 
     cpu.pc = cpu.stack_pop(); // ret
+}
+
+/// Return carry if Up+Select+B, Start or A are pressed in c frames. \
+/// Used only in the intro and title screen.
+pub fn check_for_user_interruption(cpu: &mut Cpu) {
+    let frames = cpu.c;
+
+    for _ in 0..frames {
+        home::vblank::delay_frame(cpu);
+
+        let saved_bc = cpu.bc();
+        cpu.call(0x381e); // JoypadLowSensitivity
+        cpu.set_bc(saved_bc);
+
+        let joy_held = cpu.read_byte(hram::H_JOY_HELD);
+
+        if joy_held == (D_UP | SELECT | B_BUTTON) {
+            cpu.set_flag(CpuFlag::C, true);
+            cpu.pc = cpu.stack_pop(); // ret
+            log::debug!("check_for_user_interruption() == {}", true);
+            return;
+        }
+
+        let joy_5 = cpu.read_byte(hram::H_JOY_5);
+
+        if (joy_5 & (START | A_BUTTON)) != 0 {
+            cpu.set_flag(CpuFlag::C, true);
+            cpu.pc = cpu.stack_pop(); // ret
+            log::debug!("check_for_user_interruption() == {}", true);
+            return;
+        }
+    }
+
+    cpu.set_flag(CpuFlag::C, false);
+    cpu.pc = cpu.stack_pop(); // ret
+    log::trace!("check_for_user_interruption() == {}", false);
 }
 
 /// Load position data for destination warp when switching maps

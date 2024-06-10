@@ -10,6 +10,7 @@ pub const H_JOY_LAST: u16 = 0xffb1;
 pub const H_JOY_RELEASED: u16 = 0xffb2;
 pub const H_JOY_PRESSED: u16 = 0xffb3;
 pub const H_JOY_HELD: u16 = 0xffb4;
+pub const H_JOY_5: u16 = 0xffb5;
 
 pub const H_LOADED_ROM_BANK: u16 = 0xffb8;
 
