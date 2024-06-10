@@ -1,6 +1,9 @@
 pub const H_BASE_TILE_ID: u16 = 0xff8b;
 pub const H_SPRITE_INDEX_OR_TEXT_ID: u16 = 0xff8c;
 
+pub const H_LOAD_SPRITE_TEMP1: u16 = 0xff8d;
+pub const H_LOAD_SPRITE_TEMP2: u16 = 0xff8e;
+
 // these values are copied to rSCX, rSCY, and rWY during V-blank
 pub const H_SCX: u16 = 0xffae;
 pub const H_SCY: u16 = 0xffaf;

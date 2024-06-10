@@ -268,6 +268,362 @@ pub fn handle_mid_jump(cpu: &mut Cpu) {
     cpu.pc = cpu.stack_pop(); // ret
 }
 
+pub fn load_sprite(cpu: &mut Cpu) {
+    log::debug!("load_sprite()");
+
+    cpu.pc = 0x106f;
+
+    // push hl
+    cpu.stack_push(cpu.hl());
+    cpu.pc += 1;
+    cpu.cycle(16);
+
+    // ld b, $0
+    cpu.b = 0x0;
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // ld hl, wMapSpriteData
+    cpu.set_hl(wram::W_MAP_SPRITE_DATA);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // add hl, bc
+    {
+        let hl = cpu.hl();
+        let bc = cpu.bc();
+        let result = hl.wrapping_add(bc);
+
+        cpu.set_flag(CpuFlag::H, (hl & 0x07ff) + (bc & 0x07ff) > 0x07ff);
+        cpu.set_flag(CpuFlag::N, false);
+        cpu.set_flag(CpuFlag::C, hl > 0xffff - bc);
+
+        cpu.set_hl(result);
+        cpu.pc += 1;
+        cpu.cycle(8);
+    }
+
+    // ldh a, [hLoadSpriteTemp1]
+    cpu.a = cpu.read_byte(hram::H_LOAD_SPRITE_TEMP1);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // store movement byte 2 in byte 0 of sprite entry
+    // ld [hli], a
+    cpu.write_byte(cpu.hl(), cpu.a);
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ldh a, [hLoadSpriteTemp2]
+    cpu.a = cpu.read_byte(hram::H_LOAD_SPRITE_TEMP2);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // this appears pointless, since the value is overwritten immediately after
+    // ld [hl], a
+    cpu.write_byte(cpu.hl(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ldh a, [hLoadSpriteTemp2]
+    cpu.a = cpu.read_byte(hram::H_LOAD_SPRITE_TEMP2);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // ldh [hLoadSpriteTemp1], a
+    cpu.write_byte(hram::H_LOAD_SPRITE_TEMP1, cpu.a);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // and a, $3f
+    cpu.a &= 0x3f;
+    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::C, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // store text ID in byte 1 of sprite entry
+    // ld [hl], a
+    cpu.write_byte(cpu.hl(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // pop hl
+    {
+        let hl = cpu.stack_pop();
+        cpu.set_hl(hl);
+        cpu.pc += 1;
+        cpu.cycle(12);
+    }
+
+    // ldh a, [hLoadSpriteTemp1]
+    cpu.a = cpu.read_byte(hram::H_LOAD_SPRITE_TEMP1);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // bit 6, a
+    cpu.set_flag(CpuFlag::Z, (cpu.a & (1 << 6)) == 0);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // jr nz, .trainerSprite
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_sprite_trainer_sprite(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // bit 7, a
+    cpu.set_flag(CpuFlag::Z, (cpu.a & (1 << 7)) == 0);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // jr nz, .itemBallSprite
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_sprite_item_ball_sprite(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // for regular sprites
+    // push hl
+    cpu.stack_push(cpu.hl());
+    cpu.pc += 1;
+    cpu.cycle(16);
+
+    // ld hl, wMapSpriteExtraData
+    cpu.set_hl(wram::W_MAP_SPRITE_EXTRA_DATA);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // add hl, bc
+    {
+        let hl = cpu.hl();
+        let bc = cpu.bc();
+        let result = hl.wrapping_add(bc);
+
+        cpu.set_flag(CpuFlag::H, (hl & 0x07ff) + (bc & 0x07ff) > 0x07ff);
+        cpu.set_flag(CpuFlag::N, false);
+        cpu.set_flag(CpuFlag::C, hl > 0xffff - bc);
+
+        cpu.set_hl(result);
+        cpu.pc += 1;
+        cpu.cycle(8);
+    }
+
+    // zero both bytes, since regular sprites don't use this extra space
+    // xor a, a
+    cpu.a = 0;
+    cpu.set_flag(CpuFlag::Z, true);
+    cpu.set_flag(CpuFlag::C, false);
+    cpu.set_flag(CpuFlag::H, false);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // ld [hli], a
+    cpu.write_byte(cpu.hl(), cpu.a);
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld [hl], a
+    cpu.write_byte(cpu.hl(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // pop hl
+    {
+        let hl = cpu.stack_pop();
+        cpu.set_hl(hl);
+        cpu.pc += 1;
+        cpu.cycle(12);
+    }
+
+    // ret
+    cpu.pc = cpu.stack_pop();
+    cpu.cycle(16);
+}
+
+fn load_sprite_trainer_sprite(cpu: &mut Cpu) {
+    cpu.pc = 0x1098;
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // save trainer class
+    // ldh [hLoadSpriteTemp1], a
+    cpu.write_byte(hram::H_LOAD_SPRITE_TEMP1, cpu.a);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // save trainer number (within class)
+    // ldh [hLoadSpriteTemp2], a
+    cpu.write_byte(hram::H_LOAD_SPRITE_TEMP2, cpu.a);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // push hl
+    cpu.stack_push(cpu.hl());
+    cpu.pc += 1;
+    cpu.cycle(16);
+
+    // ld hl, wMapSpriteExtraData
+    cpu.set_hl(wram::W_MAP_SPRITE_EXTRA_DATA);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // add hl, bc
+    {
+        let hl = cpu.hl();
+        let bc = cpu.bc();
+        let result = hl.wrapping_add(bc);
+
+        cpu.set_flag(CpuFlag::H, (hl & 0x07ff) + (bc & 0x07ff) > 0x07ff);
+        cpu.set_flag(CpuFlag::N, false);
+        cpu.set_flag(CpuFlag::C, hl > 0xffff - bc);
+
+        cpu.set_hl(result);
+        cpu.pc += 1;
+        cpu.cycle(8);
+    }
+
+    // ldh a, [hLoadSpriteTemp1]
+    cpu.a = cpu.read_byte(hram::H_LOAD_SPRITE_TEMP1);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // store trainer class in byte 0 of the entry
+    // ld [hli], a
+    cpu.write_byte(cpu.hl(), cpu.a);
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ldh a, [hLoadSpriteTemp2]
+    cpu.a = cpu.read_byte(hram::H_LOAD_SPRITE_TEMP2);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // store trainer number in byte 1 of the entry
+    // ld [hl], a
+    cpu.write_byte(cpu.hl(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // pop hl
+    {
+        let hl = cpu.stack_pop();
+        cpu.set_hl(hl);
+        cpu.pc += 1;
+        cpu.cycle(12);
+    }
+
+    // ret
+    cpu.pc = cpu.stack_pop();
+    cpu.cycle(16);
+}
+
+fn load_sprite_item_ball_sprite(cpu: &mut Cpu) {
+    cpu.pc = 0x10ab;
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // save item number
+    // ldh [hLoadSpriteTemp1], a
+    cpu.write_byte(hram::H_LOAD_SPRITE_TEMP1, cpu.a);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // push hl
+    cpu.stack_push(cpu.hl());
+    cpu.pc += 1;
+    cpu.cycle(16);
+
+    // ld hl, wMapSpriteExtraData
+    cpu.set_hl(wram::W_MAP_SPRITE_EXTRA_DATA);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // add hl, bc
+    {
+        let hl = cpu.hl();
+        let bc = cpu.bc();
+        let result = hl.wrapping_add(bc);
+
+        cpu.set_flag(CpuFlag::H, (hl & 0x07ff) + (bc & 0x07ff) > 0x07ff);
+        cpu.set_flag(CpuFlag::N, false);
+        cpu.set_flag(CpuFlag::C, hl > 0xffff - bc);
+
+        cpu.set_hl(result);
+        cpu.pc += 1;
+        cpu.cycle(8);
+    }
+
+    // ldh a, [hLoadSpriteTemp1]
+    cpu.a = cpu.read_byte(hram::H_LOAD_SPRITE_TEMP1);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // store item number in byte 0 of the entry
+    // ld [hli], a
+    cpu.write_byte(cpu.hl(), cpu.a);
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // xor a, a
+    cpu.a = 0;
+    cpu.set_flag(CpuFlag::Z, true);
+    cpu.set_flag(CpuFlag::C, false);
+    cpu.set_flag(CpuFlag::H, false);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // zero byte 1, since it is not used
+    // ld [hl], a
+    cpu.write_byte(cpu.hl(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // pop hl
+    {
+        let hl = cpu.stack_pop();
+        cpu.set_hl(hl);
+        cpu.pc += 1;
+        cpu.cycle(12);
+    }
+
+    // ret
+    cpu.pc = cpu.stack_pop();
+    cpu.cycle(16);
+}
+
 /// Return carry if Up+Select+B, Start or A are pressed in c frames. \
 /// Used only in the intro and title screen.
 pub fn check_for_user_interruption(cpu: &mut Cpu) {
