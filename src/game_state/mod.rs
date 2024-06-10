@@ -416,6 +416,15 @@ impl GameState {
         self.data[0x14af]
     }
 
+    /// Number of sprites on the current map (up to 16)
+    pub fn num_sprites(&self) -> u8 {
+        self.data[0x14e0]
+    }
+
+    pub fn set_num_sprites(&mut self, value: u8) {
+        self.data[0x14e0] = value;
+    }
+
     /// If the player is moving, the current direction \
     /// If the player is not moving, the last the direction in which the player moved
     pub fn set_player_direction(&mut self, direction: u8) {

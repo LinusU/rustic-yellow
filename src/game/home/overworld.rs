@@ -268,6 +268,365 @@ pub fn handle_mid_jump(cpu: &mut Cpu) {
     cpu.pc = cpu.stack_pop(); // ret
 }
 
+pub fn init_sprites(cpu: &mut Cpu) {
+    log::debug!("init_sprites()");
+
+    cpu.pc = 0x1006;
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // save the number of sprites
+    // ld [wNumSprites], a
+    let num_sprites = cpu.a;
+    cpu.borrow_wram_mut().set_num_sprites(num_sprites);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // push hl
+    cpu.stack_push(cpu.hl());
+    cpu.pc += 1;
+    cpu.cycle(16);
+
+    // push de
+    cpu.stack_push(cpu.de());
+    cpu.pc += 1;
+    cpu.cycle(16);
+
+    // push bc
+    cpu.stack_push(cpu.bc());
+    cpu.pc += 1;
+    cpu.cycle(16);
+
+    // call ZeroSpriteStateData
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        zero_sprite_state_data(cpu);
+        cpu.pc = pc;
+    }
+
+    // call DisableRegularSprites
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        disable_regular_sprites(cpu);
+        cpu.pc = pc;
+    }
+
+    // ld hl, wMapSpriteData
+    cpu.set_hl(wram::W_MAP_SPRITE_DATA);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // ld bc, $20
+    cpu.set_bc(0x20);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // xor a, a
+    cpu.a = 0;
+    cpu.set_flag(CpuFlag::Z, true);
+    cpu.set_flag(CpuFlag::C, false);
+    cpu.set_flag(CpuFlag::H, false);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // call FillMemory
+    {
+        cpu.pc += 3;
+        cpu.cycle(24);
+        cpu.call(0x166e);
+    }
+
+    // pop bc
+    {
+        let bc = cpu.stack_pop();
+        cpu.set_bc(bc);
+        cpu.pc += 1;
+        cpu.cycle(12);
+    }
+
+    // pop de
+    {
+        let de = cpu.stack_pop();
+        cpu.set_de(de);
+        cpu.pc += 1;
+        cpu.cycle(12);
+    }
+
+    // pop hl
+    {
+        let hl = cpu.stack_pop();
+        cpu.set_hl(hl);
+        cpu.pc += 1;
+        cpu.cycle(12);
+    }
+
+    // ld a, [wNumSprites]
+    cpu.a = cpu.borrow_wram().num_sprites();
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // are sprites existant?
+    // and a, a
+    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::C, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // don't copy sprite data if not
+    // ret z
+    if cpu.flag(CpuFlag::Z) {
+        cpu.pc = cpu.stack_pop();
+        cpu.cycle(20);
+        return;
+    } else {
+        cpu.pc += 1;
+        cpu.cycle(8);
+    }
+
+    // ld b, a
+    cpu.b = cpu.a;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // ld c, $0
+    cpu.c = 0x0;
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // ld de, wSprite01StateData1
+    cpu.set_de(wram::W_SPRITE01_STATE_DATA1);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // copy sprite stuff?
+    init_sprites_load_sprite_loop(cpu);
+}
+
+fn init_sprites_load_sprite_loop(cpu: &mut Cpu) {
+    cpu.pc = 0x102b;
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // x#SPRITESTATEDATA1_PICTUREID
+    // ld [de], a
+    cpu.write_byte(cpu.de(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // inc d
+    cpu.set_flag(CpuFlag::H, (cpu.d & 0x0f) == 0x0f);
+    cpu.d = cpu.d.wrapping_add(1);
+    cpu.set_flag(CpuFlag::Z, cpu.d == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // ld a, e
+    cpu.a = cpu.e;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // add $4
+    {
+        let value = cpu.read_byte(cpu.pc + 1);
+        cpu.set_flag(CpuFlag::H, (cpu.a & 0x0f) + (value & 0x0f) > 0x0f);
+        cpu.set_flag(CpuFlag::C, (cpu.a as u16) + (value as u16) > 0xff);
+        cpu.a = cpu.a.wrapping_add(value);
+    }
+    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // ld e, a
+    cpu.e = cpu.a;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // x#SPRITESTATEDATA2_MAPY
+    // ld [de], a
+    cpu.write_byte(cpu.de(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // inc e
+    cpu.set_flag(CpuFlag::H, (cpu.e & 0x0f) == 0x0f);
+    cpu.e = cpu.e.wrapping_add(1);
+    cpu.set_flag(CpuFlag::Z, cpu.e == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // x#SPRITESTATEDATA2_MAPX
+    // ld [de], a
+    cpu.write_byte(cpu.de(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // inc e
+    cpu.set_flag(CpuFlag::H, (cpu.e & 0x0f) == 0x0f);
+    cpu.e = cpu.e.wrapping_add(1);
+    cpu.set_flag(CpuFlag::Z, cpu.e == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // x#SPRITESTATEDATA2_MOVEMENTBYTE1
+    // ld [de], a
+    cpu.write_byte(cpu.de(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // save movement byte 2
+    // ldh [hLoadSpriteTemp1], a
+    cpu.write_byte(hram::H_LOAD_SPRITE_TEMP1, cpu.a);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // save text ID and flags byte
+    // ldh [hLoadSpriteTemp2], a
+    cpu.write_byte(hram::H_LOAD_SPRITE_TEMP2, cpu.a);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // push bc
+    cpu.stack_push(cpu.bc());
+    cpu.pc += 1;
+    cpu.cycle(16);
+
+    // call LoadSprite
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        load_sprite(cpu);
+        cpu.pc = pc;
+    }
+
+    // pop bc
+    {
+        let bc = cpu.stack_pop();
+        cpu.set_bc(bc);
+        cpu.pc += 1;
+        cpu.cycle(12);
+    }
+
+    // dec d
+    cpu.set_flag(CpuFlag::H, (cpu.d & 0x0f) == 0x00);
+    cpu.d = cpu.d.wrapping_sub(1);
+    cpu.set_flag(CpuFlag::Z, cpu.d == 0);
+    cpu.set_flag(CpuFlag::N, true);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // ld a, e
+    cpu.a = cpu.e;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // add $a
+    {
+        let value = cpu.read_byte(cpu.pc + 1);
+        cpu.set_flag(CpuFlag::H, (cpu.a & 0x0f) + (value & 0x0f) > 0x0f);
+        cpu.set_flag(CpuFlag::C, (cpu.a as u16) + (value as u16) > 0xff);
+        cpu.a = cpu.a.wrapping_add(value);
+    }
+    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // ld e, a
+    cpu.e = cpu.a;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // inc c
+    cpu.set_flag(CpuFlag::H, (cpu.c & 0x0f) == 0x0f);
+    cpu.c = cpu.c.wrapping_add(1);
+    cpu.set_flag(CpuFlag::Z, cpu.c == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // inc c
+    cpu.set_flag(CpuFlag::H, (cpu.c & 0x0f) == 0x0f);
+    cpu.c = cpu.c.wrapping_add(1);
+    cpu.set_flag(CpuFlag::Z, cpu.c == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // dec b
+    cpu.set_flag(CpuFlag::H, (cpu.b & 0x0f) == 0x00);
+    cpu.b = cpu.b.wrapping_sub(1);
+    cpu.set_flag(CpuFlag::Z, cpu.b == 0);
+    cpu.set_flag(CpuFlag::N, true);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // jr nz, .loadSpriteLoop
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return init_sprites_load_sprite_loop(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // ret
+    cpu.pc = cpu.stack_pop();
+    cpu.cycle(16);
+}
+
 /// Zero out sprite state data for sprites 01..=14 \
 /// Sprite 15 is used for Pikachu
 pub fn zero_sprite_state_data(cpu: &mut Cpu) {
