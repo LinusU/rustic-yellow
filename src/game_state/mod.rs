@@ -417,10 +417,6 @@ impl GameState {
     }
 
     /// Number of sprites on the current map (up to 16)
-    pub fn num_sprites(&self) -> u8 {
-        self.data[0x14e0]
-    }
-
     pub fn set_num_sprites(&mut self, value: u8) {
         self.data[0x14e0] = value;
     }
