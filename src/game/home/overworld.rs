@@ -261,6 +261,16 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn load_screen_related_data(cpu: &mut Cpu) {
+    log::debug!("load_screen_related_data()");
+
+    cpu.call(0x083c); // LoadTileBlockMap
+    cpu.call(0x0828); // LoadTilesetTilePatternData
+    cpu.call(0x0b06); // LoadCurrentMapView
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn reload_map_after_surfing_minigame(cpu: &mut Cpu) {
     log::debug!("reload_map_after_surfing_minigame()");
 
@@ -275,7 +285,8 @@ pub fn reload_map_after_surfing_minigame(cpu: &mut Cpu) {
     cpu.stack_push(0x0001);
     switch_to_map_rom_bank(cpu);
 
-    cpu.call(0x0f0c); // LoadScreenRelatedData
+    cpu.stack_push(0x0001);
+    load_screen_related_data(cpu);
 
     cpu.stack_push(0x0001);
     copy_map_view_to_vram(cpu);

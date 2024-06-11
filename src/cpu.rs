@@ -93,6 +93,7 @@ impl Cpu {
                 (_, 0x095e) => crate::game::home::overworld::is_sprite_or_sign_in_front_of_player(self),
                 (_, 0x0983) => crate::game::home::overworld::is_sprite_in_front_of_player(self),
                 (_, 0x0985) => crate::game::home::overworld::is_sprite_in_front_of_player2(self),
+                (_, 0x0f0c) => crate::game::home::overworld::load_screen_related_data(self),
                 (_, 0x0f16) => crate::game::home::overworld::reload_map_after_surfing_minigame(self),
                 (_, 0x0f3d) => crate::game::home::overworld::reload_map_after_printer(self),
                 (_, 0x0f56) => crate::game::home::overworld::reset_map_variables(self),
