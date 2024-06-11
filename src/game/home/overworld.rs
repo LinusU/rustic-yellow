@@ -261,6 +261,41 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn reload_map_after_surfing_minigame(cpu: &mut Cpu) {
+    log::debug!("reload_map_after_surfing_minigame()");
+
+    let saved_bank = cpu.borrow_wram().loaded_rom_bank();
+
+    cpu.call(0x0061); // DisableLCD
+
+    cpu.stack_push(0x0001);
+    reset_map_variables(cpu);
+
+    cpu.a = cpu.borrow_wram().cur_map();
+    cpu.stack_push(0x0001);
+    switch_to_map_rom_bank(cpu);
+
+    cpu.call(0x0f0c); // LoadScreenRelatedData
+
+    cpu.stack_push(0x0001);
+    copy_map_view_to_vram(cpu);
+
+    cpu.set_de(vram::V_BG_MAP1);
+    cpu.stack_push(0x0001);
+    copy_map_view_to_vram2(cpu);
+
+    cpu.call(0x007b); // EnableLCD
+    cpu.call(0x3e1e); // ReloadMapSpriteTilePatterns
+
+    cpu.a = saved_bank;
+    cpu.call(0x3e7e); // BankswitchCommon
+
+    // SetMapSpecificScriptFlagsOnMapReload
+    macros::farcall::farcall(cpu, 0x3c, 0x42da);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn reload_map_after_printer(cpu: &mut Cpu) {
     log::debug!("reload_map_after_printer()");
 
