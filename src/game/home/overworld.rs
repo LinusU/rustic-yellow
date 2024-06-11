@@ -259,6 +259,15 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn reset_using_strength_out_of_battle_bit(cpu: &mut Cpu) {
+    log::debug!("reset_using_strength_out_of_battle_bit()");
+
+    let value = cpu.read_byte(wram::W_D728);
+    cpu.write_byte(wram::W_D728, value & !(1 << 0));
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn force_bike_or_surf(cpu: &mut Cpu) {
     log::debug!("force_bike_or_surf()");
 

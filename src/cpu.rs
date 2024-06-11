@@ -93,6 +93,7 @@ impl Cpu {
                 (_, 0x095e) => crate::game::home::overworld::is_sprite_or_sign_in_front_of_player(self),
                 (_, 0x0983) => crate::game::home::overworld::is_sprite_in_front_of_player(self),
                 (_, 0x0985) => crate::game::home::overworld::is_sprite_in_front_of_player2(self),
+                (_, 0x0fd0) => crate::game::home::overworld::reset_using_strength_out_of_battle_bit(self),
                 (_, 0x0fd6) => crate::game::home::overworld::force_bike_or_surf(self),
                 (_, 0x0fe1) => crate::game::home::overworld::handle_mid_jump(self),
                 (_, 0x0ff0) => crate::game::home::overworld::is_spinning(self),

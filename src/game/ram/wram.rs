@@ -323,6 +323,15 @@ pub const W_PALLET_TOWN_CUR_SCRIPT: u16 = 0xd5f0;
 pub const W_RIVAL_STARTER: u16 = 0xd714;
 pub const W_PLAYER_STARTER: u16 = 0xd716;
 
+/// bit 0: using Strength outside of battle \
+/// bit 1: set by IsSurfingAllowed when surfing's allowed, but the caller resets it after checking the result \
+/// bit 3: received Old Rod \
+/// bit 4: received Good Rod \
+/// bit 5: received Super Rod \
+/// bit 6: gave one of the Saffron guards a drink \
+/// bit 7: set by ItemUseCardKey, which is leftover code from a previous implementation of the Card Key
+pub const W_D728: u16 = 0xd727;
+
 /// bit 0: if not set, the 3 minimum steps between random battles have passed \
 /// bit 1: prevent audio fade out
 pub const W_D72C: u16 = 0xd72b;
