@@ -262,6 +262,121 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn copy_sign_data(cpu: &mut Cpu) {
+    log::debug!("copy_sign_data()");
+
+    cpu.pc = 0x0eb3;
+
+    // start of sign coords
+    // ld de, wSignCoords
+    cpu.set_de(wram::W_SIGN_COORDS);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // start of sign text ids
+    // ld bc, wSignTextIDs
+    cpu.set_bc(wram::W_SIGN_TEXT_IDS);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // number of signs
+    // ld a, [wNumSigns]
+    cpu.a = cpu.borrow_wram().num_signs();
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    copy_sign_data_signcopyloop(cpu);
+}
+
+fn copy_sign_data_signcopyloop(cpu: &mut Cpu) {
+    cpu.pc = 0x0ebc;
+
+    // push af
+    cpu.stack_push(cpu.af());
+    cpu.pc += 1;
+    cpu.cycle(16);
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // copy y coord
+    // ld [de], a
+    cpu.write_byte(cpu.de(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // inc de
+    cpu.set_de(cpu.de().wrapping_add(1));
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // copy x coord
+    // ld [de], a
+    cpu.write_byte(cpu.de(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // inc de
+    cpu.set_de(cpu.de().wrapping_add(1));
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // copy sign text id
+    // ld [bc], a
+    cpu.write_byte(cpu.bc(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // inc bc
+    cpu.set_bc(cpu.bc().wrapping_add(1));
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // pop af
+    {
+        let af = cpu.stack_pop();
+        cpu.set_af(af);
+        cpu.pc += 1;
+        cpu.cycle(12);
+    }
+
+    // dec a
+    cpu.set_flag(CpuFlag::H, (cpu.a & 0x0f) == 0x00);
+    cpu.a = cpu.a.wrapping_sub(1);
+    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
+    cpu.set_flag(CpuFlag::N, true);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // jr nz, .signcopyloop
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return copy_sign_data_signcopyloop(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // ret
+    cpu.pc = cpu.stack_pop();
+    cpu.cycle(16);
+}
+
 pub fn load_map_data(cpu: &mut Cpu) {
     log::debug!("load_map_data()");
 
