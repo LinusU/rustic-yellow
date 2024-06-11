@@ -160,6 +160,11 @@ impl GameState {
         (self.data[0x1731] & 0b0000_0010) != 0
     }
 
+    /// `walk_bike_surf_state` is sometimes copied here, but it doesn't seem to be used for anything
+    pub fn set_walk_bike_surf_state_copy(&mut self, value: u8) {
+        self.data[0x1119] = value;
+    }
+
     /// after a battle, you have at least 3 steps before a random battle can occur
     pub fn number_of_no_random_battle_steps_left(&self) -> u8 {
         self.data[0x113b]
@@ -201,6 +206,11 @@ impl GameState {
 
     pub fn set_joy_ignore(&mut self, value: u8) {
         self.data[0x0d6b] = value;
+    }
+
+    /// Walk animation counter
+    pub fn set_walk_counter(&mut self, value: u8) {
+        self.data[0x0fc4] = value;
     }
 
     pub fn enemy_mon_species2(&self) -> u8 {
@@ -413,6 +423,11 @@ impl GameState {
         self.data[0x1366] = value;
     }
 
+    /// Sprite set ID for the current map
+    pub fn set_sprite_set_id(&mut self, value: u8) {
+        self.data[0x13a7] = value;
+    }
+
     /// If $ff, the player's coordinates are not updated when entering the map
     pub fn destination_warp_id(&self) -> u8 {
         self.data[0x142e]
@@ -426,6 +441,13 @@ impl GameState {
     /// Number of sprites on the current map (up to 16)
     pub fn set_num_sprites(&mut self, value: u8) {
         self.data[0x14e0] = value;
+    }
+
+    /// The address of the upper left corner of the visible portion of the BG tile map in VRAM
+    pub fn set_map_view_vram_pointer(&mut self, value: u16) {
+        let bytes = value.to_le_bytes();
+        self.data[0x1525] = bytes[0];
+        self.data[0x1526] = bytes[1];
     }
 
     /// If the player is moving, the current direction \

@@ -261,6 +261,20 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn reset_map_variables(cpu: &mut Cpu) {
+    log::debug!("reset_map_variables()");
+
+    cpu.borrow_wram_mut().set_map_view_vram_pointer(0x9800);
+    cpu.write_byte(hram::H_SCY, 0);
+    cpu.write_byte(hram::H_SCX, 0);
+    cpu.borrow_wram_mut().set_walk_counter(0);
+    cpu.write_byte(wram::W_UNUSED_D119, 0);
+    cpu.borrow_wram_mut().set_sprite_set_id(0);
+    cpu.borrow_wram_mut().set_walk_bike_surf_state_copy(0);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn copy_map_view_to_vram(cpu: &mut Cpu) {
     log::debug!("copy_map_view_to_vram()");
 

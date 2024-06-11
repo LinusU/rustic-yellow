@@ -235,6 +235,8 @@ pub const W_SAVED_TILE_ANIMATIONS: u16 = 0xd0d3;
 
 pub const W_REPEL_REMAINING_STEPS: u16 = 0xd0da;
 
+pub const W_UNUSED_D119: u16 = 0xd118;
+
 /// used as a Pokemon and Item storage value. Also used as an output value for CountSetBits
 pub const W_D11E: u16 = 0xd11e;
 
