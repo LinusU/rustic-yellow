@@ -261,6 +261,15 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn copy_map_view_to_vram(cpu: &mut Cpu) {
+    log::debug!("copy_map_view_to_vram()");
+
+    // copy current map view to VRAM
+    cpu.set_de(vram::V_BG_MAP0);
+
+    copy_map_view_to_vram2(cpu)
+}
+
 /// Input: de = destination address
 pub fn copy_map_view_to_vram2(cpu: &mut Cpu) {
     log::debug!("copy_map_view_to_vram2({:04x})", cpu.de());
