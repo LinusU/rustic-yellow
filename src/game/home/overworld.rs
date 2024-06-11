@@ -12,6 +12,7 @@ use crate::{
         home, macros,
         ram::{hram, wram},
     },
+    rom::ROM,
 };
 
 /// Load a new map
@@ -257,6 +258,23 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     }
 
     false
+}
+
+/// Output:
+/// hl = pointer to the map header of the current map
+pub fn get_map_header_pointer(cpu: &mut Cpu) {
+    // 3f:41f2 MapHeaderPointers
+    const MAP_HEADER_POINTERS: usize = (0x3f * 0x4000) | (0x41f2 & 0x3fff);
+
+    log::debug!("get_map_header_pointer()");
+
+    let cur_map = cpu.borrow_wram().cur_map() as usize;
+    let pointer = MAP_HEADER_POINTERS + (cur_map * 2);
+
+    // Pointers are stored in little-endian format
+    cpu.set_hl(u16::from_le_bytes([ROM[pointer], ROM[pointer + 1]]));
+
+    cpu.pc = cpu.stack_pop(); // ret
 }
 
 pub fn ignore_input_for_half_second(cpu: &mut Cpu) {
