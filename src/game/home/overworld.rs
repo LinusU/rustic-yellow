@@ -2,6 +2,7 @@ use crate::{
     cpu::{Cpu, CpuFlag},
     game::{
         constants::{
+            gfx_constants,
             hardware_constants::MBC1_ROM_BANK,
             input_constants::{A_BUTTON, B_BUTTON, D_UP, SELECT, START},
             sprite_data_constants::{
@@ -10,7 +11,7 @@ use crate::{
             },
         },
         home, macros,
-        ram::{hram, wram},
+        ram::{hram, vram, wram},
     },
     rom::ROM,
 };
@@ -258,6 +259,133 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     }
 
     false
+}
+
+pub fn copy_map_view_to_vram2(cpu: &mut Cpu) {
+    log::debug!("copy_map_view_to_vram2()");
+
+    cpu.pc = 0x0f73;
+
+    // ld hl, wTileMap
+    cpu.set_hl(wram::W_TILE_MAP);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // ld b, SCREEN_HEIGHT
+    cpu.b = gfx_constants::SCREEN_HEIGHT;
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    copy_map_view_to_vram2_vram_copy_loop(cpu);
+}
+
+fn copy_map_view_to_vram2_vram_copy_loop(cpu: &mut Cpu) {
+    cpu.pc = 0x0f78;
+
+    // ld c, SCREEN_WIDTH
+    cpu.c = gfx_constants::SCREEN_WIDTH;
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    copy_map_view_to_vram2_vram_copy_inner_loop(cpu);
+}
+
+fn copy_map_view_to_vram2_vram_copy_inner_loop(cpu: &mut Cpu) {
+    cpu.pc = 0x0f7a;
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld [de], a
+    cpu.write_byte(cpu.de(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // inc e
+    cpu.set_flag(CpuFlag::H, (cpu.e & 0x0f) == 0x0f);
+    cpu.e = cpu.e.wrapping_add(1);
+    cpu.set_flag(CpuFlag::Z, cpu.e == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // dec c
+    cpu.set_flag(CpuFlag::H, (cpu.c & 0x0f) == 0x00);
+    cpu.c = cpu.c.wrapping_sub(1);
+    cpu.set_flag(CpuFlag::Z, cpu.c == 0);
+    cpu.set_flag(CpuFlag::N, true);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // jr nz, .vramCopyInnerLoop
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return copy_map_view_to_vram2_vram_copy_inner_loop(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // ld a, BG_MAP_WIDTH - SCREEN_WIDTH
+    cpu.a = gfx_constants::BG_MAP_WIDTH - gfx_constants::SCREEN_WIDTH;
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // add e
+    cpu.set_flag(CpuFlag::H, (cpu.a & 0x0f) + (cpu.e & 0x0f) > 0x0f);
+    cpu.set_flag(CpuFlag::C, (cpu.a as u16) + (cpu.e as u16) > 0xff);
+    cpu.a = cpu.a.wrapping_add(cpu.e);
+    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // ld e, a
+    cpu.e = cpu.a;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // jr nc, .noCarry
+    if !cpu.flag(CpuFlag::C) {
+        cpu.cycle(12);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+
+        // inc d
+        cpu.set_flag(CpuFlag::H, (cpu.d & 0x0f) == 0x0f);
+        cpu.d = cpu.d.wrapping_add(1);
+        cpu.set_flag(CpuFlag::Z, cpu.d == 0);
+        cpu.set_flag(CpuFlag::N, false);
+        cpu.pc += 1;
+        cpu.cycle(4);
+    }
+
+    cpu.pc = 0x0f87;
+
+    // dec b
+    cpu.set_flag(CpuFlag::H, (cpu.b & 0x0f) == 0x00);
+    cpu.b = cpu.b.wrapping_sub(1);
+    cpu.set_flag(CpuFlag::Z, cpu.b == 0);
+    cpu.set_flag(CpuFlag::N, true);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // jr nz, .vramCopyLoop
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return copy_map_view_to_vram2_vram_copy_loop(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // ret
+    cpu.pc = cpu.stack_pop();
+    cpu.cycle(16);
 }
 
 /// Function to switch to the ROM bank that a map is stored in.
