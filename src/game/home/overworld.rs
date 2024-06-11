@@ -265,29 +265,11 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
 pub fn load_map_data(cpu: &mut Cpu) {
     log::debug!("load_map_data()");
 
-    cpu.pc = 0x0ecb;
-
-    // ldh a, [hLoadedROMBank]
-    cpu.a = cpu.borrow_wram().loaded_rom_bank();
-    cpu.pc += 2;
-    cpu.cycle(12);
-
-    // push af
-    cpu.stack_push(cpu.af());
-    cpu.pc += 1;
-    cpu.cycle(16);
+    let saved_bank = cpu.borrow_wram().loaded_rom_bank();
 
     cpu.call(0x0061); // DisableLCD
 
-    // call ResetMapVariables
-    {
-        cpu.pc += 3;
-        let pc = cpu.pc;
-        cpu.stack_push(pc);
-        cpu.cycle(24);
-        reset_map_variables(cpu);
-        cpu.pc = pc;
-    }
+    reset_map_variables(cpu);
 
     cpu.call(0x36a3); // LoadTextBoxTilePatterns
     cpu.call(0x0dab); // LoadMapHeader
@@ -295,127 +277,40 @@ pub fn load_map_data(cpu: &mut Cpu) {
     // load tile pattern data for sprites
     cpu.call(0x3dba); // InitMapSprites
 
-    // call LoadScreenRelatedData
-    {
-        cpu.pc += 3;
-        let pc = cpu.pc;
-        cpu.stack_push(pc);
-        cpu.cycle(24);
-        load_screen_related_data(cpu);
-        cpu.pc = pc;
-    }
-
-    // call CopyMapViewToVRAM
-    {
-        cpu.pc += 3;
-        let pc = cpu.pc;
-        cpu.stack_push(pc);
-        cpu.cycle(24);
-        copy_map_view_to_vram(cpu);
-        cpu.pc = pc;
-    }
-
-    // ld a, $01
-    cpu.a = 0x01;
-    cpu.pc += 2;
-    cpu.cycle(8);
-
-    // ld [wUpdateSpritesEnabled], a
+    load_screen_related_data(cpu);
+    copy_map_view_to_vram(cpu, vram::V_BG_MAP0);
     cpu.borrow_wram_mut().set_update_sprites_enabled(0x01);
-    cpu.pc += 3;
-    cpu.cycle(16);
 
     cpu.call(0x007b); // EnableLCD
 
-    // ld b, SET_PAL_OVERWORLD
     cpu.b = palette_constants::SET_PAL_OVERWORLD;
-    cpu.pc += 2;
-    cpu.cycle(8);
-
     cpu.call(0x3e05); // RunPaletteCommand
 
     cpu.call(0x07d7); // LoadPlayerSpriteGraphics
 
-    // ld a, [wd732]
-    cpu.a = cpu.read_byte(wram::W_D732);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
     // fly warp or dungeon warp
-    // and 1 << 4 | 1 << 3
-    cpu.a &= 1 << 4 | 1 << 3;
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.set_flag(CpuFlag::H, true);
-    cpu.set_flag(CpuFlag::C, false);
-    cpu.pc += 2;
-    cpu.cycle(8);
+    let w_d732 = cpu.read_byte(wram::W_D732);
 
-    // jr nz, .restoreRomBank
-    if !cpu.flag(CpuFlag::Z) {
-        cpu.cycle(12);
-        return load_map_data_restore_rom_bank(cpu);
-    } else {
-        cpu.pc += 2;
-        cpu.cycle(8);
+    if (w_d732 & (1 << 4 | 1 << 3)) == 0 {
+        let w_d733 = cpu.read_byte(wram::W_FLAGS_D733);
+
+        if (w_d733 & (1 << 1)) == 0 {
+            cpu.call(0x21e3); // UpdateMusic6Times
+            cpu.call(0x2176); // PlayDefaultMusicFadeOutCurrent
+        }
     }
 
-    // ld a, [wFlags_D733]
-    cpu.a = cpu.read_byte(wram::W_FLAGS_D733);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // bit 1, a
-    cpu.set_flag(CpuFlag::Z, (cpu.a & (1 << 1)) == 0);
-    cpu.set_flag(CpuFlag::H, true);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.pc += 2;
-    cpu.cycle(8);
-
-    // jr nz, .restoreRomBank
-    if !cpu.flag(CpuFlag::Z) {
-        cpu.cycle(12);
-        return load_map_data_restore_rom_bank(cpu);
-    } else {
-        cpu.pc += 2;
-        cpu.cycle(8);
-    }
-
-    // music related
-    cpu.call(0x21e3); // UpdateMusic6Times
-
-    // music related
-    cpu.call(0x2176); // PlayDefaultMusicFadeOutCurrent
-
-    load_map_data_restore_rom_bank(cpu);
-}
-
-fn load_map_data_restore_rom_bank(cpu: &mut Cpu) {
-    cpu.pc = 0x0f07;
-
-    // pop af
-    {
-        let af = cpu.stack_pop();
-        cpu.set_af(af);
-        cpu.pc += 1;
-        cpu.cycle(12);
-    }
-
+    cpu.a = saved_bank;
     cpu.call(0x3e7e); // BankswitchCommon
-
-    // ret
-    cpu.pc = cpu.stack_pop();
-    cpu.cycle(16);
+    cpu.pc = cpu.stack_pop(); // ret
 }
 
 pub fn load_screen_related_data(cpu: &mut Cpu) {
-    log::debug!("load_screen_related_data()");
+    log::trace!("load_screen_related_data()");
 
     cpu.call(0x083c); // LoadTileBlockMap
     cpu.call(0x0828); // LoadTilesetTilePatternData
     cpu.call(0x0b06); // LoadCurrentMapView
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 pub fn reload_map_after_surfing_minigame(cpu: &mut Cpu) {
@@ -425,22 +320,16 @@ pub fn reload_map_after_surfing_minigame(cpu: &mut Cpu) {
 
     cpu.call(0x0061); // DisableLCD
 
-    cpu.stack_push(0x0001);
     reset_map_variables(cpu);
 
     cpu.a = cpu.borrow_wram().cur_map();
     cpu.stack_push(0x0001);
     switch_to_map_rom_bank(cpu);
 
-    cpu.stack_push(0x0001);
     load_screen_related_data(cpu);
 
-    cpu.stack_push(0x0001);
-    copy_map_view_to_vram(cpu);
-
-    cpu.set_de(vram::V_BG_MAP1);
-    cpu.stack_push(0x0001);
-    copy_map_view_to_vram2(cpu);
+    copy_map_view_to_vram(cpu, vram::V_BG_MAP0);
+    copy_map_view_to_vram(cpu, vram::V_BG_MAP1);
 
     cpu.call(0x007b); // EnableLCD
     cpu.call(0x3e1e); // ReloadMapSpriteTilePatterns
@@ -476,7 +365,7 @@ pub fn reload_map_after_printer(cpu: &mut Cpu) {
 }
 
 pub fn reset_map_variables(cpu: &mut Cpu) {
-    log::debug!("reset_map_variables()");
+    log::trace!("reset_map_variables()");
 
     cpu.borrow_wram_mut().set_map_view_vram_pointer(0x9800);
     cpu.write_byte(hram::H_SCY, 0);
@@ -485,24 +374,13 @@ pub fn reset_map_variables(cpu: &mut Cpu) {
     cpu.write_byte(wram::W_UNUSED_D119, 0);
     cpu.borrow_wram_mut().set_sprite_set_id(0);
     cpu.borrow_wram_mut().set_walk_bike_surf_state_copy(0);
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
-pub fn copy_map_view_to_vram(cpu: &mut Cpu) {
-    log::debug!("copy_map_view_to_vram()");
-
-    // copy current map view to VRAM
-    cpu.set_de(vram::V_BG_MAP0);
-
-    copy_map_view_to_vram2(cpu)
-}
-
-/// Input: de = destination address
-pub fn copy_map_view_to_vram2(cpu: &mut Cpu) {
-    log::debug!("copy_map_view_to_vram2({:04x})", cpu.de());
+pub fn copy_map_view_to_vram(cpu: &mut Cpu, dst: u16) {
+    log::trace!("copy_map_view_to_vram({:04x})", dst);
 
     cpu.set_hl(wram::W_TILE_MAP);
+    cpu.set_de(dst);
 
     for _ in 0..gfx_constants::SCREEN_HEIGHT {
         for x in 0..gfx_constants::SCREEN_WIDTH {
@@ -513,8 +391,6 @@ pub fn copy_map_view_to_vram2(cpu: &mut Cpu) {
         cpu.set_hl(cpu.hl() + (gfx_constants::SCREEN_WIDTH as u16));
         cpu.set_de(cpu.de() + (gfx_constants::BG_MAP_WIDTH as u16));
     }
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// Function to switch to the ROM bank that a map is stored in.
