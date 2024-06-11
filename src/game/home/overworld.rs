@@ -259,10 +259,37 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn force_bike_or_surf(cpu: &mut Cpu) {
+    log::debug!("force_bike_or_surf()");
+
+    cpu.b = 0x05; // BANK(RedSprite)
+    cpu.set_hl(0x07d7); // LoadPlayerSpriteGraphics (in bank 0)
+    cpu.call(0x3e84); // Bankswitch
+
+    // update map/player state?
+    cpu.call(0x216b); // PlayDefaultMusic
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 // Handle the player jumping down a ledge in the overworld.
 pub fn handle_mid_jump(cpu: &mut Cpu) {
     if (cpu.read_byte(wram::W_D736) & (1 << 6)) != 0 {
         macros::farcall::farcall(cpu, 0x1c, 0x48df); // _HandleMidJump
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
+pub fn is_spinning(cpu: &mut Cpu) {
+    let w_d736 = cpu.read_byte(wram::W_D736);
+
+    // if spinning
+    if (w_d736 & (1 << 7)) != 0 {
+        log::debug!("is_spinning() spinnig");
+        macros::farcall::farcall(cpu, 0x11, 0x5077); // LoadSpinnerArrowTiles
+    } else {
+        log::trace!("is_spinning() not spinning");
     }
 
     cpu.pc = cpu.stack_pop(); // ret
