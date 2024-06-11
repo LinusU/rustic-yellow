@@ -259,6 +259,18 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn ignore_input_for_half_second(cpu: &mut Cpu) {
+    log::debug!("ignore_input_for_half_second()");
+
+    cpu.borrow_wram_mut().set_ignore_input_counter(30);
+
+    // set ignore input bit
+    cpu.a = cpu.read_byte(wram::W_D730) | 0b00100110;
+    cpu.write_byte(wram::W_D730, cpu.a);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn reset_using_strength_out_of_battle_bit(cpu: &mut Cpu) {
     log::debug!("reset_using_strength_out_of_battle_bit()");
 

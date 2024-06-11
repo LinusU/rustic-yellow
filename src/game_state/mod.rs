@@ -364,6 +364,13 @@ impl GameState {
         self.data[0x1082] = value;
     }
 
+    /// Counts downward each frame.
+    ///
+    /// When it hits 0, bit 5 (ignore input bit) of wd730 is reset.
+    pub fn set_ignore_input_counter(&mut self, value: u8) {
+        self.data[0x1139] = value;
+    }
+
     /// Pointer to the upper left corner of the current view in the tile block map
     pub fn set_current_tile_block_map_view_pointer(&mut self, value: u16) {
         self.data[0x135e] = (value >> 8) as u8;
