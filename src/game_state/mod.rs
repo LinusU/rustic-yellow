@@ -368,6 +368,14 @@ impl GameState {
         self.data[0x0fc6] = value;
     }
 
+    /// $00 = causes sprites to be hidden and the value to change to $ff \
+    /// $01 = enabled \
+    /// $ff = disabled \
+    /// other values aren't used
+    pub fn set_update_sprites_enabled(&mut self, value: u8) {
+        self.data[0x0fca] = value;
+    }
+
     /// Low health alarm counter/enable. \
     /// high bit = enable, others = timer to cycle frequencies
     pub fn set_low_health_alarm(&mut self, value: u8) {

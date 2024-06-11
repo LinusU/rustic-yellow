@@ -5,6 +5,7 @@ use crate::{
             gfx_constants,
             hardware_constants::MBC1_ROM_BANK,
             input_constants::{A_BUTTON, B_BUTTON, D_UP, SELECT, START},
+            palette_constants,
             sprite_data_constants::{
                 PLAYER_DIR_DOWN, PLAYER_DIR_LEFT, PLAYER_DIR_RIGHT, PLAYER_DIR_UP,
                 SPRITE_FACING_DOWN, SPRITE_FACING_LEFT, SPRITE_FACING_RIGHT, SPRITE_FACING_UP,
@@ -259,6 +260,152 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     }
 
     false
+}
+
+pub fn load_map_data(cpu: &mut Cpu) {
+    log::debug!("load_map_data()");
+
+    cpu.pc = 0x0ecb;
+
+    // ldh a, [hLoadedROMBank]
+    cpu.a = cpu.borrow_wram().loaded_rom_bank();
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // push af
+    cpu.stack_push(cpu.af());
+    cpu.pc += 1;
+    cpu.cycle(16);
+
+    cpu.call(0x0061); // DisableLCD
+
+    // call ResetMapVariables
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        reset_map_variables(cpu);
+        cpu.pc = pc;
+    }
+
+    cpu.call(0x36a3); // LoadTextBoxTilePatterns
+    cpu.call(0x0dab); // LoadMapHeader
+
+    // load tile pattern data for sprites
+    cpu.call(0x3dba); // InitMapSprites
+
+    // call LoadScreenRelatedData
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        load_screen_related_data(cpu);
+        cpu.pc = pc;
+    }
+
+    // call CopyMapViewToVRAM
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        copy_map_view_to_vram(cpu);
+        cpu.pc = pc;
+    }
+
+    // ld a, $01
+    cpu.a = 0x01;
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // ld [wUpdateSpritesEnabled], a
+    cpu.borrow_wram_mut().set_update_sprites_enabled(0x01);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    cpu.call(0x007b); // EnableLCD
+
+    // ld b, SET_PAL_OVERWORLD
+    cpu.b = palette_constants::SET_PAL_OVERWORLD;
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    cpu.call(0x3e05); // RunPaletteCommand
+
+    cpu.call(0x07d7); // LoadPlayerSpriteGraphics
+
+    // ld a, [wd732]
+    cpu.a = cpu.read_byte(wram::W_D732);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // fly warp or dungeon warp
+    // and 1 << 4 | 1 << 3
+    cpu.a &= 1 << 4 | 1 << 3;
+    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::C, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // jr nz, .restoreRomBank
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_map_data_restore_rom_bank(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // ld a, [wFlags_D733]
+    cpu.a = cpu.read_byte(wram::W_FLAGS_D733);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // bit 1, a
+    cpu.set_flag(CpuFlag::Z, (cpu.a & (1 << 1)) == 0);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // jr nz, .restoreRomBank
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_map_data_restore_rom_bank(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // music related
+    cpu.call(0x21e3); // UpdateMusic6Times
+
+    // music related
+    cpu.call(0x2176); // PlayDefaultMusicFadeOutCurrent
+
+    load_map_data_restore_rom_bank(cpu);
+}
+
+fn load_map_data_restore_rom_bank(cpu: &mut Cpu) {
+    cpu.pc = 0x0f07;
+
+    // pop af
+    {
+        let af = cpu.stack_pop();
+        cpu.set_af(af);
+        cpu.pc += 1;
+        cpu.cycle(12);
+    }
+
+    cpu.call(0x3e7e); // BankswitchCommon
+
+    // ret
+    cpu.pc = cpu.stack_pop();
+    cpu.cycle(16);
 }
 
 pub fn load_screen_related_data(cpu: &mut Cpu) {

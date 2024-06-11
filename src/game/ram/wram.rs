@@ -394,6 +394,14 @@ pub const W_D736: u16 = 0xd735;
 // bit 6: map destination is [wLastBlackoutMap] (usually the last used pokemon center, but could be the player's house)
 pub const W_D732: u16 = 0xd731;
 
+/// bit 0: running a test battle (unused in non-debug builds) \
+/// bit 1: prevent music from changing when entering new map \
+/// bit 2: skip the joypad check in CheckWarpsNoCollision (used for the forced warp down the waterfall in the Seafoam Islands) \
+/// bit 3: trainer wants to battle \
+/// bit 4: use variable [wCurMapScript] instead of the provided index for next frame's map script (used to start battle when talking to trainers) \
+/// bit 7: used fly out of battle
+pub const W_FLAGS_D733: u16 = 0xd732;
+
 pub const W_EVENT_FLAGS: u16 = 0xd746;
 
 pub const W_GRASS_RATE: u16 = 0xd886;
