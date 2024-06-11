@@ -261,6 +261,27 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn reload_map_after_printer(cpu: &mut Cpu) {
+    log::debug!("reload_map_after_printer()");
+
+    let saved_bank = cpu.borrow_wram().loaded_rom_bank();
+
+    cpu.a = cpu.borrow_wram().cur_map();
+
+    cpu.stack_push(0x0001);
+    switch_to_map_rom_bank(cpu);
+
+    cpu.call(0x083c); // LoadTileBlockMap
+
+    cpu.a = saved_bank;
+    cpu.call(0x3e7e); // BankswitchCommon
+
+    // SetMapSpecificScriptFlagsOnMapReload
+    macros::farcall::farcall(cpu, 0x3c, 0x42da);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn reset_map_variables(cpu: &mut Cpu) {
     log::debug!("reset_map_variables()");
 
