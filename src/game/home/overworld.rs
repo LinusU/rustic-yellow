@@ -260,6 +260,24 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+/// Function to switch to the ROM bank that a map is stored in.
+///
+/// Input: a = map number
+pub fn switch_to_map_rom_bank(cpu: &mut Cpu) {
+    // 3f:43e4 MapHeaderBanks
+    const MAP_HEADER_BANKS: usize = (0x3f * 0x4000) | (0x43e4 & 0x3fff);
+
+    log::trace!("switch_to_map_rom_bank({:02x})", cpu.a);
+
+    let map_number = cpu.a as usize;
+    let target_bank = ROM[MAP_HEADER_BANKS + map_number];
+
+    cpu.a = target_bank;
+    cpu.call(0x3e7e); // BankswitchCommon
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Output:
 /// hl = pointer to the map header of the current map
 pub fn get_map_header_pointer(cpu: &mut Cpu) {
