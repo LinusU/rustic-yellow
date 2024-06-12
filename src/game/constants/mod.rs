@@ -4,6 +4,7 @@ pub mod hardware_constants;
 pub mod input_constants;
 pub mod item_constants;
 pub mod map_constants;
+pub mod map_data_constants;
 pub mod misc_constants;
 pub mod move_constants;
 pub mod music_constants;

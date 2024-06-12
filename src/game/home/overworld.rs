@@ -5,6 +5,7 @@ use crate::{
             gfx_constants,
             hardware_constants::MBC1_ROM_BANK,
             input_constants::{A_BUTTON, B_BUTTON, D_UP, SELECT, START},
+            map_data_constants::{EAST_F, NORTH_F, SOUTH_F, WEST_F},
             palette_constants,
             sprite_data_constants::{
                 PLAYER_DIR_DOWN, PLAYER_DIR_LEFT, PLAYER_DIR_RIGHT, PLAYER_DIR_UP,
@@ -260,6 +261,820 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     }
 
     false
+}
+
+// Load data from the map header
+pub fn load_map_header(cpu: &mut Cpu) {
+    log::debug!("load_map_header()");
+
+    cpu.pc = 0x0dab;
+
+    // MarkTownVisitedAndLoadMissableObjects
+    macros::farcall::farcall(cpu, 0x03, 0x6f93);
+
+    // ld a, [wCurMapTileset]
+    cpu.a = cpu.read_byte(wram::W_CUR_MAP_TILESET);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ld [wUnusedD119], a
+    cpu.write_byte(wram::W_UNUSED_D119, cpu.a);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ld a, [wCurMap]
+    cpu.a = cpu.read_byte(wram::W_CUR_MAP);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // call SwitchToMapRomBank
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        switch_to_map_rom_bank(cpu);
+        cpu.pc = pc;
+    }
+
+    // ld a, [wCurMapTileset]
+    cpu.a = cpu.read_byte(wram::W_CUR_MAP_TILESET);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ld b, a
+    cpu.b = cpu.a;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // res 7, a
+    cpu.a &= !(1 << 7);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // ld [wCurMapTileset], a
+    cpu.write_byte(wram::W_CUR_MAP_TILESET, cpu.a);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ldh [hPreviousTileset], a
+    let previous_tileset = cpu.a;
+    cpu.borrow_wram_mut().set_previous_tileset(previous_tileset);
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // bit 7, b
+    cpu.set_flag(CpuFlag::Z, (cpu.b & (1 << 7)) == 0);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // ret nz
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.pc = cpu.stack_pop();
+        cpu.cycle(20);
+        return;
+    } else {
+        cpu.pc += 1;
+        cpu.cycle(8);
+    }
+
+    // call GetMapHeaderPointer
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        get_map_header_pointer(cpu);
+        cpu.pc = pc;
+    }
+
+    // ld de, wCurMapHeader
+    cpu.set_de(wram::W_CUR_MAP_HEADER);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // ld c, wCurMapHeaderEnd - wCurMapHeader
+    cpu.c = (wram::W_CUR_MAP_HEADER_END - wram::W_CUR_MAP_HEADER) as u8;
+
+    load_map_header_copy_fixed_header_loop(cpu);
+}
+
+fn load_map_header_copy_fixed_header_loop(cpu: &mut Cpu) {
+    cpu.pc = 0x0ddf;
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld [de], a
+    cpu.write_byte(cpu.de(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // inc de
+    cpu.set_de(cpu.de().wrapping_add(1));
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // dec c
+    cpu.set_flag(CpuFlag::H, (cpu.c & 0x0f) == 0x00);
+    cpu.c = cpu.c.wrapping_sub(1);
+    cpu.set_flag(CpuFlag::Z, cpu.c == 0);
+    cpu.set_flag(CpuFlag::N, true);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // jr nz, .copyFixedHeaderLoop
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_map_header_copy_fixed_header_loop(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // initialize all the connected maps to disabled at first, before loading the actual values
+    // ld a, $ff
+    cpu.a = 0xff;
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // ld [wNorthConnectedMap], a
+    cpu.write_byte(wram::W_NORTH_CONNECTED_MAP, cpu.a);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ld [wSouthConnectedMap], a
+    cpu.write_byte(wram::W_SOUTH_CONNECTED_MAP, cpu.a);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ld [wWestConnectedMap], a
+    cpu.write_byte(wram::W_WEST_CONNECTED_MAP, cpu.a);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ld [wEastConnectedMap], a
+    cpu.write_byte(wram::W_EAST_CONNECTED_MAP, cpu.a);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // copy connection data (if any) to WRAM
+    // ld a, [wCurMapConnections]
+    cpu.a = cpu.read_byte(wram::W_CUR_MAP_CONNECTIONS);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ld b, a
+    cpu.b = cpu.a;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    load_map_header_check_north(cpu);
+}
+
+fn load_map_header_check_north(cpu: &mut Cpu) {
+    cpu.pc = 0x0df7;
+
+    // bit NORTH_F, b
+    cpu.set_flag(CpuFlag::Z, (cpu.b & (1 << NORTH_F)) == 0);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // jr z, .checkSouth
+    if cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_map_header_check_south(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // ld de, wNorthConnectionHeader
+    cpu.set_de(wram::W_NORTH_CONNECTION_HEADER);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // call CopyMapConnectionHeader
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        copy_map_connection_header(cpu);
+        cpu.pc = pc;
+    }
+
+    load_map_header_check_south(cpu);
+}
+
+fn load_map_header_check_south(cpu: &mut Cpu) {
+    cpu.pc = 0x0e01;
+
+    // bit SOUTH_F, b
+    cpu.set_flag(CpuFlag::Z, (cpu.b & (1 << SOUTH_F)) == 0);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // jr z, .checkWest
+    if cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_map_header_check_west(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // ld de, wSouthConnectionHeader
+    cpu.set_de(wram::W_SOUTH_CONNECTION_HEADER);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // call CopyMapConnectionHeader
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        copy_map_connection_header(cpu);
+        cpu.pc = pc;
+    }
+
+    load_map_header_check_west(cpu);
+}
+
+fn load_map_header_check_west(cpu: &mut Cpu) {
+    cpu.pc = 0x0e0b;
+
+    // bit WEST_F, b
+    cpu.set_flag(CpuFlag::Z, (cpu.b & (1 << WEST_F)) == 0);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // jr z, .checkEast
+    if cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_map_header_check_east(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // ld de, wWestConnectionHeader
+    cpu.set_de(wram::W_WEST_CONNECTION_HEADER);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // call CopyMapConnectionHeader
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        copy_map_connection_header(cpu);
+        cpu.pc = pc;
+    }
+
+    load_map_header_check_east(cpu);
+}
+
+fn load_map_header_check_east(cpu: &mut Cpu) {
+    cpu.pc = 0x0e15;
+
+    // bit EAST_F, b
+    cpu.set_flag(CpuFlag::Z, (cpu.b & (1 << EAST_F)) == 0);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // jr z, .getObjectDataPointer
+    if cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_map_header_get_object_data_pointer(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // ld de, wEastConnectionHeader
+    cpu.set_de(wram::W_EAST_CONNECTION_HEADER);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // call CopyMapConnectionHeader
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        copy_map_connection_header(cpu);
+        cpu.pc = pc;
+    }
+
+    load_map_header_get_object_data_pointer(cpu);
+}
+
+fn load_map_header_get_object_data_pointer(cpu: &mut Cpu) {
+    cpu.pc = 0x0e1f;
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld [wObjectDataPointerTemp], a
+    let w_object_data_pointer_temp0 = cpu.a;
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld [wObjectDataPointerTemp + 1], a
+    let w_object_data_pointer_temp1 = cpu.a;
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // push hl
+    cpu.stack_push(cpu.hl());
+    cpu.pc += 1;
+    cpu.cycle(16);
+
+    // ld a, [wObjectDataPointerTemp]
+    cpu.a = w_object_data_pointer_temp0;
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ld l, a
+    cpu.l = cpu.a;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // ld a, [wObjectDataPointerTemp + 1]
+    cpu.a = w_object_data_pointer_temp1;
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // hl = base of object data
+    // ld h, a
+    cpu.h = cpu.a;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // ld de, wMapBackgroundTile
+    cpu.set_de(0xd3ac); // only used to set map_background_tile to a?
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld [de], a
+    let map_background_tile = cpu.a;
+    cpu.borrow_wram_mut()
+        .set_map_background_tile(map_background_tile);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    load_map_header_load_warp_data(cpu);
+}
+
+fn load_map_header_load_warp_data(cpu: &mut Cpu) {
+    cpu.pc = 0x0e35;
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld [wNumberOfWarps], a
+    let number_of_warps = cpu.a;
+    cpu.borrow_wram_mut().set_number_of_warps(number_of_warps);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // and a, a
+    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::C, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // jr z, .loadSignData
+    if cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_map_header_load_sign_data(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // ld c, a
+    cpu.c = cpu.a;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // ld de, wWarpEntries
+    cpu.set_de(wram::W_WARP_ENTRIES);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    load_map_header_warp_loop(cpu);
+}
+
+// one warp per loop iteration
+fn load_map_header_warp_loop(cpu: &mut Cpu) {
+    cpu.pc = 0x0e40;
+
+    // ld b, 4
+    cpu.b = 4;
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    load_map_header_warp_inner_loop(cpu);
+}
+
+fn load_map_header_warp_inner_loop(cpu: &mut Cpu) {
+    cpu.pc = 0x0e42;
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld [de], a
+    cpu.write_byte(cpu.de(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // inc de
+    cpu.set_de(cpu.de().wrapping_add(1));
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // dec b
+    cpu.set_flag(CpuFlag::H, (cpu.b & 0x0f) == 0x00);
+    cpu.b = cpu.b.wrapping_sub(1);
+    cpu.set_flag(CpuFlag::Z, cpu.b == 0);
+    cpu.set_flag(CpuFlag::N, true);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // jr nz, .warpInnerLoop
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_map_header_warp_inner_loop(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // dec c
+    cpu.set_flag(CpuFlag::H, (cpu.c & 0x0f) == 0x00);
+    cpu.c = cpu.c.wrapping_sub(1);
+    cpu.set_flag(CpuFlag::Z, cpu.c == 0);
+    cpu.set_flag(CpuFlag::N, true);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // jr nz, .warpLoop
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_map_header_warp_loop(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    load_map_header_load_sign_data(cpu);
+}
+
+fn load_map_header_load_sign_data(cpu: &mut Cpu) {
+    cpu.pc = 0x0e4b;
+
+    // number of signs
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld [wNumSigns], a
+    let num_signs = cpu.a;
+    cpu.borrow_wram_mut().set_num_signs(num_signs);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // are there any signs?
+    // and a, a
+    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::C, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // if not, skip this
+    // jr z, .loadSpriteData
+    if cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_map_header_load_sprite_data(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // call CopySignData
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        copy_sign_data(cpu);
+        cpu.pc = pc;
+    }
+
+    load_map_header_load_sprite_data(cpu);
+}
+
+fn load_map_header_load_sprite_data(cpu: &mut Cpu) {
+    cpu.pc = 0x0e55;
+
+    // ld a, [wd72e]
+    cpu.a = cpu.read_byte(wram::W_D72E);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // did a battle happen immediately before this?
+    // bit 5, a
+    cpu.set_flag(CpuFlag::Z, (cpu.a & (1 << 5)) == 0);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // if so, skip this because battles don't destroy this data
+    // jr nz, .finishUp
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_map_header_finish_up(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // call InitSprites
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.stack_push(pc);
+        cpu.cycle(24);
+        init_sprites(cpu);
+        cpu.pc = pc;
+    }
+
+    load_map_header_finish_up(cpu);
+}
+
+fn load_map_header_finish_up(cpu: &mut Cpu) {
+    cpu.pc = 0x0e5f;
+
+    // predef LoadTilesetHeader
+    macros::predef::predef_call!(cpu, LoadTilesetHeader);
+
+    // ld a, [wd72e]
+    cpu.a = cpu.read_byte(wram::W_D72E);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // did a battle happen immediately before this?
+    // bit 5, a
+    cpu.set_flag(CpuFlag::Z, (cpu.a & (1 << 5)) == 0);
+    cpu.set_flag(CpuFlag::H, true);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // jr nz, .skip_pika_spawn
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return load_map_header_skip_pika_spawn(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // callfar SchedulePikachuSpawnForAfterText
+    macros::farcall::callfar(cpu, 0x3f, 0x44fa);
+
+    load_map_header_skip_pika_spawn(cpu);
+}
+
+fn load_map_header_skip_pika_spawn(cpu: &mut Cpu) {
+    cpu.pc = 0x0e73;
+
+    // callfar LoadWildData
+    macros::farcall::callfar(cpu, 0x03, 0x4b62);
+
+    // restore hl from before going to the warp/sign/sprite data (this value was saved for seemingly no purpose)
+    // pop hl
+    {
+        let hl = cpu.stack_pop();
+        cpu.set_hl(hl);
+        cpu.pc += 1;
+        cpu.cycle(12);
+    }
+
+    // map height in 4x4 tile blocks
+    // ld a, [wCurMapHeight]
+    cpu.a = cpu.borrow_wram().cur_map_height();
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // double it
+    // add a
+    cpu.set_flag(CpuFlag::H, (cpu.a & 0x0f) + (cpu.a & 0x0f) > 0x0f);
+    cpu.set_flag(CpuFlag::C, (cpu.a as u16) + (cpu.a as u16) > 0xff);
+    cpu.a = cpu.a.wrapping_add(cpu.a);
+    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // store map height in 2x2 tile blocks
+    // ld [wCurrentMapHeight2], a
+    let current_map_height_2 = cpu.a;
+    cpu.borrow_wram_mut()
+        .set_current_map_height_2(current_map_height_2);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // map width in 4x4 tile blocks
+    // ld a, [wCurMapWidth]
+    cpu.a = cpu.borrow_wram().cur_map_width();
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // double it
+    // add a
+    cpu.set_flag(CpuFlag::H, (cpu.a & 0x0f) + (cpu.a & 0x0f) > 0x0f);
+    cpu.set_flag(CpuFlag::C, (cpu.a as u16) + (cpu.a as u16) > 0xff);
+    cpu.a = cpu.a.wrapping_add(cpu.a);
+    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
+    cpu.set_flag(CpuFlag::N, false);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // map width in 2x2 tile blocks
+    // ld [wCurrentMapWidth2], a
+    let current_map_width_2 = cpu.a;
+    cpu.borrow_wram_mut()
+        .set_current_map_width_2(current_map_width_2);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ld a, [wCurMap]
+    cpu.a = cpu.read_byte(wram::W_CUR_MAP);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ld c, a
+    cpu.c = cpu.a;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // ld b, $00
+    cpu.b = 0x00;
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // ldh a, [hLoadedROMBank]
+    cpu.a = cpu.borrow_wram().loaded_rom_bank();
+    cpu.pc += 2;
+    cpu.cycle(12);
+
+    // push af
+    cpu.stack_push(cpu.af());
+    cpu.pc += 1;
+    cpu.cycle(16);
+
+    // ld a, BANK(MapSongBanks)
+    cpu.a = 0x3f;
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // call BankswitchCommon
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.cycle(24);
+        cpu.call(0x3e7e); // BankswitchCommon
+        cpu.pc = pc;
+    }
+
+    // ld hl, MapSongBanks
+    cpu.set_hl(0x4000); // MapSongBanks
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // add hl, bc
+    {
+        let hl = cpu.hl();
+        let bc = cpu.bc();
+        let result = hl.wrapping_add(bc);
+
+        cpu.set_flag(CpuFlag::H, (hl & 0x07ff) + (bc & 0x07ff) > 0x07ff);
+        cpu.set_flag(CpuFlag::N, false);
+        cpu.set_flag(CpuFlag::C, hl > 0xffff - bc);
+
+        cpu.set_hl(result);
+        cpu.pc += 1;
+        cpu.cycle(8);
+    }
+
+    // add hl, bc
+    {
+        let hl = cpu.hl();
+        let bc = cpu.bc();
+        let result = hl.wrapping_add(bc);
+
+        cpu.set_flag(CpuFlag::H, (hl & 0x07ff) + (bc & 0x07ff) > 0x07ff);
+        cpu.set_flag(CpuFlag::N, false);
+        cpu.set_flag(CpuFlag::C, hl > 0xffff - bc);
+
+        cpu.set_hl(result);
+        cpu.pc += 1;
+        cpu.cycle(8);
+    }
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // music 1
+    // ld [wMapMusicSoundID], a
+    let map_music_sound_id = cpu.a;
+    cpu.borrow_wram_mut()
+        .set_map_music_sound_id(map_music_sound_id);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ld a, [hl]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // music 2
+    // ld [wMapMusicROMBank], a
+    let map_music_rom_bank = cpu.a;
+    cpu.borrow_wram_mut()
+        .set_map_music_rom_bank(map_music_rom_bank);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // pop af
+    {
+        let af = cpu.stack_pop();
+        cpu.set_af(af);
+        cpu.pc += 1;
+        cpu.cycle(12);
+    }
+
+    // call BankswitchCommon
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.cycle(24);
+        cpu.call(0x3e7e); // BankswitchCommon
+        cpu.pc = pc;
+    }
+
+    // ret
+    cpu.pc = cpu.stack_pop();
+    cpu.cycle(16);
 }
 
 /// Copy map connection data from ROM to WRAM.

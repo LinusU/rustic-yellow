@@ -299,7 +299,24 @@ pub const W_PLAYER_ID: u16 = 0xd358;
 
 pub const W_CUR_MAP: u16 = 0xd35d;
 
+pub const W_CUR_MAP_HEADER: u16 = 0xd366;
 pub const W_CUR_MAP_TILESET: u16 = 0xd366;
+pub const W_CUR_MAP_CONNECTIONS: u16 = 0xd36f;
+pub const W_CUR_MAP_HEADER_END: u16 = 0xd370;
+
+pub const W_NORTH_CONNECTION_HEADER: u16 = 0xd370;
+pub const W_NORTH_CONNECTED_MAP: u16 = 0xd370;
+
+pub const W_SOUTH_CONNECTION_HEADER: u16 = 0xd37b;
+pub const W_SOUTH_CONNECTED_MAP: u16 = 0xd37b;
+
+pub const W_WEST_CONNECTION_HEADER: u16 = 0xd386;
+pub const W_WEST_CONNECTED_MAP: u16 = 0xd386;
+
+pub const W_EAST_CONNECTION_HEADER: u16 = 0xd391;
+pub const W_EAST_CONNECTED_MAP: u16 = 0xd391;
+
+pub const W_WARP_ENTRIES: u16 = 0xd3ae;
 
 pub const W_D436: u16 = 0xd435;
 

@@ -389,6 +389,14 @@ impl GameState {
         self.data[0x1139] = value;
     }
 
+    pub fn set_map_music_sound_id(&mut self, value: u8) {
+        self.data[0x135a] = value;
+    }
+
+    pub fn set_map_music_rom_bank(&mut self, value: u8) {
+        self.data[0x135b] = value;
+    }
+
     /// Pointer to the upper left corner of the current view in the tile block map
     pub fn set_current_tile_block_map_view_pointer(&mut self, value: u16) {
         self.data[0x135e] = (value >> 8) as u8;
@@ -431,9 +439,31 @@ impl GameState {
         self.data[0x1366] = value;
     }
 
+    pub fn cur_map_height(&self) -> u8 {
+        self.data[0x1367]
+    }
+
+    pub fn cur_map_width(&self) -> u8 {
+        self.data[0x1368]
+    }
+
     /// Sprite set ID for the current map
     pub fn set_sprite_set_id(&mut self, value: u8) {
         self.data[0x13a7] = value;
+    }
+
+    /// The tile shown outside the boundaries of the map
+    pub fn map_background_tile(&self) -> u8 {
+        self.data[0x13ac]
+    }
+
+    pub fn set_map_background_tile(&mut self, value: u8) {
+        self.data[0x13ac] = value;
+    }
+
+    /// Number of warps in current map (up to 32)
+    pub fn set_number_of_warps(&mut self, value: u8) {
+        self.data[0x13ad] = value;
     }
 
     /// If $ff, the player's coordinates are not updated when entering the map
@@ -446,9 +476,23 @@ impl GameState {
         self.data[0x14af]
     }
 
+    pub fn set_num_signs(&mut self, value: u8) {
+        self.data[0x14af] = value;
+    }
+
     /// Number of sprites on the current map (up to 16)
     pub fn set_num_sprites(&mut self, value: u8) {
         self.data[0x14e0] = value;
+    }
+
+    /// Map height in 2x2 meta-tiles
+    pub fn set_current_map_height_2(&mut self, value: u8) {
+        self.data[0x1523] = value;
+    }
+
+    /// Map width in 2x2 meta-tiles
+    pub fn set_current_map_width_2(&mut self, value: u8) {
+        self.data[0x1524] = value;
     }
 
     /// The address of the upper left corner of the visible portion of the BG tile map in VRAM
@@ -480,6 +524,10 @@ impl GameState {
 
     pub fn previous_tileset(&self) -> u8 {
         self.high_ram[0x0b]
+    }
+
+    pub fn set_previous_tileset(&mut self, value: u8) {
+        self.high_ram[0x0b] = value;
     }
 
     pub fn loaded_rom_bank(&self) -> u8 {
