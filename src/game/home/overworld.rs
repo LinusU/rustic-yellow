@@ -262,6 +262,25 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+/// Copy map connection data from ROM to WRAM.
+///
+/// Input: hl = source, de = destination \
+/// Output: hl = end of source
+pub fn copy_map_connection_header(cpu: &mut Cpu) {
+    const MAP_CONNECTION_HEADER_SIZE: u16 = 0x0b;
+
+    log::debug!("copy_map_connection_header()");
+
+    for i in 0..MAP_CONNECTION_HEADER_SIZE {
+        let byte = cpu.read_byte(cpu.hl() + i);
+        cpu.write_byte(cpu.de() + i, byte);
+    }
+
+    cpu.set_hl(cpu.hl() + MAP_CONNECTION_HEADER_SIZE);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Input: hl = pointer to bg_event list to load
 /// Output: hl = pointer to just after the bg_event list
 pub fn copy_sign_data(cpu: &mut Cpu) {
