@@ -301,6 +301,7 @@ pub const W_CUR_MAP: u16 = 0xd35d;
 
 pub const W_CUR_MAP_HEADER: u16 = 0xd366;
 pub const W_CUR_MAP_TILESET: u16 = 0xd366;
+pub const W_CUR_MAP_SCRIPT_PTR: u16 = 0xd36d;
 pub const W_CUR_MAP_CONNECTIONS: u16 = 0xd36f;
 pub const W_CUR_MAP_HEADER_END: u16 = 0xd370;
 

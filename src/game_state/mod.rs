@@ -10,6 +10,15 @@ const BATTLE_MON_START: usize = 0x1013;
 const BOX_DATA_START: usize = 0x1a7f;
 const PARTY_DATA_START: usize = 0x1162;
 
+// wFlags_0xcd60
+/// bit 0: is player engaged by trainer (to avoid being engaged by multiple trainers simultaneously) \
+/// bit 1: boulder dust animation (from using Strength) pending \
+/// bit 3: using generic PC \
+/// bit 5: don't play sound when A or B is pressed in menu \
+/// bit 6: tried pushing against boulder once (you need to push twice before it will move)
+const W_CD60: usize = 0x0d60;
+
+// wd728
 /// bit 0: using Strength outside of battle \
 /// bit 1: set by IsSurfingAllowed when surfing's allowed, but the caller resets it after checking the result \
 /// bit 3: received Old Rod \
@@ -266,6 +275,10 @@ impl GameState {
 
     pub fn trainer_pic_pointer(&self) -> u16 {
         self.data[0x1032] as u16 | ((self.data[0x1033] as u16) << 8)
+    }
+
+    pub fn boulder_dust_animation_pending(&self) -> bool {
+        self.data[W_CD60] & (1 << 1) != 0
     }
 
     /// This has overlapping related uses. \

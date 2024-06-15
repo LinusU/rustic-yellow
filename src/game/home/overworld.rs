@@ -263,6 +263,44 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+/// Run the current map's script
+pub fn run_map_script(cpu: &mut Cpu) {
+    log::trace!("run_map_script()");
+
+    let saved_hl = cpu.hl();
+    let saved_de = cpu.de();
+    let saved_bc = cpu.bc();
+
+    // TryPushingBoulder
+    macros::farcall::farcall(cpu, 0x03, 0x70a1);
+
+    if cpu.borrow_wram().boulder_dust_animation_pending() {
+        // DoBoulderDustAnimation
+        macros::farcall::farcall(cpu, 0x03, 0x7131);
+    }
+
+    cpu.set_bc(saved_bc);
+    cpu.set_de(saved_de);
+    cpu.set_hl(saved_hl);
+
+    cpu.call(0x30ae); // RunNPCMovementScript
+
+    // change to the ROM bank the map's data is in
+    cpu.a = cpu.borrow_wram().cur_map();
+    cpu.stack_push(0x0001);
+    switch_to_map_rom_bank(cpu);
+
+    let ptr = u16::from_le_bytes([
+        cpu.read_byte(wram::W_CUR_MAP_SCRIPT_PTR),
+        cpu.read_byte(wram::W_CUR_MAP_SCRIPT_PTR + 1),
+    ]);
+
+    // Jump to the map's script
+    cpu.call(ptr);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn load_walking_player_sprite_graphics(cpu: &mut Cpu) {
     // new sprite copy stuff
     cpu.write_byte(wram::W_D473, 0);
