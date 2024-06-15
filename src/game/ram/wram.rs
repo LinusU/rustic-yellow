@@ -320,6 +320,9 @@ pub const W_WARP_ENTRIES: u16 = 0xd3ae;
 
 pub const W_D436: u16 = 0xd435;
 
+pub const W_D472: u16 = 0xd471;
+pub const W_D473: u16 = 0xd472;
+
 pub const W_PRINTER_SETTINGS: u16 = 0xd497;
 
 pub const W_SIGN_COORDS: u16 = 0xd4b0;

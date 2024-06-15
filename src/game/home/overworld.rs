@@ -263,6 +263,29 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn load_surfing_player_sprite_graphics2(cpu: &mut Cpu) {
+    log::debug!("load_surfing_player_sprite_graphics2()");
+
+    let w_d473 = cpu.read_byte(wram::W_D473);
+    let w_d472_bit_6 = (cpu.read_byte(wram::W_D472) & (1 << 6)) != 0;
+
+    match (w_d473, w_d472_bit_6) {
+        (1, _) => load_surfing_player_sprite_graphics(cpu),
+        (2, _) => load_surfing_player_sprite_graphics2_load_surfing_pikachu(cpu),
+        (_, false) => load_surfing_player_sprite_graphics(cpu),
+        (_, true) => load_surfing_player_sprite_graphics2_load_surfing_pikachu(cpu),
+    }
+}
+
+fn load_surfing_player_sprite_graphics2_load_surfing_pikachu(cpu: &mut Cpu) {
+    log::trace!("load_surfing_player_sprite_graphics2_load_surfing_pikachu()");
+
+    cpu.b = 0x3f; // BANK(SurfingPikachuSprite)
+    cpu.set_de(0x6def); // SurfingPikachuSprite
+
+    load_player_sprite_graphics_common(cpu)
+}
+
 pub fn load_surfing_player_sprite_graphics(cpu: &mut Cpu) {
     log::debug!("load_surfing_player_sprite_graphics()");
 
