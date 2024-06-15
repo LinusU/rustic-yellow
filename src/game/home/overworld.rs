@@ -263,6 +263,14 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn load_walking_player_sprite_graphics(cpu: &mut Cpu) {
+    // new sprite copy stuff
+    cpu.write_byte(wram::W_D473, 0);
+
+    load_player_sprite_graphics_common(cpu, 0x05, 0x4571); // RedSprite
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn load_surfing_player_sprite_graphics2(cpu: &mut Cpu) {
     log::debug!("load_surfing_player_sprite_graphics2()");
 
@@ -270,62 +278,40 @@ pub fn load_surfing_player_sprite_graphics2(cpu: &mut Cpu) {
     let w_d472_bit_6 = (cpu.read_byte(wram::W_D472) & (1 << 6)) != 0;
 
     match (w_d473, w_d472_bit_6) {
-        (1, _) => load_surfing_player_sprite_graphics(cpu),
-        (2, _) => load_surfing_player_sprite_graphics2_load_surfing_pikachu(cpu),
-        (_, false) => load_surfing_player_sprite_graphics(cpu),
-        (_, true) => load_surfing_player_sprite_graphics2_load_surfing_pikachu(cpu),
+        (1, _) => load_player_sprite_graphics_common(cpu, 0x05, 0x7ab1), // SeelSprite
+        (2, _) => load_player_sprite_graphics_common(cpu, 0x3f, 0x6def), // SurfingPikachuSprite
+        (_, false) => load_player_sprite_graphics_common(cpu, 0x05, 0x7ab1), // SeelSprite
+        (_, true) => load_player_sprite_graphics_common(cpu, 0x3f, 0x6def), // SurfingPikachuSprite
     }
-}
 
-fn load_surfing_player_sprite_graphics2_load_surfing_pikachu(cpu: &mut Cpu) {
-    log::trace!("load_surfing_player_sprite_graphics2_load_surfing_pikachu()");
-
-    cpu.b = 0x3f; // BANK(SurfingPikachuSprite)
-    cpu.set_de(0x6def); // SurfingPikachuSprite
-
-    load_player_sprite_graphics_common(cpu)
-}
-
-pub fn load_surfing_player_sprite_graphics(cpu: &mut Cpu) {
-    log::debug!("load_surfing_player_sprite_graphics()");
-
-    cpu.b = 0x05; // BANK(SeelSprite)
-    cpu.set_de(0x7ab1); // SeelSprite
-
-    load_player_sprite_graphics_common(cpu)
+    cpu.pc = cpu.stack_pop(); // ret
 }
 
 pub fn load_bike_player_sprite_graphics(cpu: &mut Cpu) {
     log::debug!("load_bike_player_sprite_graphics()");
 
-    cpu.b = 0x05; // BANK(RedBikeSprite)
-    cpu.set_de(0x43f1); // RedBikeSprite
-
-    load_player_sprite_graphics_common(cpu);
+    load_player_sprite_graphics_common(cpu, 0x05, 0x43f1); // RedBikeSprite
+    cpu.pc = cpu.stack_pop(); // ret
 }
 
-/// Input: b = bank, de = address
-pub fn load_player_sprite_graphics_common(cpu: &mut Cpu) {
-    let bank = cpu.b;
-    let address = cpu.de();
-
-    log::debug!(
+fn load_player_sprite_graphics_common(cpu: &mut Cpu, bank: u8, addr: u16) {
+    log::trace!(
         "load_player_sprite_graphics_common({:02x}:{:04x})",
         bank,
-        address
+        addr
     );
 
+    cpu.b = bank;
     cpu.c = 0xc;
+    cpu.set_de(addr);
     cpu.set_hl(vram::V_NPC_SPRITES);
     cpu.call(0x15fe); // CopyVideoData
 
     cpu.b = bank;
     cpu.c = 0xc;
-    cpu.set_de(address + 0xc0);
+    cpu.set_de(addr + 0xc0);
     cpu.set_hl(vram::V_NPC_SPRITES2);
     cpu.call(0x15fe); // CopyVideoData
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 // Load data from the map header
