@@ -273,251 +273,80 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
 pub fn collision_check_on_water(cpu: &mut Cpu) {
     log::trace!("collision_check_on_water()");
 
-    cpu.pc = 0x0cca;
-
-    // ld a, [wd730]
-    cpu.a = cpu.read_byte(wram::W_D730);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // bit 7, a
-    cpu.set_flag(CpuFlag::Z, (cpu.a & (1 << 7)) == 0);
-    cpu.set_flag(CpuFlag::H, true);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.pc += 2;
-    cpu.cycle(8);
-
     // return and clear carry if button presses are being simulated
-    // jp nz, .noCollision
-    if !cpu.flag(CpuFlag::Z) {
-        cpu.cycle(16);
+    if (cpu.read_byte(wram::W_D730) & (1 << 7)) != 0 {
         return collision_check_on_water_no_collision(cpu);
-    } else {
-        cpu.pc += 3;
-        cpu.cycle(12);
     }
 
     // the direction that the player is trying to go in
-    // ld a, [wPlayerDirection]
-    cpu.a = cpu.borrow_wram().player_direction();
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // ld d, a
-    cpu.d = cpu.a;
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // ld a, [wSpritePlayerStateData1CollisionData]
+    cpu.d = cpu.borrow_wram().player_direction();
     cpu.a = cpu.read_byte(wram::W_SPRITE_PLAYER_STATE_DATA1_COLLISION_DATA);
-    cpu.pc += 3;
-    cpu.cycle(16);
 
     // check if a sprite is in the direction the player is trying to go
-    // and a, d
-    cpu.a &= cpu.d;
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.set_flag(CpuFlag::H, true);
-    cpu.set_flag(CpuFlag::C, false);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // jr nz, .collision
-    if !cpu.flag(CpuFlag::Z) {
-        cpu.cycle(12);
+    if (cpu.a & cpu.d) != 0 {
         return collision_check_on_water_collision(cpu);
-    } else {
-        cpu.pc += 2;
-        cpu.cycle(8);
     }
 
-    // ld hl, TilePairCollisionsWater
     cpu.set_hl(0x0afc); // TilePairCollisionsWater
-    cpu.pc += 3;
-    cpu.cycle(12);
-
-    // call CheckForJumpingAndTilePairCollisions
     cpu.call(0x0a86); // CheckForJumpingAndTilePairCollisions
 
-    // jr c, .collision
     if cpu.flag(CpuFlag::C) {
-        cpu.cycle(12);
         return collision_check_on_water_collision(cpu);
-    } else {
-        cpu.pc += 2;
-        cpu.cycle(8);
     }
 
     // get tile in front of player (puts it in c and [wTileInFrontOfPlayer])
-    // predef GetTileAndCoordsInFrontOfPlayer
     macros::predef::predef_call!(cpu, GetTileAndCoordsInFrontOfPlayer);
 
-    // callfar IsNextTileShoreOrWater
+    // IsNextTileShoreOrWater
     macros::farcall::callfar(cpu, 0x03, 0x6808);
 
-    // jr c, .noCollision
     if cpu.flag(CpuFlag::C) {
-        cpu.cycle(12);
         return collision_check_on_water_no_collision(cpu);
-    } else {
-        cpu.pc += 2;
-        cpu.cycle(8);
     }
 
     // tile in front of player
-    // ld a, [wTileInFrontOfPlayer]
-    cpu.a = cpu.borrow_wram().tile_in_front_of_player();
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // ld c, a
-    cpu.c = cpu.a;
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // call IsTilePassable
+    cpu.c = cpu.borrow_wram().tile_in_front_of_player();
     cpu.call(0x15c3); // IsTilePassable
 
-    // jr nc, .stopSurfing
-    if !cpu.flag(CpuFlag::C) {
-        cpu.cycle(12);
-        return collision_check_on_water_stop_surfing(cpu);
+    if cpu.flag(CpuFlag::C) {
+        collision_check_on_water_collision(cpu);
     } else {
-        cpu.pc += 2;
-        cpu.cycle(8);
+        collision_check_on_water_stop_surfing(cpu)
     }
-
-    collision_check_on_water_collision(cpu);
 }
 
 fn collision_check_on_water_collision(cpu: &mut Cpu) {
-    cpu.pc = 0x0cfc;
-
-    // ld a, [wChannelSoundIDs + CHAN5]
     cpu.a = cpu.read_byte(wram::W_CHANNEL_SOUND_IDS + (CHAN5 as u16));
-    cpu.pc += 3;
-    cpu.cycle(16);
 
-    // check if collision sound is already playing
-    // cp SFX_COLLISION
-    cpu.set_flag(CpuFlag::Z, cpu.a == SFX_COLLISION);
-    cpu.set_flag(CpuFlag::H, (cpu.a & 0x0f) < (SFX_COLLISION & 0x0f));
-    cpu.set_flag(CpuFlag::N, true);
-    cpu.set_flag(CpuFlag::C, cpu.a < SFX_COLLISION);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // jr z, .setCarry
-    if cpu.flag(CpuFlag::Z) {
-        cpu.cycle(12);
-        return collision_check_on_water_set_carry(cpu);
-    } else {
-        cpu.pc += 2;
-        cpu.cycle(8);
+    // check if collision sound is already playing, and play it if it's not
+    if cpu.a != SFX_COLLISION {
+        cpu.a = SFX_COLLISION;
+        cpu.call(0x2238); // PlaySound
     }
 
-    // ld a, SFX_COLLISION
-    cpu.a = SFX_COLLISION;
-    cpu.pc += 2;
-    cpu.cycle(8);
-
-    // play collision sound (if it's not already playing)
-    // call PlaySound
-    cpu.call(0x2238); // PlaySound
-
-    collision_check_on_water_set_carry(cpu);
-}
-
-fn collision_check_on_water_set_carry(cpu: &mut Cpu) {
-    cpu.pc = 0x0d08;
-
-    // scf
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.set_flag(CpuFlag::H, false);
     cpu.set_flag(CpuFlag::C, true);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
     log::debug!("collision_check_on_water() collision");
 
-    // jr .done
-    cpu.cycle(12);
-    collision_check_on_water_done(cpu)
+    cpu.pc = cpu.stack_pop(); // ret
 }
 
-// based game freak
 fn collision_check_on_water_stop_surfing(cpu: &mut Cpu) {
-    cpu.pc = 0x0d14;
-
-    // ld a, $3
-    cpu.a = 0x3;
-    cpu.pc += 2;
-    cpu.cycle(8);
-
-    // ld [wPikachuSpawnState], a
     cpu.borrow_wram_mut().set_pikachu_spawn_state(0x3);
-    cpu.pc += 3;
-    cpu.cycle(16);
-
-    // ld hl, wPikachuOverworldStateFlags
-    // set 5, [hl]
-    cpu.set_hl(0xd42f);
     cpu.borrow_wram_mut()
         .set_pikachu_overworld_state_flag_5(true);
-    cpu.pc += 3;
-    cpu.cycle(12);
-    cpu.pc += 2;
-    cpu.cycle(16);
-
-    // xor a, a
-    cpu.a = 0;
-    cpu.set_flag(CpuFlag::Z, true);
-    cpu.set_flag(CpuFlag::C, false);
-    cpu.set_flag(CpuFlag::H, false);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // ld [wWalkBikeSurfState], a
     cpu.borrow_wram_mut().set_walk_bike_surf_state(0);
-    cpu.pc += 3;
-    cpu.cycle(16);
 
-    // call LoadPlayerSpriteGraphics
     cpu.call(0x07d7); // LoadPlayerSpriteGraphics
-
-    // call PlayDefaultMusic
     cpu.call(0x216b); // PlayDefaultMusic
 
-    // jr .noCollision
-    cpu.cycle(12);
     collision_check_on_water_no_collision(cpu)
 }
 
-// ...and they do the same mistake twice
 fn collision_check_on_water_no_collision(cpu: &mut Cpu) {
-    cpu.pc = 0x0d2a;
-
-    // and a, a
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.set_flag(CpuFlag::H, true);
     cpu.set_flag(CpuFlag::C, false);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
     log::trace!("collision_check_on_water() no collision");
 
-    collision_check_on_water_done(cpu);
-}
-
-fn collision_check_on_water_done(cpu: &mut Cpu) {
-    cpu.pc = 0x0d2b;
-
-    // ret
-    cpu.pc = cpu.stack_pop();
-    cpu.cycle(16);
+    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// Run the current map's script
