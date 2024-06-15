@@ -1,3 +1,4 @@
+pub mod audio_constants;
 pub mod battle_constants;
 pub mod gfx_constants;
 pub mod hardware_constants;

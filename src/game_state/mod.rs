@@ -222,6 +222,11 @@ impl GameState {
         self.data[0x0fc4] = value;
     }
 
+    /// Background tile number in front of the player (either 1 or 2 steps ahead)
+    pub fn tile_in_front_of_player(&self) -> u8 {
+        self.data[0x0fc5]
+    }
+
     pub fn enemy_mon_species2(&self) -> u8 {
         self.data[0x0fd7]
     }
@@ -484,6 +489,18 @@ impl GameState {
         self.data[0x142e]
     }
 
+    pub fn set_pikachu_overworld_state_flag_5(&mut self, value: bool) {
+        if value {
+            self.data[0x142f] |= 1 << 5;
+        } else {
+            self.data[0x142f] &= !(1 << 5);
+        }
+    }
+
+    pub fn set_pikachu_spawn_state(&mut self, value: u8) {
+        self.data[0x1430] = value;
+    }
+
     /// Number of signs in the current map (up to 16)
     pub fn num_signs(&self) -> u8 {
         self.data[0x14af]
@@ -517,12 +534,20 @@ impl GameState {
 
     /// If the player is moving, the current direction \
     /// If the player is not moving, the last the direction in which the player moved
+    pub fn player_direction(&self) -> u8 {
+        self.data[0x1529]
+    }
+
     pub fn set_player_direction(&mut self, direction: u8) {
         self.data[0x1529] = direction;
     }
 
     pub fn tileset_talking_over_tiles(&self) -> [u8; 3] {
         [self.data[0x1531], self.data[0x1532], self.data[0x1533]]
+    }
+
+    pub fn set_walk_bike_surf_state(&mut self, value: u8) {
+        self.data[0x16ff] = value;
     }
 
     pub fn set_using_strength_out_of_battle(&mut self, value: bool) {
