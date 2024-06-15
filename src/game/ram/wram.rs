@@ -364,7 +364,7 @@ pub const W_D72E: u16 = 0xd72d;
 /// bit 5: ignore joypad input \
 /// bit 6: print text with no delay between each letter \
 /// bit 7: set if joypad states are being simulated in the overworld or an NPC's movement is being scripted
-pub const W_D730: u16 = 0xd730;
+pub const W_D730: u16 = 0xd72f;
 
 /// bit 0: check if the player is standing on a door and make him walk down a step if so \
 /// bit 1: the player is currently stepping down from a door \
