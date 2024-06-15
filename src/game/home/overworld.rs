@@ -266,6 +266,26 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn schedule_east_column_redraw(cpu: &mut Cpu) {
+    log::trace!("schedule_east_column_redraw()");
+
+    cpu.set_hl(macros::coords::coord!(18, 0));
+    schedule_column_redraw_helper(cpu);
+
+    let vram_ptr = cpu.borrow_wram().map_view_vram_pointer();
+
+    let hi_bits = vram_ptr & 0xffe0;
+    let low_bits = vram_ptr.wrapping_add(18) & 0x001f;
+
+    cpu.borrow_wram_mut()
+        .set_redraw_row_or_column_dest(hi_bits | low_bits);
+
+    cpu.borrow_wram_mut()
+        .set_redraw_row_or_column_mode(gfx_constants::REDRAW_COL);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn schedule_column_redraw_helper(cpu: &mut Cpu) {
     log::trace!("schedule_column_redraw_helper()");
 
@@ -281,16 +301,12 @@ pub fn schedule_column_redraw_helper(cpu: &mut Cpu) {
         cpu.set_hl(cpu.hl() + gfx_constants::SCREEN_WIDTH as u16);
         cpu.set_de(cpu.de() + 2);
     }
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 pub fn schedule_west_column_redraw(cpu: &mut Cpu) {
     log::trace!("schedule_west_column_redraw()");
 
     cpu.set_hl(macros::coords::coord!(0, 0));
-
-    cpu.stack_push(0x0001);
     schedule_column_redraw_helper(cpu);
 
     let vram_ptr = cpu.borrow_wram().map_view_vram_pointer();
