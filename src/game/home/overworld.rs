@@ -263,6 +263,15 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn load_bike_player_sprite_graphics(cpu: &mut Cpu) {
+    log::debug!("load_bike_player_sprite_graphics()");
+
+    cpu.b = 0x05; // BANK(RedBikeSprite)
+    cpu.set_de(0x43f1); // RedBikeSprite
+
+    load_player_sprite_graphics_common(cpu);
+}
+
 /// Input: b = bank, de = address
 pub fn load_player_sprite_graphics_common(cpu: &mut Cpu) {
     let bank = cpu.b;
