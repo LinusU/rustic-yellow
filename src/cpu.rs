@@ -93,6 +93,7 @@ impl Cpu {
                 (_, 0x095e) => crate::game::home::overworld::is_sprite_or_sign_in_front_of_player(self),
                 (_, 0x0983) => crate::game::home::overworld::is_sprite_in_front_of_player(self),
                 (_, 0x0985) => crate::game::home::overworld::is_sprite_in_front_of_player2(self),
+                (_, 0x0d8f) => crate::game::home::overworld::load_player_sprite_graphics_common(self),
                 (_, 0x0dab) => crate::game::home::overworld::load_map_header(self),
                 (_, 0x0eaa) => crate::game::home::overworld::copy_map_connection_header(self),
                 (_, 0x0eb3) => panic!("copy_sign_data should only be called from Rust"),

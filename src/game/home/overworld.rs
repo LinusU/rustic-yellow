@@ -263,6 +263,30 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+/// Input: b = bank, de = address
+pub fn load_player_sprite_graphics_common(cpu: &mut Cpu) {
+    let bank = cpu.b;
+    let address = cpu.de();
+
+    log::debug!(
+        "load_player_sprite_graphics_common({:02x}:{:04x})",
+        bank,
+        address
+    );
+
+    cpu.c = 0xc;
+    cpu.set_hl(vram::V_NPC_SPRITES);
+    cpu.call(0x15fe); // CopyVideoData
+
+    cpu.b = bank;
+    cpu.c = 0xc;
+    cpu.set_de(address + 0xc0);
+    cpu.set_hl(vram::V_NPC_SPRITES2);
+    cpu.call(0x15fe); // CopyVideoData
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 // Load data from the map header
 pub fn load_map_header(cpu: &mut Cpu) {
     log::debug!("load_map_header()");
