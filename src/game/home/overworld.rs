@@ -265,25 +265,66 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
-pub fn get_simulated_input(cpu: &mut Cpu) {
-    log::debug!("get_simulated_input()");
+pub fn are_inputs_simulated(cpu: &mut Cpu) {
+    log::trace!("are_inputs_simulated()");
+
+    let w_d730 = cpu.read_byte(wram::W_D730);
+
+    if (w_d730 & (1 << 7)) == 0 {
+        cpu.pc = cpu.stack_pop(); // ret
+        return;
+    }
+
+    log::debug!("are_inputs_simulated() joypad is being simulated");
+
+    match get_simulated_input(cpu) {
+        None => {
+            // if done simulating button presses
+            cpu.borrow_wram_mut().set_simulated_joypad_states_index(0);
+            cpu.write_byte(wram::W_SIMULATED_JOYPAD_STATES_END, 0);
+            cpu.write_byte(wram::W_JOY_IGNORE, 0);
+            cpu.write_byte(hram::H_JOY_HELD, 0);
+
+            let w_d736 = cpu.read_byte(wram::W_D736) & 0xf8;
+            cpu.write_byte(wram::W_D736, w_d736);
+
+            let w_d730 = cpu.read_byte(wram::W_D730);
+            cpu.write_byte(wram::W_D730, w_d730 & !(1 << 7));
+
+            cpu.a = w_d736;
+        }
+        Some(input) => {
+            // store simulated button press in joypad state
+            cpu.write_byte(hram::H_JOY_HELD, input);
+
+            if input == 0 {
+                cpu.write_byte(hram::H_JOY_PRESSED, input);
+                cpu.write_byte(hram::H_JOY_RELEASED, input);
+            }
+
+            cpu.a = input;
+        }
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
+fn get_simulated_input(cpu: &mut Cpu) -> Option<u8> {
+    log::trace!("get_simulated_input()");
 
     let mut idx = cpu.borrow_wram().simulated_joypad_states_index();
 
     // if the end of the simulated button presses has been reached
     if idx == 0 {
-        cpu.set_flag(CpuFlag::C, false);
-        cpu.pc = cpu.stack_pop(); // ret
-        return;
+        return None;
     }
 
     idx -= 1;
 
     cpu.borrow_wram_mut().set_simulated_joypad_states_index(idx);
-    cpu.a = cpu.read_byte(wram::W_SIMULATED_JOYPAD_STATES_END + (idx as u16));
+    let input = cpu.read_byte(wram::W_SIMULATED_JOYPAD_STATES_END + (idx as u16));
 
-    cpu.set_flag(CpuFlag::C, true);
-    cpu.pc = cpu.stack_pop(); // ret
+    Some(input)
 }
 
 /// Check the tile ahead to determine if the character should get on land or keep surfing.
