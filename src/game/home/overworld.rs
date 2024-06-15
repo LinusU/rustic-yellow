@@ -266,6 +266,23 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn schedule_west_column_redraw(cpu: &mut Cpu) {
+    log::trace!("schedule_west_column_redraw()");
+
+    cpu.set_hl(macros::coords::coord!(0, 0));
+    cpu.call(0x0bf6); // ScheduleColumnRedrawHelper
+
+    let vram_ptr = cpu.borrow_wram().map_view_vram_pointer();
+
+    cpu.borrow_wram_mut()
+        .set_redraw_row_or_column_dest(vram_ptr);
+
+    cpu.borrow_wram_mut()
+        .set_redraw_row_or_column_mode(gfx_constants::REDRAW_COL);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Write the tiles that make up a tile block to memory
 ///
 /// Input: c = tile block ID, hl = destination address

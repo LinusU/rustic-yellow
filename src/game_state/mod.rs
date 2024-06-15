@@ -537,6 +537,10 @@ impl GameState {
     }
 
     /// The address of the upper left corner of the visible portion of the BG tile map in VRAM
+    pub fn map_view_vram_pointer(&self) -> u16 {
+        u16::from_le_bytes([self.data[0x1525], self.data[0x1526]])
+    }
+
     pub fn set_map_view_vram_pointer(&mut self, value: u16) {
         let bytes = value.to_le_bytes();
         self.data[0x1525] = bytes[0];
@@ -589,6 +593,16 @@ impl GameState {
 
     pub fn set_loaded_rom_bank(&mut self, value: u8) {
         self.high_ram[0x38] = value;
+    }
+
+    pub fn set_redraw_row_or_column_mode(&mut self, value: u8) {
+        self.high_ram[0x50] = value;
+    }
+
+    pub fn set_redraw_row_or_column_dest(&mut self, value: u16) {
+        let bytes = value.to_le_bytes();
+        self.high_ram[0x51] = bytes[0];
+        self.high_ram[0x52] = bytes[1];
     }
 
     /// Controls which tiles are animated.
