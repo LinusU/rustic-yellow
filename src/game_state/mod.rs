@@ -213,6 +213,17 @@ impl GameState {
         self.data[0x0c2f]
     }
 
+    /// The next simulated joypad state is at wSimulatedJoypadStatesEnd plus this value minus 1
+    ///
+    /// 0 if the joypad state is not being simulated
+    pub fn simulated_joypad_states_index(&self) -> u8 {
+        self.data[0x0d38]
+    }
+
+    pub fn set_simulated_joypad_states_index(&mut self, value: u8) {
+        self.data[0x0d38] = value;
+    }
+
     pub fn set_joy_ignore(&mut self, value: u8) {
         self.data[0x0d6b] = value;
     }

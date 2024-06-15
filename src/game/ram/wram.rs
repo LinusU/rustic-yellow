@@ -84,6 +84,8 @@ pub const W_MON_DATA_LOCATION: u16 = 0xcc49;
 /// 0 if an NPC movement script is not running
 pub const W_NPC_MOVEMENT_SCRIPT_POINTER_TABLE_NUM: u16 = 0xcc57;
 
+pub const W_SIMULATED_JOYPAD_STATES_END: u16 = 0xccd3;
+
 pub const W_PARENT_MENU_ITEM: u16 = 0xccd3;
 
 /// if [wAILayer2Encouragement] != 1, the second AI layer is not applied

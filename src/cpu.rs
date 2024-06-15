@@ -93,6 +93,7 @@ impl Cpu {
                 (_, 0x095e) => crate::game::home::overworld::is_sprite_or_sign_in_front_of_player(self),
                 (_, 0x0983) => crate::game::home::overworld::is_sprite_in_front_of_player(self),
                 (_, 0x0985) => crate::game::home::overworld::is_sprite_in_front_of_player2(self),
+                (_, 0x0cb3) => crate::game::home::overworld::get_simulated_input(self),
                 (_, 0x0cca) => crate::game::home::overworld::collision_check_on_water(self),
                 (_, 0x0d2c) => crate::game::home::overworld::run_map_script(self),
                 (_, 0x0d5e) => crate::game::home::overworld::load_walking_player_sprite_graphics(self),

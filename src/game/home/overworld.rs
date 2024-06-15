@@ -265,6 +265,27 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn get_simulated_input(cpu: &mut Cpu) {
+    log::debug!("get_simulated_input()");
+
+    let mut idx = cpu.borrow_wram().simulated_joypad_states_index();
+
+    // if the end of the simulated button presses has been reached
+    if idx == 0 {
+        cpu.set_flag(CpuFlag::C, false);
+        cpu.pc = cpu.stack_pop(); // ret
+        return;
+    }
+
+    idx -= 1;
+
+    cpu.borrow_wram_mut().set_simulated_joypad_states_index(idx);
+    cpu.a = cpu.read_byte(wram::W_SIMULATED_JOYPAD_STATES_END + (idx as u16));
+
+    cpu.set_flag(CpuFlag::C, true);
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Check the tile ahead to determine if the character should get on land or keep surfing.
 ///
 /// Sets carry if there is a collision and clears carry otherwise.
