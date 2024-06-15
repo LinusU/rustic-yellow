@@ -266,11 +266,32 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn schedule_column_redraw_helper(cpu: &mut Cpu) {
+    log::trace!("schedule_column_redraw_helper()");
+
+    cpu.set_de(wram::W_REDRAW_ROW_OR_COLUMN_SRC_TILES);
+
+    for _ in 0..gfx_constants::SCREEN_HEIGHT {
+        cpu.a = cpu.read_byte(cpu.hl());
+        cpu.write_byte(cpu.de(), cpu.a);
+
+        cpu.a = cpu.read_byte(cpu.hl() + 1);
+        cpu.write_byte(cpu.de() + 1, cpu.a);
+
+        cpu.set_hl(cpu.hl() + gfx_constants::SCREEN_WIDTH as u16);
+        cpu.set_de(cpu.de() + 2);
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn schedule_west_column_redraw(cpu: &mut Cpu) {
     log::trace!("schedule_west_column_redraw()");
 
     cpu.set_hl(macros::coords::coord!(0, 0));
-    cpu.call(0x0bf6); // ScheduleColumnRedrawHelper
+
+    cpu.stack_push(0x0001);
+    schedule_column_redraw_helper(cpu);
 
     let vram_ptr = cpu.borrow_wram().map_view_vram_pointer();
 

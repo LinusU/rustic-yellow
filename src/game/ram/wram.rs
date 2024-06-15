@@ -20,6 +20,8 @@ pub const W_SPRITE_DATA_END: u16 = 0xc300;
 
 pub const W_TILE_MAP: u16 = 0xc3a0;
 
+pub const W_REDRAW_ROW_OR_COLUMN_SRC_TILES: u16 = 0xcbfc;
+
 pub const W_TOP_MENU_ITEM_Y: u16 = 0xcc24;
 pub const W_TOP_MENU_ITEM_X: u16 = 0xcc25;
 

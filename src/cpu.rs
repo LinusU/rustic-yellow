@@ -93,6 +93,7 @@ impl Cpu {
                 (_, 0x095e) => crate::game::home::overworld::is_sprite_or_sign_in_front_of_player(self),
                 (_, 0x0983) => crate::game::home::overworld::is_sprite_in_front_of_player(self),
                 (_, 0x0985) => crate::game::home::overworld::is_sprite_in_front_of_player2(self),
+                (_, 0x0bf6) => crate::game::home::overworld::schedule_column_redraw_helper(self),
                 (_, 0x0c0c) => crate::game::home::overworld::schedule_west_column_redraw(self),
                 (_, 0x0c21) => crate::game::home::overworld::draw_tile_block(self),
                 (_, 0x0c51) => crate::game::home::overworld::joypad_overworld(self),
