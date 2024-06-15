@@ -553,6 +553,10 @@ impl GameState {
         self.data[0x1529] = direction;
     }
 
+    pub fn tileset_blocks_pointer(&self) -> u16 {
+        u16::from_le_bytes([self.data[0x152b], self.data[0x152c]])
+    }
+
     pub fn tileset_talking_over_tiles(&self) -> [u8; 3] {
         [self.data[0x1531], self.data[0x1532], self.data[0x1533]]
     }

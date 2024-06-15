@@ -266,6 +266,32 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+/// Write the tiles that make up a tile block to memory
+///
+/// Input: c = tile block ID, hl = destination address
+pub fn draw_tile_block(cpu: &mut Cpu) {
+    log::trace!("draw_tile_block()");
+
+    // pointer to tiles
+    let pointer = cpu.borrow_wram().tileset_blocks_pointer();
+    let offset = (cpu.c as u16) * 0x10;
+
+    cpu.set_de(pointer + offset);
+
+    for _ in 0..4 {
+        // each loop iteration, write 4 tile numbers
+        for i in 0..4 {
+            let tile = cpu.read_byte(cpu.de() + i);
+            cpu.write_byte(cpu.hl() + i, tile);
+        }
+
+        cpu.set_de(cpu.de() + 4);
+        cpu.set_hl(cpu.hl() + 0x18);
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Update joypad state and simulate button presses
 pub fn joypad_overworld(cpu: &mut Cpu) {
     log::trace!("joypad_overworld()");

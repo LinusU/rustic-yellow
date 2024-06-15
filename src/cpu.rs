@@ -93,6 +93,7 @@ impl Cpu {
                 (_, 0x095e) => crate::game::home::overworld::is_sprite_or_sign_in_front_of_player(self),
                 (_, 0x0983) => crate::game::home::overworld::is_sprite_in_front_of_player(self),
                 (_, 0x0985) => crate::game::home::overworld::is_sprite_in_front_of_player2(self),
+                (_, 0x0c21) => crate::game::home::overworld::draw_tile_block(self),
                 (_, 0x0c51) => crate::game::home::overworld::joypad_overworld(self),
                 (_, 0x0c65) => panic!("force_bike_down should only be called from Rust"),
                 (_, 0x0c7b) => panic!("are_inputs_simulated should only be called from Rust"),
