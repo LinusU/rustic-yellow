@@ -5,7 +5,8 @@ use crate::{
             audio_constants::CHAN5,
             gfx_constants,
             hardware_constants::MBC1_ROM_BANK,
-            input_constants::{A_BUTTON, B_BUTTON, D_UP, SELECT, START},
+            input_constants::{A_BUTTON, B_BUTTON, D_DOWN, D_LEFT, D_RIGHT, D_UP, SELECT, START},
+            map_constants::ROUTE_17,
             map_data_constants::{EAST_F, NORTH_F, SOUTH_F, WEST_F},
             music_constants::SFX_COLLISION,
             palette_constants,
@@ -263,6 +264,32 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     }
 
     false
+}
+
+pub fn force_bike_down(cpu: &mut Cpu) {
+    log::trace!("force_bike_down()");
+
+    // check if a trainer wants a challenge
+    let flags_d733 = cpu.read_byte(wram::W_FLAGS_D733);
+
+    if (flags_d733 & (1 << 3)) != 0 {
+        cpu.pc = cpu.stack_pop(); // ret
+        return;
+    }
+
+    if cpu.borrow_wram().cur_map() != ROUTE_17 {
+        cpu.pc = cpu.stack_pop(); // ret
+        return;
+    }
+
+    let joy_held = cpu.read_byte(hram::H_JOY_HELD);
+
+    // on the cycling road, if there isn't a trainer and the player isn't pressing buttons, simulate a down press
+    if (joy_held & (D_DOWN | D_UP | D_LEFT | D_RIGHT | B_BUTTON | A_BUTTON)) == 0 {
+        cpu.write_byte(hram::H_JOY_HELD, D_DOWN);
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
 }
 
 pub fn are_inputs_simulated(cpu: &mut Cpu) {

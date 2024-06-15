@@ -93,6 +93,7 @@ impl Cpu {
                 (_, 0x095e) => crate::game::home::overworld::is_sprite_or_sign_in_front_of_player(self),
                 (_, 0x0983) => crate::game::home::overworld::is_sprite_in_front_of_player(self),
                 (_, 0x0985) => crate::game::home::overworld::is_sprite_in_front_of_player2(self),
+                (_, 0x0c65) => crate::game::home::overworld::force_bike_down(self),
                 (_, 0x0c7b) => crate::game::home::overworld::are_inputs_simulated(self),
                 (_, 0x0cb3) => panic!("get_simulated_input should only be called from Rust"),
                 (_, 0x0cca) => crate::game::home::overworld::collision_check_on_water(self),
