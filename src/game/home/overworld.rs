@@ -266,19 +266,34 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
-pub fn force_bike_down(cpu: &mut Cpu) {
+/// Update joypad state and simulate button presses
+pub fn joypad_overworld(cpu: &mut Cpu) {
+    log::trace!("joypad_overworld()");
+
+    cpu.write_byte(wram::W_SPRITE_PLAYER_STATE_DATA1_Y_STEP_VECTOR, 0);
+    cpu.write_byte(wram::W_SPRITE_PLAYER_STATE_DATA1_X_STEP_VECTOR, 0);
+
+    cpu.stack_push(0x0001);
+    run_map_script(cpu);
+
+    cpu.call(0x01b9); // Joypad
+    force_bike_down(cpu);
+    are_inputs_simulated(cpu);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
+fn force_bike_down(cpu: &mut Cpu) {
     log::trace!("force_bike_down()");
 
     // check if a trainer wants a challenge
     let flags_d733 = cpu.read_byte(wram::W_FLAGS_D733);
 
     if (flags_d733 & (1 << 3)) != 0 {
-        cpu.pc = cpu.stack_pop(); // ret
         return;
     }
 
     if cpu.borrow_wram().cur_map() != ROUTE_17 {
-        cpu.pc = cpu.stack_pop(); // ret
         return;
     }
 
@@ -288,17 +303,14 @@ pub fn force_bike_down(cpu: &mut Cpu) {
     if (joy_held & (D_DOWN | D_UP | D_LEFT | D_RIGHT | B_BUTTON | A_BUTTON)) == 0 {
         cpu.write_byte(hram::H_JOY_HELD, D_DOWN);
     }
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
-pub fn are_inputs_simulated(cpu: &mut Cpu) {
+fn are_inputs_simulated(cpu: &mut Cpu) {
     log::trace!("are_inputs_simulated()");
 
     let w_d730 = cpu.read_byte(wram::W_D730);
 
     if (w_d730 & (1 << 7)) == 0 {
-        cpu.pc = cpu.stack_pop(); // ret
         return;
     }
 
@@ -317,8 +329,6 @@ pub fn are_inputs_simulated(cpu: &mut Cpu) {
 
             let w_d730 = cpu.read_byte(wram::W_D730);
             cpu.write_byte(wram::W_D730, w_d730 & !(1 << 7));
-
-            cpu.a = w_d736;
         }
         Some(input) => {
             // store simulated button press in joypad state
@@ -328,12 +338,8 @@ pub fn are_inputs_simulated(cpu: &mut Cpu) {
                 cpu.write_byte(hram::H_JOY_PRESSED, input);
                 cpu.write_byte(hram::H_JOY_RELEASED, input);
             }
-
-            cpu.a = input;
         }
     }
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 fn get_simulated_input(cpu: &mut Cpu) -> Option<u8> {
