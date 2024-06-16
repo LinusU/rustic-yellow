@@ -330,6 +330,7 @@ pub const W_EAST_CONNECTED_MAP: u16 = 0xd391;
 
 pub const W_WARP_ENTRIES: u16 = 0xd3ae;
 
+pub const W_D435: u16 = 0xd434;
 pub const W_D436: u16 = 0xd435;
 
 pub const W_D472: u16 = 0xd471;

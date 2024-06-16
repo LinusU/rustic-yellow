@@ -21,6 +21,9 @@ use crate::{
     rom::ROM,
 };
 
+const TILE_PAIR_COLLISIONS_LAND: u16 = 0x0ada;
+const TILE_PAIR_COLLISIONS_WATER: u16 = 0x0afc;
+
 /// Load a new map
 pub fn enter_map(cpu: &mut Cpu) {
     log::debug!("EnterMap");
@@ -139,6 +142,7 @@ pub fn is_sprite_or_sign_in_front_of_player(cpu: &mut Cpu) {
 }
 
 /// sets carry flag if a sprite is in front of the player, resets if not
+/// Output: hl = ???
 pub fn is_sprite_in_front_of_player(cpu: &mut Cpu) {
     // talking range in pixels (normal range)
     cpu.d = 0x10;
@@ -266,6 +270,122 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+/// Check if the player will jump down a ledge and check if the tile ahead is passable (when not surfing)
+///
+/// Sets the carry flag if there is a collision, and unsets it if there isn't a collision
+pub fn collision_check_on_land(cpu: &mut Cpu) {
+    log::trace!("collision_check_on_land()");
+
+    // no collisions when the player jumping
+    if (cpu.read_byte(wram::W_D736) & (1 << 6)) != 0 {
+        return collision_check_on_land_no_collision(cpu);
+    }
+
+    // no collisions when the player's movements are being controlled by the game
+    if cpu.borrow_wram().simulated_joypad_states_index() != 0 {
+        return collision_check_on_land_no_collision(cpu);
+    }
+
+    // the direction that the player is trying to go in
+    cpu.d = cpu.borrow_wram().player_direction();
+    cpu.a = cpu.read_byte(wram::W_SPRITE_PLAYER_STATE_DATA1_COLLISION_DATA);
+
+    // check if a sprite is in the direction the player is trying to go
+    if (cpu.a & cpu.d) != 0 {
+        return collision_check_on_land_collision(cpu);
+    }
+
+    cpu.write_byte(hram::H_SPRITE_INDEX_OR_TEXT_ID, 0);
+
+    // check for sprite collisions again? when does the above check fail to detect a sprite collision?
+    cpu.stack_push(0x0001);
+    is_sprite_in_front_of_player(cpu);
+
+    if !cpu.flag(CpuFlag::C) {
+        return collision_check_on_land_asm_0a5c(cpu);
+    }
+
+    // res 7, [hl]
+    {
+        let value = cpu.read_byte(cpu.hl());
+        cpu.write_byte(cpu.hl(), value & !(1 << 7));
+    }
+
+    cpu.a = cpu.read_byte(hram::H_SPRITE_INDEX_OR_TEXT_ID);
+
+    // was there a sprite collision?
+    if cpu.a == 0 {
+        return collision_check_on_land_asm_0a5c(cpu);
+    }
+
+    // if no sprite collision
+    if cpu.a != 0xf {
+        return collision_check_on_land_collision(cpu);
+    }
+
+    cpu.call(0x154a); // CheckPikachuFollowingPlayer
+
+    if !cpu.flag(CpuFlag::Z) {
+        return collision_check_on_land_collision(cpu);
+    }
+
+    if (cpu.read_byte(hram::H_JOY_HELD) & 0x2) != 0 {
+        return collision_check_on_land_asm_0a5c(cpu);
+    }
+
+    cpu.set_hl(wram::W_D435);
+    let w_d435 = cpu.read_byte(cpu.hl());
+
+    if w_d435 == 0 {
+        return collision_check_on_land_asm_0a5c(cpu);
+    }
+
+    cpu.write_byte(wram::W_D435, w_d435 - 1);
+
+    if w_d435 > 1 {
+        return collision_check_on_land_collision(cpu);
+    }
+
+    collision_check_on_land_asm_0a5c(cpu);
+}
+
+fn collision_check_on_land_asm_0a5c(cpu: &mut Cpu) {
+    if check_for_jumping_and_tile_pair_collisions(cpu, TILE_PAIR_COLLISIONS_LAND) {
+        return collision_check_on_land_collision(cpu);
+    }
+
+    cpu.stack_push(0x0001);
+    check_tile_passable(cpu);
+
+    if cpu.flag(CpuFlag::C) {
+        return collision_check_on_land_collision(cpu);
+    }
+
+    collision_check_on_land_no_collision(cpu)
+}
+
+fn collision_check_on_land_collision(cpu: &mut Cpu) {
+    cpu.a = cpu.read_byte(wram::W_CHANNEL_SOUND_IDS + (CHAN5 as u16));
+
+    // play collision sound (if it's not already playing)
+    if cpu.a != SFX_COLLISION {
+        cpu.a = SFX_COLLISION;
+        cpu.call(0x2238); // PlaySound
+    }
+
+    cpu.set_flag(CpuFlag::C, true);
+    log::debug!("collision_check_on_land() collision");
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
+fn collision_check_on_land_no_collision(cpu: &mut Cpu) {
+    cpu.set_flag(CpuFlag::C, false);
+    log::trace!("collision_check_on_land() no collision");
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Check if the tile in front of the player is passable
 ///
 /// Clears carry if it is, sets carry if not
@@ -283,13 +403,8 @@ pub fn check_tile_passable(cpu: &mut Cpu) {
 
 /// Check if the player is going to jump down a small ledge and check
 /// for collisions that only occur between certain pairs of tiles.
-///
-/// Input: hl = pointer to TilePairCollisions* table \
-/// Output: carry flag set if there is a collision, unset if there isn't
-pub fn check_for_jumping_and_tile_pair_collisions(cpu: &mut Cpu) {
+pub fn check_for_jumping_and_tile_pair_collisions(cpu: &mut Cpu, table: u16) -> bool {
     log::trace!("check_for_jumping_and_tile_pair_collisions()");
-
-    let saved_hl = cpu.hl();
 
     // get the tile in front of the player
     macros::predef::predef_call!(cpu, GetTileAndCoordsInFrontOfPlayer);
@@ -302,18 +417,18 @@ pub fn check_for_jumping_and_tile_pair_collisions(cpu: &mut Cpu) {
 
     cpu.set_bc(saved_bc);
     cpu.set_de(saved_de);
-    cpu.set_hl(saved_hl);
+    cpu.set_hl(table);
 
     // is the player jumping?
     if (cpu.read_byte(wram::W_D736) & (1 << 6)) != 0 {
         log::trace!("check_for_jumping_and_tile_pair_collisions() == false");
-        cpu.set_flag(CpuFlag::C, false);
-        cpu.pc = cpu.stack_pop(); // ret
-        return;
+        return false;
     }
 
     // if not jumping
+    cpu.stack_push(0x0001);
     check_for_tile_pair_collisions2(cpu);
+    cpu.flag(CpuFlag::C)
 }
 
 pub fn check_for_tile_pair_collisions2(cpu: &mut Cpu) {
@@ -687,10 +802,7 @@ pub fn collision_check_on_water(cpu: &mut Cpu) {
         return collision_check_on_water_collision(cpu);
     }
 
-    cpu.set_hl(0x0afc); // TilePairCollisionsWater
-    cpu.call(0x0a86); // CheckForJumpingAndTilePairCollisions
-
-    if cpu.flag(CpuFlag::C) {
+    if check_for_jumping_and_tile_pair_collisions(cpu, TILE_PAIR_COLLISIONS_WATER) {
         return collision_check_on_water_collision(cpu);
     }
 
