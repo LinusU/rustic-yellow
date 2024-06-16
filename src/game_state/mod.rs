@@ -323,6 +323,10 @@ impl GameState {
         self.data[0x0f0e]
     }
 
+    pub fn set_tile_player_standing_on(&mut self, value: u8) {
+        self.data[0x0f0e] = value;
+    }
+
     /// Offset of the current top menu item from the beginning of the list.
     ///
     /// Keeps track of what section of the list is on screen.

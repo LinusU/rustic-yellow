@@ -266,6 +266,15 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn check_for_tile_pair_collisions2(cpu: &mut Cpu) {
+    log::trace!("check_for_tile_pair_collisions2()");
+
+    let tile = cpu.read_byte(macros::coords::coord!(8, 9));
+    cpu.borrow_wram_mut().set_tile_player_standing_on(tile);
+
+    check_for_tile_pair_collisions(cpu);
+}
+
 /// Input: hl = pointer to TilePairCollisions* table \
 /// Output: carry flag set if there is a collision, unset if there isn't
 pub fn check_for_tile_pair_collisions(cpu: &mut Cpu) {
