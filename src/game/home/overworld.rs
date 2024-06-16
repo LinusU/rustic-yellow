@@ -98,6 +98,26 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+/// Input: b = connection strip length, hl = src, de = dest
+pub fn load_east_west_connections_tile_map(cpu: &mut Cpu) {
+    log::debug!("load_east_west_connections_tile_map()");
+
+    let connected_width = cpu.borrow_wram().east_west_connected_map_width() as u16;
+    let current_width = cpu.borrow_wram().cur_map_width() as u16;
+
+    for _ in 0..cpu.b {
+        for i in 0..MAP_BORDER {
+            let byte = cpu.read_byte(cpu.hl() + (i as u16));
+            cpu.write_byte(cpu.de() + (i as u16), byte);
+        }
+
+        cpu.set_hl(cpu.hl() + connected_width);
+        cpu.set_de(cpu.de() + current_width + (MAP_BORDER as u16 * 2));
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// function to check if there is a sign or sprite in front of the player \
 /// if so, carry is set. otherwise, carry is cleared
 pub fn is_sprite_or_sign_in_front_of_player(cpu: &mut Cpu) {

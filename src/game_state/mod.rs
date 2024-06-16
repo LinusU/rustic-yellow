@@ -617,6 +617,10 @@ impl GameState {
         self.high_ram[0x0b] = value;
     }
 
+    pub fn east_west_connected_map_width(&self) -> u8 {
+        self.high_ram[0x0b]
+    }
+
     pub fn loaded_rom_bank(&self) -> u8 {
         self.high_ram[0x38]
     }
