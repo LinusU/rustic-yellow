@@ -266,6 +266,41 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+/// Check if the player is going to jump down a small ledge and check
+/// for collisions that only occur between certain pairs of tiles.
+///
+/// Input: hl = pointer to TilePairCollisions* table \
+/// Output: carry flag set if there is a collision, unset if there isn't
+pub fn check_for_jumping_and_tile_pair_collisions(cpu: &mut Cpu) {
+    log::trace!("check_for_jumping_and_tile_pair_collisions()");
+
+    let saved_hl = cpu.hl();
+
+    // get the tile in front of the player
+    macros::predef::predef_call!(cpu, GetTileAndCoordsInFrontOfPlayer);
+
+    let saved_de = cpu.de();
+    let saved_bc = cpu.bc();
+
+    // check if the player is trying to jump a ledge
+    macros::farcall::farcall(cpu, 0x06, 0x67f4); // HandleLedges
+
+    cpu.set_bc(saved_bc);
+    cpu.set_de(saved_de);
+    cpu.set_hl(saved_hl);
+
+    // is the player jumping?
+    if (cpu.read_byte(wram::W_D736) & (1 << 6)) != 0 {
+        log::trace!("check_for_jumping_and_tile_pair_collisions() == false");
+        cpu.set_flag(CpuFlag::C, false);
+        cpu.pc = cpu.stack_pop(); // ret
+        return;
+    }
+
+    // if not jumping
+    check_for_tile_pair_collisions2(cpu);
+}
+
 pub fn check_for_tile_pair_collisions2(cpu: &mut Cpu) {
     log::trace!("check_for_tile_pair_collisions2()");
 
