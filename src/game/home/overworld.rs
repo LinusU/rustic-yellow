@@ -266,6 +266,24 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn schedule_south_row_redraw(cpu: &mut Cpu) {
+    log::trace!("schedule_south_row_redraw()");
+
+    cpu.set_hl(macros::coords::coord!(0, 16));
+    cpu.call(0x0baa); // CopyToRedrawRowOrColumnSrcTiles
+
+    let vram_ptr = cpu.borrow_wram().map_view_vram_pointer();
+    let vram_ptr = ((vram_ptr + 0x200) & 0x03ff) | 0x9800;
+
+    cpu.borrow_wram_mut()
+        .set_redraw_row_or_column_dest(vram_ptr);
+
+    cpu.borrow_wram_mut()
+        .set_redraw_row_or_column_mode(gfx_constants::REDRAW_ROW);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn schedule_east_column_redraw(cpu: &mut Cpu) {
     log::trace!("schedule_east_column_redraw()");
 
