@@ -266,6 +266,21 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+/// Check if the tile in front of the player is passable
+///
+/// Clears carry if it is, sets carry if not
+pub fn check_tile_passable(cpu: &mut Cpu) {
+    log::trace!("check_tile_passable()");
+
+    // get tile in front of player
+    macros::predef::predef_call!(cpu, GetTileAndCoordsInFrontOfPlayer);
+
+    cpu.c = cpu.borrow_wram().tile_in_front_of_player();
+    cpu.call(0x15c3); // IsTilePassable
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Check if the player is going to jump down a small ledge and check
 /// for collisions that only occur between certain pairs of tiles.
 ///
