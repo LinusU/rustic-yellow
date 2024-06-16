@@ -266,6 +266,25 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+// The following 6 functions are used to tell the V-blank handler to redraw the
+// portion of the map that was newly exposed due to the player's movement.
+
+pub fn schedule_north_row_redraw(cpu: &mut Cpu) {
+    cpu.set_hl(macros::coords::coord!(0, 0));
+    cpu.stack_push(0x0001);
+    copy_to_redraw_row_or_column_src_tiles(cpu);
+
+    let vram_ptr = cpu.borrow_wram().map_view_vram_pointer();
+
+    cpu.borrow_wram_mut()
+        .set_redraw_row_or_column_dest(vram_ptr);
+
+    cpu.borrow_wram_mut()
+        .set_redraw_row_or_column_mode(gfx_constants::REDRAW_ROW);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Input: hl = source pointer
 pub fn copy_to_redraw_row_or_column_src_tiles(cpu: &mut Cpu) {
     const BYTES: u16 = (gfx_constants::SCREEN_WIDTH as u16) * 2;
