@@ -1,5 +1,8 @@
 #[rustfmt::skip]
 macro_rules! predef_id {
+    (CopyUncompressedPicToTilemap) => { 0x01 };
+    (CopyDownscaledMonTiles) => { 0x05 };
+    (GetQuantityOfItemInBag) => { 0x1c };
     (_RunPaletteCommand) => { 0x45 };
     (LoadSAV) => { 0x52 };
 }

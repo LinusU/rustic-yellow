@@ -364,7 +364,7 @@ impl PokemonSpecies {
     }
 
     // From `dex_order.asm`
-    pub fn into_index(self) -> u8 {
+    pub const fn into_index(self) -> u8 {
         match self {
             Self::Rhydon => 1,
             Self::Kangaskhan => 2,

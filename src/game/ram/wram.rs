@@ -33,22 +33,34 @@ pub const W_MENU_WATCHED_KEYS: u16 = 0xcc29;
 pub const W_LAST_MENU_ITEM: u16 = 0xcc2a;
 
 /// It is mainly used by the party menu to remember the cursor position while the
-/// menu isn't active.
+/// menu isn't active. \
 /// It is also used to remember the cursor position of mon lists (for the
 /// withdraw/deposit/release actions) in Bill's PC so that it doesn't get lost
 /// when you choose a mon from the list and a sub-menu is shown. It's reset when
 /// you return to the main Bill's PC menu.
 pub const W_PARTY_AND_BILLS_PC_SAVED_MENU_ITEM: u16 = 0xcc2b;
 
+/// It is used by the bag list to remember the cursor position while the menu
+/// isn't active.
+pub const W_BAG_SAVED_MENU_ITEM: u16 = 0xcc2c;
+
+/// It is used by the start menu to remember the cursor position while the menu
+/// isn't active. \
+/// The battle menu uses it so that the cursor position doesn't get lost when
+/// a sub-menu is shown. It's reset at the start of each battle.
+pub const W_BATTLE_AND_START_SAVED_MENU_ITEM: u16 = 0xcc2d;
+
+pub const W_PLAYER_MOVE_LIST_INDEX: u16 = 0xcc2e;
+
 /// how many times should HandleMenuInput poll the joypad state before it returns?
 pub const W_MENU_JOYPAD_POLL_COUNT: u16 = 0xcc34;
 
-/// offset of the current top menu item from the beginning of the list
-/// keeps track of what section of the list is on screen
-pub const W_LIST_SCROLL_OFFSET: u16 = 0xcc36;
-
 /// if non-zero, skip waiting for a button press after displaying text in DisplayTextID
 pub const W_DO_NOT_WAIT_FOR_BUTTON_PRESS_AFTER_DISPLAYING_TEXT: u16 = 0xcc3c;
+
+pub const W_PREDEF_HL: u16 = 0xcc4f;
+pub const W_PREDEF_DE: u16 = 0xcc51;
+pub const W_PREDEF_BC: u16 = 0xcc53;
 
 /// 0 = player's party \
 /// 1 = enemy party \
@@ -61,10 +73,80 @@ pub const W_DO_NOT_WAIT_FOR_BUTTON_PRESS_AFTER_DISPLAYING_TEXT: u16 = 0xcc3c;
 /// If the entire value is 0, then the player is allowed to name the mon.
 pub const W_MON_DATA_LOCATION: u16 = 0xcc49;
 
+/// which NPC movement script pointer is being used \
+/// 0 if an NPC movement script is not running
+pub const W_NPC_MOVEMENT_SCRIPT_POINTER_TABLE_NUM: u16 = 0xcc57;
+
 pub const W_PARENT_MENU_ITEM: u16 = 0xccd3;
+
+/// if [wAILayer2Encouragement] != 1, the second AI layer is not applied
+pub const W_AI_LAYER2_ENCOURAGEMENT: u16 = 0xccd5;
+
+/// current HP of player and enemy substitutes
+pub const W_PLAYER_SUBSTITUTE_HP: u16 = 0xccd7;
+pub const W_ENEMY_SUBSTITUTE_HP: u16 = 0xccd8;
+
+/// The player's selected move during a test battle. \
+/// InitBattleVariables sets it to the move Pound.
+pub const W_TEST_BATTLE_PLAYER_SELECTED_MOVE: u16 = 0xccd9;
+
+/// 0=regular, 1=mimic, 2=above message box (relearn, heal pp..)
+pub const W_MOVE_MENU_TYPE: u16 = 0xccdb;
+
+pub const W_PLAYER_SELECTED_MOVE: u16 = 0xccdc;
+pub const W_ENEMY_SELECTED_MOVE: u16 = 0xccdd;
+
+pub const W_LINK_BATTLE_RANDOM_NUMBER_LIST_INDEX: u16 = 0xccde;
+
+// number of times remaining that AI action can occur
+pub const W_AI_COUNT: u16 = 0xccdf;
+
+pub const W_ENEMY_MOVE_LIST_INDEX: u16 = 0xcce2;
+
+/// The enemy mon's HP when it was switched in or when the current player mon
+/// was switched in, which was more recent.
+///
+/// It's used to determine the message to print when switching out the player mon.
+pub const W_LAST_SWITCH_IN_ENEMY_MON_HP: u16 = 0xcce3;
+
+pub const W_SAFARI_ESCAPE_FACTOR: u16 = 0xcce8;
+pub const W_SAFARI_BAIT_FACTOR: u16 = 0xcce9;
+
+pub const W_TRANSFORMED_ENEMY_MON_ORIGINAL_DVS: u16 = 0xcceb;
+
+pub const W_MON_IS_DISOBEDIENT: u16 = 0xcced;
+
+pub const W_PLAYER_DISABLED_MOVE_NUMBER: u16 = 0xccee;
+pub const W_ENEMY_DISABLED_MOVE_NUMBER: u16 = 0xccef;
+
+/// When running in the scope of HandlePlayerMonFainted, it equals 1. \
+/// When running in the scope of HandleEnemyMonFainted, it equals 0.
+pub const W_IN_HANDLE_PLAYER_MON_FAINTED: u16 = 0xccf0;
+
+pub const W_PLAYER_USED_MOVE: u16 = 0xccf1;
+pub const W_ENEMY_USED_MOVE: u16 = 0xccf2;
+
+pub const W_ENEMY_MON_MINIMIZED: u16 = 0xccf3;
+
+pub const W_MOVE_DIDNT_MISS: u16 = 0xccf4;
+
+/// Flags that indicate which party members have fought the current enemy mon
+pub const W_PARTY_FOUGHT_CURRENT_ENEMY_FLAGS: u16 = 0xccf5;
+
+pub const W_LOW_HEALTH_ALARM_DISABLED: u16 = 0xccf6;
+
+pub const W_PLAYER_MON_MINIMIZED: u16 = 0xccf7;
+
+/// Number of hits by enemy in attacks like Double Slap, etc.
+pub const W_ENEMY_NUM_HITS: u16 = 0xcd05;
 
 /// Set buttons are ignored.
 pub const W_JOY_IGNORE: u16 = 0xcd6b;
+
+/// Size of downscaled mon pic used in pokeball entering/exiting animation \
+/// $00 = 5×5 \
+/// $01 = 3×3
+pub const W_DOWNSCALED_MON_SIZE: u16 = 0xcd6c;
 
 pub const W_CD6D: u16 = 0xcd6d;
 
@@ -85,7 +167,38 @@ pub const W_CF91: u16 = 0xcf90;
 /// the music).
 pub const W_LAST_MUSIC_SOUND_ID: u16 = 0xcfc9;
 
+pub const W_ENEMY_MOVE_NUM: u16 = 0xcfcb;
+pub const W_ENEMY_MOVE_EFFECT: u16 = 0xcfcc;
+pub const W_ENEMY_MOVE_POWER: u16 = 0xcfcd;
+pub const W_ENEMY_MOVE_TYPE: u16 = 0xcfce;
+pub const W_ENEMY_MOVE_ACCURACY: u16 = 0xcfcf;
+pub const W_ENEMY_MOVE_MAX_PP: u16 = 0xcfd0;
+pub const W_PLAYER_MOVE_NUM: u16 = 0xcfd1;
+pub const W_PLAYER_MOVE_EFFECT: u16 = 0xcfd2;
+pub const W_PLAYER_MOVE_POWER: u16 = 0xcfd3;
+pub const W_PLAYER_MOVE_TYPE: u16 = 0xcfd4;
+pub const W_PLAYER_MOVE_ACCURACY: u16 = 0xcfd5;
+pub const W_PLAYER_MOVE_MAX_PP: u16 = 0xcfd6;
+
+pub const W_ENEMY_MON_SPECIES2: u16 = 0xcfd7;
 pub const W_BATTLE_MON_SPECIES2: u16 = 0xcfd8;
+
+pub const W_ENEMY_MON_NICK: u16 = 0xcfd9;
+
+pub const W_ENEMY_MON_PARTY_POS: u16 = 0xcfe7;
+
+pub const W_BATTLE_MON_PP: u16 = 0xd02c;
+
+pub const W_TRAINER_CLASS: u16 = 0xd030;
+
+pub const W_TRAINER_PIC_POINTER: u16 = 0xd032;
+
+pub const W_IS_IN_BATTLE: u16 = 0xd056;
+
+// which entry in LoneAttacks to use
+// it's actually the same thing as ^
+pub const W_LONE_ATTACK_NO: u16 = 0xd05b;
+pub const W_GYM_LEADER_NO: u16 = 0xd05b;
 
 /// in a wild battle, this is the species of pokemon \
 /// in a trainer battle, this is the trainer class + OPP_ID_OFFSET
@@ -114,6 +227,10 @@ pub const W_MON_H_INDEX: u16 = 0xd0b7;
 pub const W_MON_H_SPRITE_DIM: u16 = 0xd0c1;
 pub const W_MON_H_FRONT_SPRITE: u16 = 0xd0c2;
 
+pub const W_SAVED_TILE_ANIMATIONS: u16 = 0xd0d3;
+
+pub const W_REPEL_REMAINING_STEPS: u16 = 0xd0da;
+
 /// used as a Pokemon and Item storage value. Also used as an output value for CountSetBits
 pub const W_D11E: u16 = 0xd11e;
 
@@ -124,9 +241,16 @@ pub const W_CUR_ENEMY_LVL: u16 = 0xd126;
 
 pub const W_LINK_STATE: u16 = 0xd12a;
 
+// after a battle, you have at least 3 steps before a random battle can occur
+pub const W_NUMBER_OF_NO_RANDOM_BATTLE_STEPS_LEFT: u16 = 0xd13b;
+
 pub const W_PLAYER_NAME: u16 = 0xd157;
 
 pub const W_PARTY_DATA_START: u16 = 0xd162;
+pub const W_PARTY_MON1: u16 = 0xd16a;
+pub const W_PARTY_MON1_PP: u16 = 0xd187;
+pub const W_PARTY_MON1_LEVEL: u16 = 0xd18b;
+pub const W_PARTY_MON2: u16 = 0xd196;
 pub const W_PARTY_DATA_END: u16 = 0xd2f6;
 
 pub const W_MAIN_DATA_START: u16 = 0xd2f6;
@@ -134,6 +258,8 @@ pub const W_MAIN_DATA_START: u16 = 0xd2f6;
 pub const W_POKEDEX_OWNED: u16 = 0xd2f6;
 pub const W_POKEDEX_OWNED_END: u16 = 0xd309;
 pub const W_POKEDEX_SEEN_END: u16 = 0xd31c;
+
+pub const W_NUM_BAG_ITEMS: u16 = 0xd31c;
 
 /// bit 7 = battle animation
 ///   0: On
@@ -165,9 +291,13 @@ pub const W_LETTER_PRINTING_DELAY_FLAGS: u16 = 0xd357;
 
 pub const W_PLAYER_ID: u16 = 0xd358;
 
+pub const W_CUR_MAP: u16 = 0xd35d;
+
 pub const W_CUR_MAP_TILESET: u16 = 0xd366;
 
 pub const W_PRINTER_SETTINGS: u16 = 0xd497;
+
+pub const W_GRASS_TILE: u16 = 0xd534;
 
 /// bits 0-6: box number \
 /// bit 7: whether the player has changed boxes before
@@ -194,7 +324,39 @@ pub const W_D72E: u16 = 0xd72d;
 /// bit 7: set if joypad states are being simulated in the overworld or an NPC's movement is being scripted
 pub const W_D730: u16 = 0xd730;
 
+/// bit 0: check if the player is standing on a door and make him walk down a step if so \
+/// bit 1: the player is currently stepping down from a door \
+/// bit 2: standing on a warp \
+/// bit 6: jumping down a ledge / fishing animation \
+/// bit 7: player sprite spinning due to spin tiles (Rocket hideout / Viridian Gym)
+pub const W_D736: u16 = 0xd735;
+
+// bit 0: play time being counted
+// bit 1: remnant of debug mode; only set by the debug build.
+// if it is set:
+// 1. skips most of Prof. Oak's speech, and uses NINTEN as the player's name and SONY as the rival's name
+// 2. does not have the player start in floor two of the player's house (instead sending them to [wLastMap])
+// 3. allows wild battles to be avoided by holding down B
+// furthermore, in the debug build:
+// 4. allows trainers to be avoided by holding down B
+// 5. skips Safari Zone step counter by holding down B
+// 6. skips the NPC who blocks Route 3 before beating Brock by holding down B
+// 7. skips Cerulean City rival battle by holding down B
+// 8. skips Pokémon Tower rival battle by holding down B
+// bit 2: the target warp is a fly warp (bit 3 set or blacked out) or a dungeon warp (bit 4 set)
+// bit 3: used warp pad, escape rope, dig, teleport, or fly, so the target warp is a "fly warp"
+// bit 4: jumped into hole (Pokemon Mansion, Seafoam Islands, Victory Road) or went down waterfall (Seafoam Islands), so the target warp is a "dungeon warp"
+// bit 5: currently being forced to ride bike (cycling road)
+// bit 6: map destination is [wLastBlackoutMap] (usually the last used pokemon center, but could be the player's house)
+pub const W_D732: u16 = 0xd731;
+
 pub const W_EVENT_FLAGS: u16 = 0xd746;
+
+pub const W_GRASS_RATE: u16 = 0xd886;
+pub const W_GRASS_MONS: u16 = 0xd887;
+
+pub const W_WATER_RATE: u16 = 0xd8a3;
+pub const W_WATER_MONS: u16 = 0xd8a4;
 
 pub const W_PLAY_TIME_HOURS: u16 = 0xda40;
 pub const W_PLAY_TIME_MAXED: u16 = 0xda41;

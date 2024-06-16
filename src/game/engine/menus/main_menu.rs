@@ -246,10 +246,8 @@ fn display_continue_game_info(cpu: &mut Cpu, data: &SaveState) -> bool {
 }
 
 pub fn init_options(cpu: &mut Cpu) {
-    cpu.write_byte(
-        wram::W_LETTER_PRINTING_DELAY_FLAGS,
-        constants::misc_constants::TEXT_DELAY_FAST,
-    );
+    cpu.borrow_wram_mut()
+        .set_letter_printing_delay_flags(constants::misc_constants::TEXT_DELAY_FAST);
     cpu.write_byte(
         wram::W_OPTIONS,
         constants::misc_constants::TEXT_DELAY_MEDIUM,

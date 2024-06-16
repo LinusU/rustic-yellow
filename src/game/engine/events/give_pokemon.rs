@@ -1,8 +1,4 @@
-use crate::{
-    cpu::Cpu, game::engine::items::item_effects::switch_to_non_full_box, save_state::BoxView,
-};
-
-const WRAM_BOX_DATA_START: usize = 0x1a7f;
+use crate::{cpu::Cpu, game::engine::items::item_effects::switch_to_non_full_box};
 
 pub fn hook_give_pokemon_next_end(cpu: &mut Cpu) {
     // If the current box is full, switch to a non-full box
