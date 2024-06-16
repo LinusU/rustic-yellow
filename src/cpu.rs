@@ -89,6 +89,7 @@ impl Cpu {
                 (_, 0x0000) => break,
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
                 (_, 0x01d7) => crate::game::home::overworld::enter_map(self),
+                (_, 0x0919) => crate::game::home::overworld::load_north_south_connections_tile_map(self),
                 (_, 0x093d) => crate::game::home::overworld::load_east_west_connections_tile_map(self),
                 (_, 0x09f2) => panic!("sign_loop should only be called from Rust"),
                 (_, 0x095e) => crate::game::home::overworld::is_sprite_or_sign_in_front_of_player(self),

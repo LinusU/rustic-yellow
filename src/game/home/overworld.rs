@@ -24,6 +24,10 @@ use crate::{
 const TILE_PAIR_COLLISIONS_LAND: u16 = 0x0ada;
 const TILE_PAIR_COLLISIONS_WATER: u16 = 0x0afc;
 
+// This is only used to pass the value from the caller to load_north_south_connections_tile_map
+const H_NORTH_SOUTH_CONNECTION_STRIP_WIDTH: u16 = 0xff8b;
+const H_NORTH_SOUTH_CONNECTED_MAP_WIDTH: u16 = 0xff8c;
+
 /// Load a new map
 pub fn enter_map(cpu: &mut Cpu) {
     log::debug!("EnterMap");
@@ -96,6 +100,27 @@ pub fn enter_map(cpu: &mut Cpu) {
 
     // Fallthrough to OverworldLoop
     cpu.pc = 0x0242;
+}
+
+/// Input: hl = src, de = dest
+pub fn load_north_south_connections_tile_map(cpu: &mut Cpu) {
+    log::debug!("load_north_south_connections_tile_map()");
+
+    let strip_length = cpu.read_byte(H_NORTH_SOUTH_CONNECTION_STRIP_WIDTH) as u16;
+    let connected_width = cpu.read_byte(H_NORTH_SOUTH_CONNECTED_MAP_WIDTH) as u16;
+    let current_width = cpu.borrow_wram().cur_map_width() as u16;
+
+    for _ in 0..MAP_BORDER {
+        for i in 0..strip_length {
+            let byte = cpu.read_byte(cpu.hl() + i);
+            cpu.write_byte(cpu.de() + i, byte);
+        }
+
+        cpu.set_hl(cpu.hl() + connected_width);
+        cpu.set_de(cpu.de() + current_width + (MAP_BORDER as u16 * 2));
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// Input: b = connection strip length, hl = src, de = dest
