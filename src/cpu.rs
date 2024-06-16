@@ -93,6 +93,7 @@ impl Cpu {
                 (_, 0x095e) => crate::game::home::overworld::is_sprite_or_sign_in_front_of_player(self),
                 (_, 0x0983) => crate::game::home::overworld::is_sprite_in_front_of_player(self),
                 (_, 0x0985) => crate::game::home::overworld::is_sprite_in_front_of_player2(self),
+                (_, 0x0baa) => crate::game::home::overworld::copy_to_redraw_row_or_column_src_tiles(self),
                 (_, 0x0bb6) => crate::game::home::overworld::schedule_south_row_redraw(self),
                 (_, 0x0bd7) => crate::game::home::overworld::schedule_east_column_redraw(self),
                 (_, 0x0bf6) => panic!("schedule_column_redraw_helper should only be called from Rust"),

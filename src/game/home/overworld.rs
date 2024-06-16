@@ -266,11 +266,29 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+/// Input: hl = source pointer
+pub fn copy_to_redraw_row_or_column_src_tiles(cpu: &mut Cpu) {
+    const BYTES: u16 = (gfx_constants::SCREEN_WIDTH as u16) * 2;
+
+    log::trace!("copy_to_redraw_row_or_column_src_tiles()");
+
+    for i in 0..BYTES {
+        let byte = cpu.read_byte(cpu.hl() + i);
+        cpu.write_byte(wram::W_REDRAW_ROW_OR_COLUMN_SRC_TILES + i, byte);
+    }
+
+    cpu.set_hl(cpu.hl() + BYTES);
+    cpu.set_de(wram::W_REDRAW_ROW_OR_COLUMN_SRC_TILES + BYTES);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn schedule_south_row_redraw(cpu: &mut Cpu) {
     log::trace!("schedule_south_row_redraw()");
 
     cpu.set_hl(macros::coords::coord!(0, 16));
-    cpu.call(0x0baa); // CopyToRedrawRowOrColumnSrcTiles
+    cpu.stack_push(0x0001);
+    copy_to_redraw_row_or_column_src_tiles(cpu);
 
     let vram_ptr = cpu.borrow_wram().map_view_vram_pointer();
     let vram_ptr = ((vram_ptr + 0x200) & 0x03ff) | 0x9800;
