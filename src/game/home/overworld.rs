@@ -266,6 +266,48 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+/// Input: hl = pointer to TilePairCollisions* table \
+/// Output: carry flag set if there is a collision, unset if there isn't
+pub fn check_for_tile_pair_collisions(cpu: &mut Cpu) {
+    log::trace!("check_for_tile_pair_collisions()");
+
+    let cur_tileset = cpu.borrow_wram().cur_map_tileset();
+    let cur_tile = cpu.borrow_wram().tile_player_standing_on();
+    let next_tile = cpu.borrow_wram().tile_in_front_of_player();
+
+    for i in 0.. {
+        let pair_tileset = cpu.read_byte(cpu.hl() + (i * 3));
+
+        if pair_tileset == 0xff {
+            log::trace!("check_for_tile_pair_collisions() == false");
+            cpu.set_flag(CpuFlag::C, false);
+            cpu.pc = cpu.stack_pop(); // ret
+            return;
+        }
+
+        if pair_tileset != cur_tileset {
+            continue;
+        }
+
+        let pair_lhs = cpu.read_byte(cpu.hl() + (i * 3) + 1);
+
+        if pair_lhs != cur_tile && pair_lhs != next_tile {
+            continue;
+        }
+
+        let pair_rhs = cpu.read_byte(cpu.hl() + (i * 3) + 2);
+
+        if pair_rhs != cur_tile && pair_rhs != next_tile {
+            continue;
+        }
+
+        log::debug!("check_for_tile_pair_collisions() == true");
+        cpu.set_flag(CpuFlag::C, true);
+        cpu.pc = cpu.stack_pop(); // ret
+        return;
+    }
+}
+
 /// Build a tile map from the tile block map based on the current X/Y coordinates of the player's character
 pub fn load_current_map_view(cpu: &mut Cpu) {
     log::trace!("load_current_map_view()");

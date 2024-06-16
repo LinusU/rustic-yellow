@@ -318,6 +318,11 @@ impl GameState {
         self.data[0x0f0b] = value as u8;
     }
 
+    /// Used in CheckForTilePairCollisions2 to store the tile the player is on
+    pub fn tile_player_standing_on(&self) -> u8 {
+        self.data[0x0f0e]
+    }
+
     /// Offset of the current top menu item from the beginning of the list.
     ///
     /// Keeps track of what section of the list is on screen.
