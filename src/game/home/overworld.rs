@@ -266,6 +266,21 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+pub fn advance_player_sprite(cpu: &mut Cpu) {
+    log::trace!("advance_player_sprite()");
+
+    let enabled = cpu.borrow_wram().update_sprites_enabled();
+
+    cpu.borrow_wram_mut().set_update_sprites_enabled(0xff);
+
+    // _AdvancePlayerSprite
+    macros::farcall::callfar(cpu, 0x3c, 0x410c);
+
+    cpu.borrow_wram_mut().set_update_sprites_enabled(enabled);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 // The following 6 functions are used to tell the V-blank handler to redraw the
 // portion of the map that was newly exposed due to the player's movement.
 

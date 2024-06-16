@@ -401,6 +401,10 @@ impl GameState {
     /// $01 = enabled \
     /// $ff = disabled \
     /// other values aren't used
+    pub fn update_sprites_enabled(&self) -> u8 {
+        self.data[0x0fca]
+    }
+
     pub fn set_update_sprites_enabled(&mut self, value: u8) {
         self.data[0x0fca] = value;
     }
