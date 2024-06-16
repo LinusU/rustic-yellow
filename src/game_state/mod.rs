@@ -431,9 +431,14 @@ impl GameState {
     }
 
     /// Pointer to the upper left corner of the current view in the tile block map
+    pub fn current_tile_block_map_view_pointer(&self) -> u16 {
+        u16::from_le_bytes([self.data[0x135e], self.data[0x135f]])
+    }
+
     pub fn set_current_tile_block_map_view_pointer(&mut self, value: u16) {
-        self.data[0x135e] = (value >> 8) as u8;
-        self.data[0x135f] = value as u8;
+        let bytes = value.to_le_bytes();
+        self.data[0x135e] = bytes[0];
+        self.data[0x135f] = bytes[1];
     }
 
     /// Player's Y position on the current map
@@ -455,11 +460,19 @@ impl GameState {
     }
 
     /// Player's Y position (by block)
+    pub fn y_block_coord(&self) -> u8 {
+        self.data[0x1362]
+    }
+
     pub fn set_y_block_coord(&mut self, value: u8) {
         self.data[0x1362] = value;
     }
 
     /// Player's X position (by block)
+    pub fn x_block_coord(&self) -> u8 {
+        self.data[0x1363]
+    }
+
     pub fn set_x_block_coord(&mut self, value: u8) {
         self.data[0x1363] = value;
     }
@@ -559,6 +572,10 @@ impl GameState {
 
     pub fn set_player_direction(&mut self, direction: u8) {
         self.data[0x1529] = direction;
+    }
+
+    pub fn tileset_bank(&self) -> u8 {
+        self.data[0x152a]
     }
 
     pub fn tileset_blocks_pointer(&self) -> u16 {

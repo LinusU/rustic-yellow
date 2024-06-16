@@ -7,7 +7,7 @@ use crate::{
             hardware_constants::MBC1_ROM_BANK,
             input_constants::{A_BUTTON, B_BUTTON, D_DOWN, D_LEFT, D_RIGHT, D_UP, SELECT, START},
             map_constants::ROUTE_17,
-            map_data_constants::{EAST_F, NORTH_F, SOUTH_F, WEST_F},
+            map_data_constants::{EAST_F, MAP_BORDER, NORTH_F, SOUTH_F, WEST_F},
             music_constants::SFX_COLLISION,
             palette_constants,
             sprite_data_constants::{
@@ -266,6 +266,65 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
     false
 }
 
+/// Build a tile map from the tile block map based on the current X/Y coordinates of the player's character
+pub fn load_current_map_view(cpu: &mut Cpu) {
+    log::trace!("load_current_map_view()");
+
+    let saved_bank = cpu.borrow_wram().loaded_rom_bank();
+
+    // switch to ROM bank that contains tile data
+    cpu.a = cpu.borrow_wram().tileset_bank();
+    cpu.call(0x3e7e); // BankswitchCommon
+
+    // address of upper left corner of current map view
+    let mut src = cpu.borrow_wram().current_tile_block_map_view_pointer();
+    let map_width = cpu.borrow_wram().cur_map_width() as u16;
+
+    // tile map pointer
+    let mut dst = wram::W_TILE_MAP_BACKUP;
+
+    // each loop iteration fills in one row of tile blocks
+    for _ in 0..5 {
+        // loop to draw each tile block of the current row
+        for i in 0..6 {
+            let tile_block = cpu.read_byte(src + i);
+
+            draw_tile_block(cpu, tile_block, dst + (i * 4));
+        }
+
+        src += map_width + (MAP_BORDER as u16 * 2);
+        dst += 0x60;
+    }
+
+    let mut src = wram::W_TILE_MAP_BACKUP;
+
+    if cpu.borrow_wram().y_block_coord() > 0 {
+        src += 0x30;
+    }
+
+    if cpu.borrow_wram().x_block_coord() > 0 {
+        src += 0x02;
+    }
+
+    // base address for the tiles that are directly transferred to VRAM during V-blank
+    let mut dst = macros::coords::coord!(0, 0);
+
+    for _ in 0..gfx_constants::SCREEN_HEIGHT {
+        for i in 0..gfx_constants::SCREEN_WIDTH {
+            let byte = cpu.read_byte(src + (i as u16));
+            cpu.write_byte(dst + (i as u16), byte);
+        }
+
+        src += gfx_constants::SCREEN_WIDTH as u16 + 4;
+        dst += gfx_constants::SCREEN_WIDTH as u16;
+    }
+
+    // restore previous ROM bank
+    cpu.a = saved_bank;
+    cpu.call(0x3e7e); // BankswitchCommon
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn advance_player_sprite(cpu: &mut Cpu) {
     log::trace!("advance_player_sprite()");
 
@@ -391,29 +450,24 @@ pub fn schedule_west_column_redraw(cpu: &mut Cpu) {
 }
 
 /// Write the tiles that make up a tile block to memory
-///
-/// Input: c = tile block ID, hl = destination address
-pub fn draw_tile_block(cpu: &mut Cpu) {
-    log::trace!("draw_tile_block()");
+fn draw_tile_block(cpu: &mut Cpu, tile_block: u8, mut dest: u16) {
+    log::trace!("draw_tile_block({}, {:04x})", tile_block, dest);
 
     // pointer to tiles
     let pointer = cpu.borrow_wram().tileset_blocks_pointer();
-    let offset = (cpu.c as u16) * 0x10;
+    let offset = (tile_block as u16) * 0x10;
 
-    cpu.set_de(pointer + offset);
+    let mut src = pointer + offset;
 
     for _ in 0..4 {
-        // each loop iteration, write 4 tile numbers
         for i in 0..4 {
-            let tile = cpu.read_byte(cpu.de() + i);
-            cpu.write_byte(cpu.hl() + i, tile);
+            let tile = cpu.read_byte(src + i);
+            cpu.write_byte(dest + i, tile);
         }
 
-        cpu.set_de(cpu.de() + 4);
-        cpu.set_hl(cpu.hl() + 0x18);
+        src += 4;
+        dest += 0x18;
     }
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// Update joypad state and simulate button presses
@@ -1308,7 +1362,7 @@ pub fn load_destination_warp_position(cpu: &mut Cpu, warp_id: u8, warp_data: u16
 
     // Read data
     let src = warp_data + (warp_id * 4) as u16;
-    let pointer = u16::from_be_bytes([cpu.read_byte(src), cpu.read_byte(src + 1)]);
+    let pointer = u16::from_le_bytes([cpu.read_byte(src), cpu.read_byte(src + 1)]);
     let y = cpu.read_byte(src + 2);
     let x = cpu.read_byte(src + 3);
 
