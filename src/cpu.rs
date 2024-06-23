@@ -89,6 +89,7 @@ impl Cpu {
                 (_, 0x0000) => break,
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
                 (_, 0x01d7) => crate::game::home::overworld::enter_map(self),
+                (_, 0x0828) => crate::game::home::overworld::load_tileset_tile_pattern_data(self),
                 (_, 0x083c) => crate::game::home::overworld::load_tile_block_map(self),
                 (_, 0x0919) => panic!("load_north_south_connections_tile_map should only be called from Rust"),
                 (_, 0x093d) => panic!("load_east_west_connections_tile_map should only be called from Rust"),

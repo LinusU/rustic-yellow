@@ -98,6 +98,21 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+/// Loads the tile pattern data of the current tileset into VRAM.
+pub fn load_tileset_tile_pattern_data(cpu: &mut Cpu) {
+    log::debug!("load_tileset_tile_pattern_data()");
+
+    let tileset_gfx_pointer = cpu.borrow_wram().tileset_gfx_pointer();
+
+    cpu.set_hl(tileset_gfx_pointer);
+    cpu.set_de(vram::V_TILESET);
+    cpu.set_bc(0x600);
+    cpu.a = cpu.borrow_wram().tileset_bank();
+    cpu.call(0x009d); // FarCopyData
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Loads the current maps complete tile map (which references blocks, not individual tiles) to C6E8.
 ///
 /// It can also load partial tile maps of connected maps into a border of length 3 around the current map.
