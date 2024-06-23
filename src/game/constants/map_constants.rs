@@ -1,4 +1,6 @@
+pub const INDIGO_PLATEAU: u8 = 0x09;
 pub const ROUTE_17: u8 = 0x1c;
+pub const ROUTE_23: u8 = 0x22;
 
 pub const FIRST_INDOOR_MAP: u8 = 0x25;
 

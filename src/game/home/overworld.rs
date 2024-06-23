@@ -6,7 +6,7 @@ use crate::{
             gfx_constants,
             hardware_constants::MBC1_ROM_BANK,
             input_constants::{A_BUTTON, B_BUTTON, D_DOWN, D_LEFT, D_RIGHT, D_UP, SELECT, START},
-            map_constants::ROUTE_17,
+            map_constants::{INDIGO_PLATEAU, ROUTE_17, ROUTE_23},
             map_data_constants::{EAST_F, MAP_BORDER, NORTH_F, SOUTH_F, WEST_F},
             music_constants::SFX_COLLISION,
             palette_constants,
@@ -15,6 +15,7 @@ use crate::{
                 SPRITE_FACING_DOWN, SPRITE_FACING_LEFT, SPRITE_FACING_RIGHT, SPRITE_FACING_UP,
             },
         },
+        data::tilesets::bike_riding_tilesets::BIKE_RIDING_TILESETS,
         home, macros,
         ram::{hram, vram, wram},
     },
@@ -96,6 +97,38 @@ pub fn enter_map(cpu: &mut Cpu) {
 
     // Fallthrough to OverworldLoop
     cpu.pc = 0x0242;
+}
+
+/// Output: sets carry if biking is allowed
+pub fn is_bike_riding_allowed(cpu: &mut Cpu) {
+    log::trace!("is_bike_riding_allowed()");
+
+    // The bike can be used on Route 23 and Indigo Plateau,
+    // or maps with tilesets in BikeRidingTilesets.
+
+    if cpu.borrow_wram().cur_map() == ROUTE_23 {
+        return is_bike_riding_allowed_allowed(cpu);
+    }
+
+    if cpu.borrow_wram().cur_map() == INDIGO_PLATEAU {
+        return is_bike_riding_allowed_allowed(cpu);
+    }
+
+    let tileset = cpu.borrow_wram().cur_map_tileset();
+
+    if BIKE_RIDING_TILESETS.contains(&tileset) {
+        return is_bike_riding_allowed_allowed(cpu);
+    }
+
+    log::debug!("is_bike_riding_allowed() == false");
+    cpu.set_flag(CpuFlag::C, false);
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
+fn is_bike_riding_allowed_allowed(cpu: &mut Cpu) {
+    log::debug!("is_bike_riding_allowed() == true");
+    cpu.set_flag(CpuFlag::C, true);
+    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// Loads the tile pattern data of the current tileset into VRAM.
