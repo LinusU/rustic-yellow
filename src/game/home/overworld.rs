@@ -99,6 +99,46 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+/// Loads sprite graphics based on whether the player is standing, biking, or surfing.
+pub fn load_player_sprite_graphics(cpu: &mut Cpu) {
+    log::debug!("load_player_sprite_graphics()");
+
+    match cpu.borrow_wram().walk_bike_surf_state() {
+        0 => load_walking_player_sprite_graphics(cpu),
+        1 => {
+            // If the bike can't be used, start walking instead.
+            cpu.stack_push(0x0001);
+            is_bike_riding_allowed(cpu);
+
+            if cpu.flag(CpuFlag::C) {
+                load_bike_player_sprite_graphics(cpu);
+                cpu.pc = cpu.stack_pop(); // ret
+            } else {
+                load_player_sprite_graphics_start_walking(cpu)
+            }
+        }
+        2 => {
+            if cpu.read_byte(hram::H_TILE_ANIMATIONS) == 0 {
+                load_player_sprite_graphics_start_walking(cpu)
+            } else {
+                load_surfing_player_sprite_graphics(cpu);
+                cpu.pc = cpu.stack_pop(); // ret
+            }
+        }
+        i => {
+            log::error!("invalid walk_bike_surf_state: {}", i);
+            load_walking_player_sprite_graphics(cpu)
+        }
+    }
+}
+
+fn load_player_sprite_graphics_start_walking(cpu: &mut Cpu) {
+    cpu.borrow_wram_mut().set_walk_bike_surf_state(0);
+    cpu.borrow_wram_mut().set_walk_bike_surf_state_copy(0);
+
+    load_walking_player_sprite_graphics(cpu)
+}
+
 /// Output: sets carry if biking is allowed
 pub fn is_bike_riding_allowed(cpu: &mut Cpu) {
     log::trace!("is_bike_riding_allowed()");
@@ -1085,8 +1125,8 @@ pub fn load_walking_player_sprite_graphics(cpu: &mut Cpu) {
     cpu.pc = cpu.stack_pop(); // ret
 }
 
-pub fn load_surfing_player_sprite_graphics2(cpu: &mut Cpu) {
-    log::debug!("load_surfing_player_sprite_graphics2()");
+fn load_surfing_player_sprite_graphics(cpu: &mut Cpu) {
+    log::trace!("load_surfing_player_sprite_graphics()");
 
     let w_d473 = cpu.read_byte(wram::W_D473);
     let w_d472_bit_6 = (cpu.read_byte(wram::W_D472) & (1 << 6)) != 0;
@@ -1097,15 +1137,12 @@ pub fn load_surfing_player_sprite_graphics2(cpu: &mut Cpu) {
         (_, false) => load_player_sprite_graphics_common(cpu, 0x05, 0x7ab1), // SeelSprite
         (_, true) => load_player_sprite_graphics_common(cpu, 0x3f, 0x6def), // SurfingPikachuSprite
     }
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
-pub fn load_bike_player_sprite_graphics(cpu: &mut Cpu) {
-    log::debug!("load_bike_player_sprite_graphics()");
+fn load_bike_player_sprite_graphics(cpu: &mut Cpu) {
+    log::trace!("load_bike_player_sprite_graphics()");
 
     load_player_sprite_graphics_common(cpu, 0x05, 0x43f1); // RedBikeSprite
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 fn load_player_sprite_graphics_common(cpu: &mut Cpu, bank: u8, addr: u16) {

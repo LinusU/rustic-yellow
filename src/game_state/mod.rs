@@ -649,6 +649,13 @@ impl GameState {
         [self.data[0x1531], self.data[0x1532], self.data[0x1533]]
     }
 
+    /// 0 = walking \
+    /// 1 = biking \
+    /// 2 = surfing
+    pub fn walk_bike_surf_state(&self) -> u8 {
+        self.data[0x16ff]
+    }
+
     pub fn set_walk_bike_surf_state(&mut self, value: u8) {
         self.data[0x16ff] = value;
     }
