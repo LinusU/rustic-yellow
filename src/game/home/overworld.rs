@@ -24,10 +24,6 @@ use crate::{
 const TILE_PAIR_COLLISIONS_LAND: u16 = 0x0ada;
 const TILE_PAIR_COLLISIONS_WATER: u16 = 0x0afc;
 
-// This is only used to pass the value from the caller to load_north_south_connections_tile_map
-const H_NORTH_SOUTH_CONNECTION_STRIP_WIDTH: u16 = 0xff8b;
-const H_NORTH_SOUTH_CONNECTED_MAP_WIDTH: u16 = 0xff8c;
-
 /// Load a new map
 pub fn enter_map(cpu: &mut Cpu) {
     log::debug!("EnterMap");
@@ -102,45 +98,134 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
-/// Input: hl = src, de = dest
-pub fn load_north_south_connections_tile_map(cpu: &mut Cpu) {
-    log::debug!("load_north_south_connections_tile_map()");
+/// Loads the current maps complete tile map (which references blocks, not individual tiles) to C6E8.
+///
+/// It can also load partial tile maps of connected maps into a border of length 3 around the current map.
+pub fn load_tile_block_map(cpu: &mut Cpu) {
+    log::debug!("load_tile_block_map()");
 
-    let strip_length = cpu.read_byte(H_NORTH_SOUTH_CONNECTION_STRIP_WIDTH) as u16;
-    let connected_width = cpu.read_byte(H_NORTH_SOUTH_CONNECTED_MAP_WIDTH) as u16;
-    let current_width = cpu.borrow_wram().cur_map_width() as u16;
+    let bg = cpu.borrow_wram().map_background_tile();
 
-    for _ in 0..MAP_BORDER {
-        for i in 0..strip_length {
-            let byte = cpu.read_byte(cpu.hl() + i);
-            cpu.write_byte(cpu.de() + i, byte);
+    // fill C6E8-CBFB with the background tile
+    for ptr in wram::W_OVERWORLD_MAP..wram::W_OVERWORLD_MAP_END {
+        cpu.write_byte(ptr, bg);
+    }
+
+    let map_height = cpu.borrow_wram().cur_map_height();
+    let map_width = cpu.borrow_wram().cur_map_width() as u16;
+    let map_stride = map_width + (MAP_BORDER * 2);
+
+    // load tile map of current map (made of tile block IDs)
+    // a 3-byte border at the edges of the map is kept so that there is space for map connections
+    // make space for north border (next 3 lines), and then the west border (next 3 bytes)
+    let mut dst = wram::W_OVERWORLD_MAP + (map_stride * MAP_BORDER) + MAP_BORDER;
+    let mut src = cpu.borrow_wram().cur_map_data_ptr();
+
+    for _ in 0..map_height {
+        for i in 0..map_width {
+            let byte = cpu.read_byte(src + i);
+            cpu.write_byte(dst + i, byte);
         }
 
-        cpu.set_hl(cpu.hl() + connected_width);
-        cpu.set_de(cpu.de() + current_width + (MAP_BORDER as u16 * 2));
+        dst += map_stride;
+        src += map_width;
+    }
+
+    if cpu.borrow_wram().north().connected_map() != 0xff {
+        cpu.a = cpu.borrow_wram().north().connected_map();
+        cpu.stack_push(0x0001);
+        switch_to_map_rom_bank(cpu);
+
+        let connection_strip_src = cpu.borrow_wram().north().connection_strip_src();
+        let connection_strip_dest = cpu.borrow_wram().north().connection_strip_dest();
+        let connection_strip_width = cpu.borrow_wram().north().connection_strip_length();
+        let connected_map_width = cpu.borrow_wram().north().connected_map_width();
+
+        cpu.set_hl(connection_strip_src);
+        cpu.set_de(connection_strip_dest);
+        load_north_south_connections_tile_map(cpu, connection_strip_width, connected_map_width);
+    }
+
+    if cpu.borrow_wram().south().connected_map() != 0xff {
+        cpu.a = cpu.borrow_wram().south().connected_map();
+        cpu.stack_push(0x0001);
+        switch_to_map_rom_bank(cpu);
+
+        let connection_strip_src = cpu.borrow_wram().south().connection_strip_src();
+        let connection_strip_dest = cpu.borrow_wram().south().connection_strip_dest();
+        let connection_strip_width = cpu.borrow_wram().south().connection_strip_length();
+        let connected_map_width = cpu.borrow_wram().south().connected_map_width();
+
+        cpu.set_hl(connection_strip_src);
+        cpu.set_de(connection_strip_dest);
+        load_north_south_connections_tile_map(cpu, connection_strip_width, connected_map_width);
+    }
+
+    if cpu.borrow_wram().west().connected_map() != 0xff {
+        cpu.a = cpu.borrow_wram().west().connected_map();
+        cpu.stack_push(0x0001);
+        switch_to_map_rom_bank(cpu);
+
+        let connection_strip_src = cpu.borrow_wram().west().connection_strip_src();
+        let connection_strip_dest = cpu.borrow_wram().west().connection_strip_dest();
+        let connection_strip_length = cpu.borrow_wram().west().connection_strip_length();
+        let connected_map_width = cpu.borrow_wram().west().connected_map_width();
+
+        cpu.set_hl(connection_strip_src);
+        cpu.set_de(connection_strip_dest);
+        load_east_west_connections_tile_map(cpu, connection_strip_length, connected_map_width);
+    }
+
+    if cpu.borrow_wram().east().connected_map() != 0xff {
+        cpu.a = cpu.borrow_wram().east().connected_map();
+        cpu.stack_push(0x0001);
+        switch_to_map_rom_bank(cpu);
+
+        let connection_strip_src = cpu.borrow_wram().east().connection_strip_src();
+        let connection_strip_dest = cpu.borrow_wram().east().connection_strip_dest();
+        let connection_strip_length = cpu.borrow_wram().east().connection_strip_length();
+        let connected_map_width = cpu.borrow_wram().east().connected_map_width();
+
+        cpu.set_hl(connection_strip_src);
+        cpu.set_de(connection_strip_dest);
+        load_east_west_connections_tile_map(cpu, connection_strip_length, connected_map_width);
     }
 
     cpu.pc = cpu.stack_pop(); // ret
 }
 
-/// Input: b = connection strip length, hl = src, de = dest
-pub fn load_east_west_connections_tile_map(cpu: &mut Cpu) {
-    log::debug!("load_east_west_connections_tile_map()");
+/// Input: hl = src, de = dest
+fn load_north_south_connections_tile_map(cpu: &mut Cpu, strip_length: u8, connected_width: u8) {
+    log::trace!("load_north_south_connections_tile_map()");
 
-    let connected_width = cpu.borrow_wram().east_west_connected_map_width() as u16;
     let current_width = cpu.borrow_wram().cur_map_width() as u16;
 
-    for _ in 0..cpu.b {
-        for i in 0..MAP_BORDER {
+    for _ in 0..MAP_BORDER {
+        for i in 0..strip_length {
             let byte = cpu.read_byte(cpu.hl() + (i as u16));
             cpu.write_byte(cpu.de() + (i as u16), byte);
         }
 
-        cpu.set_hl(cpu.hl() + connected_width);
-        cpu.set_de(cpu.de() + current_width + (MAP_BORDER as u16 * 2));
+        cpu.set_hl(cpu.hl() + (connected_width as u16));
+        cpu.set_de(cpu.de() + current_width + (MAP_BORDER * 2));
     }
+}
 
-    cpu.pc = cpu.stack_pop(); // ret
+/// Input: hl = src, de = dest
+fn load_east_west_connections_tile_map(cpu: &mut Cpu, strip_length: u8, connected_width: u8) {
+    log::trace!("load_east_west_connections_tile_map()");
+
+    let current_width = cpu.borrow_wram().cur_map_width() as u16;
+
+    for _ in 0..strip_length {
+        for i in 0..MAP_BORDER {
+            let byte = cpu.read_byte(cpu.hl() + i);
+            cpu.write_byte(cpu.de() + i, byte);
+        }
+
+        cpu.set_hl(cpu.hl() + (connected_width as u16));
+        cpu.set_de(cpu.de() + current_width + (MAP_BORDER * 2));
+    }
 }
 
 /// function to check if there is a sign or sprite in front of the player \
@@ -553,7 +638,7 @@ pub fn load_current_map_view(cpu: &mut Cpu) {
             draw_tile_block(cpu, tile_block, dst + (i * 4));
         }
 
-        src += map_width + (MAP_BORDER as u16 * 2);
+        src += map_width + (MAP_BORDER * 2);
         dst += 0x60;
     }
 

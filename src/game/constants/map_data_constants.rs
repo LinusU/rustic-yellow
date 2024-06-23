@@ -1,6 +1,6 @@
 /// Width of east/west connections \
 /// Height of north/south connections
-pub const MAP_BORDER: u8 = 3;
+pub const MAP_BORDER: u16 = 3;
 
 // Connection directions
 pub const EAST_F: u8 = 0;

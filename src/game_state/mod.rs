@@ -100,6 +100,36 @@ impl BattleStatusView<'_> {
     }
 }
 
+pub struct MapConnectionView<'a> {
+    data: &'a [u8],
+}
+
+impl MapConnectionView<'_> {
+    pub fn new(data: &[u8]) -> MapConnectionView<'_> {
+        MapConnectionView { data }
+    }
+
+    pub fn connected_map(&self) -> u8 {
+        self.data[0]
+    }
+
+    pub fn connection_strip_src(&self) -> u16 {
+        u16::from_le_bytes([self.data[1], self.data[2]])
+    }
+
+    pub fn connection_strip_dest(&self) -> u16 {
+        u16::from_le_bytes([self.data[3], self.data[4]])
+    }
+
+    pub fn connection_strip_length(&self) -> u8 {
+        self.data[5]
+    }
+
+    pub fn connected_map_width(&self) -> u8 {
+        self.data[6]
+    }
+}
+
 pub struct GameState {
     data: [u8; WRAM_SIZE],
     high_ram: [u8; ZRAM_SIZE],
@@ -502,6 +532,26 @@ impl GameState {
         self.data[0x1368]
     }
 
+    pub fn cur_map_data_ptr(&self) -> u16 {
+        u16::from_le_bytes([self.data[0x1369], self.data[0x136a]])
+    }
+
+    pub fn north(&self) -> MapConnectionView {
+        MapConnectionView::new(&self.data[0x1370..])
+    }
+
+    pub fn south(&self) -> MapConnectionView {
+        MapConnectionView::new(&self.data[0x137b..])
+    }
+
+    pub fn west(&self) -> MapConnectionView {
+        MapConnectionView::new(&self.data[0x1386..])
+    }
+
+    pub fn east(&self) -> MapConnectionView {
+        MapConnectionView::new(&self.data[0x1391..])
+    }
+
     /// Sprite set ID for the current map
     pub fn set_sprite_set_id(&mut self, value: u8) {
         self.data[0x13a7] = value;
@@ -615,10 +665,6 @@ impl GameState {
 
     pub fn set_previous_tileset(&mut self, value: u8) {
         self.high_ram[0x0b] = value;
-    }
-
-    pub fn east_west_connected_map_width(&self) -> u8 {
-        self.high_ram[0x0b]
     }
 
     pub fn loaded_rom_bank(&self) -> u8 {
