@@ -99,6 +99,22 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+pub fn stop_bike_surf(cpu: &mut Cpu) {
+    log::debug!("stop_bike_surf()");
+
+    let is_walking = cpu.borrow_wram().walk_bike_surf_state() == 0;
+
+    if !is_walking {
+        cpu.borrow_wram_mut().set_walk_bike_surf_state(0);
+
+        if cpu.borrow_wram().jumped_into_hole() {
+            cpu.call(0x216b); // PlayDefaultMusic
+        }
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Loads sprite graphics based on whether the player is standing, biking, or surfing.
 pub fn load_player_sprite_graphics(cpu: &mut Cpu) {
     log::debug!("load_player_sprite_graphics()");

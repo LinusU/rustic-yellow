@@ -199,6 +199,11 @@ impl GameState {
         (self.data[0x1731] & 0b0000_0010) != 0
     }
 
+    /// Jumped into hole (Pokemon Mansion, Seafoam Islands, Victory Road) or went down waterfall (Seafoam Islands), so the target warp is a "dungeon warp"
+    pub fn jumped_into_hole(&self) -> bool {
+        (self.data[0x1731] & 0b0001_0000) != 0
+    }
+
     /// `walk_bike_surf_state` is sometimes copied here, but it doesn't seem to be used for anything
     pub fn set_walk_bike_surf_state_copy(&mut self, value: u8) {
         self.data[0x1119] = value;
