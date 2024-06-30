@@ -199,9 +199,27 @@ impl GameState {
         (self.data[0x1731] & 0b0000_0010) != 0
     }
 
+    /// Target warp is a fly warp or a dungeon warp
+    pub fn set_fly_or_dungeon_warp(&mut self, value: bool) {
+        if value {
+            self.data[0x1731] |= 1 << 2;
+        } else {
+            self.data[0x1731] &= !(1 << 2);
+        }
+    }
+
     /// Jumped into hole (Pokemon Mansion, Seafoam Islands, Victory Road) or went down waterfall (Seafoam Islands), so the target warp is a "dungeon warp"
     pub fn jumped_into_hole(&self) -> bool {
         (self.data[0x1731] & 0b0001_0000) != 0
+    }
+
+    // Currently being forced to ride bike (cycling road)
+    pub fn set_forced_to_ride_bike(&mut self, value: bool) {
+        if value {
+            self.data[0x1731] |= 1 << 5;
+        } else {
+            self.data[0x1731] &= !(1 << 5);
+        }
     }
 
     /// `walk_bike_surf_state` is sometimes copied here, but it doesn't seem to be used for anything

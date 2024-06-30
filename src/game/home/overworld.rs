@@ -19,6 +19,7 @@ use crate::{
         home, macros,
         ram::{hram, vram, wram},
     },
+    game_state::BattleResult,
     rom::ROM,
 };
 
@@ -99,8 +100,34 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
-pub fn stop_bike_surf(cpu: &mut Cpu) {
-    log::debug!("stop_bike_surf()");
+pub fn handle_fly_warp_or_dungeon_warp(cpu: &mut Cpu) {
+    log::debug!("handle_fly_warp_or_dungeon_warp()");
+
+    cpu.call(0x231c); // UpdateSprites
+    home::palettes::delay3(cpu);
+
+    cpu.borrow_wram_mut().set_battle_result(BattleResult::Win);
+    cpu.borrow_wram_mut().set_is_in_battle(0);
+    cpu.borrow_wram_mut().set_map_pal_offset(0);
+
+    cpu.borrow_wram_mut().set_fly_or_dungeon_warp(true);
+    cpu.borrow_wram_mut().set_forced_to_ride_bike(false);
+
+    macros::farcall::farcall(cpu, 0x1c, 0x4615); // _LeaveMapAnim
+
+    stop_bike_surf(cpu);
+
+    cpu.a = 0x01; // BANK(PrepareForSpecialWarp) and BANK(SpecialEnterMap)
+    cpu.call(0x3e7e); // BankswitchCommon
+
+    cpu.call(0x6042); // PrepareForSpecialWarp
+    cpu.call(0x5ce4); // SpecialEnterMap
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
+fn stop_bike_surf(cpu: &mut Cpu) {
+    log::trace!("stop_bike_surf()");
 
     let is_walking = cpu.borrow_wram().walk_bike_surf_state() == 0;
 
@@ -111,8 +138,6 @@ pub fn stop_bike_surf(cpu: &mut Cpu) {
             cpu.call(0x216b); // PlayDefaultMusic
         }
     }
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// Loads sprite graphics based on whether the player is standing, biking, or surfing.
