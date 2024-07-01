@@ -100,6 +100,35 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+/// For when all the player's pokemon faint.
+///
+/// Does not print the "blacked out" message.
+pub fn handle_black_out(cpu: &mut Cpu) {
+    log::debug!("handle_black_out()");
+
+    cpu.call(0x1eb6); // GBFadeOutToBlack
+
+    cpu.a = 0x08;
+    cpu.stack_push(0x0001);
+    stop_music(cpu);
+
+    // Reset "blacked out" bit
+    let value = cpu.read_byte(wram::W_D72E);
+    cpu.write_byte(wram::W_D72E, value & !(1 << 5));
+
+    cpu.a = 0x01; // BANK(PrepareForSpecialWarp) and BANK(SpecialEnterMap)
+    cpu.call(0x3e7e); // BankswitchCommon
+
+    // ResetStatusAndHalveMoneyOnBlackout
+    macros::farcall::callfar(cpu, 0x3c, 0x4274);
+
+    cpu.call(0x6042); // PrepareForSpecialWarp
+    cpu.call(0x2176); // PlayDefaultMusicFadeOutCurrent
+    cpu.call(0x5ce4); // SpecialEnterMap
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Input: a = fade counter
 pub fn stop_music(cpu: &mut Cpu) {
     let fade_counter = cpu.a;
