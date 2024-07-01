@@ -12,3 +12,4 @@ pub const LOBBY: u8 = 18;
 pub const MANSION: u8 = 19;
 pub const LAB: u8 = 20;
 pub const FACILITY: u8 = 22;
+pub const PLATEAU: u8 = 23;

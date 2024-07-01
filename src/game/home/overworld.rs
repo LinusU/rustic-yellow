@@ -6,7 +6,10 @@ use crate::{
             gfx_constants,
             hardware_constants::MBC1_ROM_BANK,
             input_constants::{A_BUTTON, B_BUTTON, D_DOWN, D_LEFT, D_RIGHT, D_UP, SELECT, START},
-            map_constants::{INDIGO_PLATEAU, ROUTE_17, ROUTE_23},
+            map_constants::{
+                INDIGO_PLATEAU, ROCKET_HIDEOUT_B1F, ROCKET_HIDEOUT_B2F, ROCKET_HIDEOUT_B4F,
+                ROCK_TUNNEL_1F, ROUTE_17, ROUTE_23, SS_ANNE_3F,
+            },
             map_data_constants::{EAST_F, MAP_BORDER, NORTH_F, SOUTH_F, WEST_F},
             music_constants::SFX_COLLISION,
             palette_constants,
@@ -14,6 +17,7 @@ use crate::{
                 PLAYER_DIR_DOWN, PLAYER_DIR_LEFT, PLAYER_DIR_RIGHT, PLAYER_DIR_UP,
                 SPRITE_FACING_DOWN, SPRITE_FACING_LEFT, SPRITE_FACING_RIGHT, SPRITE_FACING_UP,
             },
+            tileset_constants::{OVERWORLD, PLATEAU, SHIP, SHIP_PORT},
         },
         data::tilesets::bike_riding_tilesets::BIKE_RIDING_TILESETS,
         home, macros,
@@ -98,6 +102,52 @@ pub fn enter_map(cpu: &mut Cpu) {
 
     // Fallthrough to OverworldLoop
     cpu.pc = 0x0242;
+}
+
+/// This function is an extra check that sometimes has to pass in order to warp, beyond just standing on a warp. The
+/// "sometimes" qualification is necessary because of CheckWarpsNoCollision's behavior. Depending on the map, either
+/// "function 1" or "function 2" is used for the check.
+///
+/// "function 1" passes when the player is at the edge of the map and is facing towards the outside of the map \
+/// "function 2" passes when the the tile in front of the player is among a certain set
+///
+/// Output: sets carry if the check passes, otherwise clears carry
+pub fn extra_warp_check(cpu: &mut Cpu) {
+    log::trace!("extra_warp_check()");
+
+    let cur_map = cpu.borrow_wram().cur_map();
+    let cur_map_tileset = cpu.borrow_wram().cur_map_tileset();
+
+    match (cur_map, cur_map_tileset) {
+        (SS_ANNE_3F, _) => extra_warp_check_use_function1(cpu),
+        (ROCKET_HIDEOUT_B1F, _) => extra_warp_check_use_function2(cpu),
+        (ROCKET_HIDEOUT_B2F, _) => extra_warp_check_use_function2(cpu),
+        (ROCKET_HIDEOUT_B4F, _) => extra_warp_check_use_function2(cpu),
+        (ROCK_TUNNEL_1F, _) => extra_warp_check_use_function2(cpu),
+
+        (_, OVERWORLD) => extra_warp_check_use_function2(cpu), // Outside tileset
+        (_, SHIP) => extra_warp_check_use_function2(cpu),      // S.S. Anne tileset
+        (_, SHIP_PORT) => extra_warp_check_use_function2(cpu), // Vermilion Port tileset
+        (_, PLATEAU) => extra_warp_check_use_function2(cpu),   // Indigo Plateau tileset
+
+        _ => extra_warp_check_use_function1(cpu),
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
+fn extra_warp_check_use_function1(cpu: &mut Cpu) {
+    log::debug!("extra_warp_check() IsPlayerFacingEdgeOfMap");
+    cpu.b = 0x03; // BANK(IsPlayerFacingEdgeOfMap)
+    cpu.set_hl(0x4148); // IsPlayerFacingEdgeOfMap
+    cpu.call(0x3e84); // Bankswitch
+}
+
+fn extra_warp_check_use_function2(cpu: &mut Cpu) {
+    log::debug!("extra_warp_check() IsWarpTileInFrontOfPlayer");
+    cpu.b = 0x03; // BANK(IsWarpTileInFrontOfPlayer)
+    cpu.set_hl(0x4197); // IsWarpTileInFrontOfPlayer
+    cpu.call(0x3e84); // Bankswitch
 }
 
 fn map_entry_after_battle(cpu: &mut Cpu) {
