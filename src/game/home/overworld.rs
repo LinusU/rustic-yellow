@@ -11,13 +11,13 @@ use crate::{
                 ROCK_TUNNEL_1F, ROUTE_17, ROUTE_23, SS_ANNE_3F,
             },
             map_data_constants::{EAST_F, MAP_BORDER, NORTH_F, SOUTH_F, WEST_F},
-            music_constants::SFX_COLLISION,
+            music_constants::{SFX_COLLISION, SFX_GO_INSIDE, SFX_GO_OUTSIDE},
             palette_constants,
             sprite_data_constants::{
                 PLAYER_DIR_DOWN, PLAYER_DIR_LEFT, PLAYER_DIR_RIGHT, PLAYER_DIR_UP,
                 SPRITE_FACING_DOWN, SPRITE_FACING_LEFT, SPRITE_FACING_RIGHT, SPRITE_FACING_UP,
             },
-            tileset_constants::{OVERWORLD, PLATEAU, SHIP, SHIP_PORT},
+            tileset_constants::{CEMETERY, FACILITY, OVERWORLD, PLATEAU, SHIP, SHIP_PORT},
         },
         data::tilesets::bike_riding_tilesets::BIKE_RIDING_TILESETS,
         home, macros,
@@ -102,6 +102,38 @@ pub fn enter_map(cpu: &mut Cpu) {
 
     // Fallthrough to OverworldLoop
     cpu.pc = 0x0242;
+}
+
+// function to play a sound when changing maps
+pub fn play_map_change_sound(cpu: &mut Cpu) {
+    log::debug!("play_map_change_sound()");
+
+    let tileset = cpu.borrow_wram().cur_map_tileset();
+
+    if matches!(tileset, FACILITY | CEMETERY) {
+        return play_map_change_sound_play_sound(cpu, SFX_GO_OUTSIDE);
+    }
+
+    // upper left tile of the 4x4 square the player's sprite is standing on
+    let standing_on_tile = cpu.read_byte(macros::coords::coord!(8, 8));
+
+    // door tile in tileset 0
+    if standing_on_tile == 0x0b {
+        play_map_change_sound_play_sound(cpu, SFX_GO_INSIDE)
+    } else {
+        play_map_change_sound_play_sound(cpu, SFX_GO_OUTSIDE)
+    }
+}
+
+fn play_map_change_sound_play_sound(cpu: &mut Cpu, sfx: u8) {
+    cpu.a = sfx;
+    cpu.call(0x2238); // PlaySound
+
+    if cpu.borrow_wram().map_pal_offset() == 0 {
+        cpu.call(0x1eb6); // GBFadeOutToBlack
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// Output: z flag is set if the player is in an outside map (a town or route)

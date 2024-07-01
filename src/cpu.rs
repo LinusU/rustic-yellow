@@ -89,6 +89,7 @@ impl Cpu {
                 (_, 0x0000) => break,
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
                 (_, 0x01d7) => crate::game::home::overworld::enter_map(self),
+                (_, 0x06ef) => crate::game::home::overworld::play_map_change_sound(self),
                 (_, 0x0712) => crate::game::home::overworld::check_if_in_outside_map(self),
                 (_, 0x071a) => crate::game::home::overworld::extra_warp_check(self),
                 (_, 0x0750) => panic!("map_entry_after_battle should only be called from Rust"),
