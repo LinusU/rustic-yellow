@@ -52,7 +52,7 @@ pub fn enter_map(cpu: &mut Cpu) {
         cpu.borrow_wram_mut()
             .set_using_strength_out_of_battle(false);
     } else {
-        cpu.call(0x0750); // MapEntryAfterBattle
+        map_entry_after_battle(cpu);
     }
 
     let w_d732 = cpu.read_byte(wram::W_D732);
@@ -98,6 +98,19 @@ pub fn enter_map(cpu: &mut Cpu) {
 
     // Fallthrough to OverworldLoop
     cpu.pc = 0x0242;
+}
+
+fn map_entry_after_battle(cpu: &mut Cpu) {
+    log::trace!("map_entry_after_battle()");
+
+    // for enabling warp testing after collisions
+    macros::farcall::farcall(cpu, 0x03, 0x40a6); // IsPlayerStandingOnWarp
+
+    if cpu.borrow_wram().map_pal_offset() == 0 {
+        cpu.call(0x1ebd); // GBFadeInFromWhite
+    } else {
+        cpu.call(0x1e6f); // LoadGBPal
+    }
 }
 
 /// For when all the player's pokemon faint.
