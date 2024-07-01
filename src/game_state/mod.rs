@@ -128,6 +128,18 @@ impl MapConnectionView<'_> {
     pub fn connected_map_width(&self) -> u8 {
         self.data[6]
     }
+
+    pub fn connected_map_y_alignment(&self) -> u8 {
+        self.data[7]
+    }
+
+    pub fn connected_map_x_alignment(&self) -> u8 {
+        self.data[8]
+    }
+
+    pub fn connected_map_view_pointer(&self) -> u16 {
+        u16::from_le_bytes([self.data[9], self.data[10]])
+    }
 }
 
 pub struct GameState {
@@ -330,6 +342,10 @@ impl GameState {
 
     pub fn cur_map(&self) -> u8 {
         self.data[0x135d]
+    }
+
+    pub fn set_cur_map(&mut self, value: u8) {
+        self.data[0x135d] = value;
     }
 
     /// in a wild battle, this is the species of pokemon \
@@ -602,6 +618,14 @@ impl GameState {
         self.data[0x142e]
     }
 
+    pub fn set_pikachu_overworld_state_flag_4(&mut self, value: bool) {
+        if value {
+            self.data[0x142f] |= 1 << 4;
+        } else {
+            self.data[0x142f] &= !(1 << 4);
+        }
+    }
+
     pub fn set_pikachu_overworld_state_flag_5(&mut self, value: bool) {
         if value {
             self.data[0x142f] |= 1 << 5;
@@ -629,11 +653,19 @@ impl GameState {
     }
 
     /// Map height in 2x2 meta-tiles
+    pub fn current_map_height_2(&self) -> u8 {
+        self.data[0x1523]
+    }
+
     pub fn set_current_map_height_2(&mut self, value: u8) {
         self.data[0x1523] = value;
     }
 
     /// Map width in 2x2 meta-tiles
+    pub fn current_map_width_2(&self) -> u8 {
+        self.data[0x1524]
+    }
+
     pub fn set_current_map_width_2(&mut self, value: u8) {
         self.data[0x1524] = value;
     }

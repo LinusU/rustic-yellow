@@ -104,6 +104,168 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+/// if no matching warp was found
+pub fn check_map_connections(cpu: &mut Cpu) {
+    log::trace!("check_map_connections()");
+
+    let x_coord = cpu.borrow_wram().x_coord();
+
+    if x_coord == 0xff {
+        return check_map_connections_move_to_west(cpu);
+    }
+
+    if x_coord == cpu.borrow_wram().current_map_width_2() {
+        return check_map_connections_move_to_east(cpu);
+    }
+
+    let y_coord = cpu.borrow_wram().y_coord();
+
+    if y_coord == 0xff {
+        return check_map_connections_move_to_north(cpu);
+    }
+
+    if y_coord == cpu.borrow_wram().current_map_height_2() {
+        return check_map_connections_move_to_south(cpu);
+    }
+
+    // jp OverworldLoop
+    cpu.pc = 0x0242;
+}
+
+pub fn check_map_connections_move_to_west(cpu: &mut Cpu) {
+    log::debug!("check_map_connections() - moving to west map");
+
+    let connected_map = cpu.borrow_wram().west().connected_map();
+    cpu.borrow_wram_mut().set_cur_map(connected_map);
+
+    // new X coordinate upon entering west map
+    let x_alignment = cpu.borrow_wram().west().connected_map_x_alignment();
+    cpu.borrow_wram_mut().set_x_coord(x_alignment);
+
+    // Y adjustment upon entering west map
+    let mut y_coord = cpu.borrow_wram().y_coord();
+    y_coord += cpu.borrow_wram().west().connected_map_y_alignment();
+    cpu.borrow_wram_mut().set_y_coord(y_coord);
+
+    // pointer to upper left corner of map without adjustment for Y position
+    let mut ptr = cpu.borrow_wram().west().connected_map_view_pointer();
+
+    let map_width = cpu.borrow_wram().west().connected_map_width();
+    ptr += ((map_width as u16) + (MAP_BORDER * 2)) * ((y_coord >> 1) as u16);
+
+    // pointer to upper left corner of current tile block map section
+    cpu.borrow_wram_mut()
+        .set_current_tile_block_map_view_pointer(ptr);
+
+    check_map_connections_load_new_map(cpu)
+}
+
+pub fn check_map_connections_move_to_east(cpu: &mut Cpu) {
+    log::debug!("check_map_connections() - moving to east map");
+
+    let connected_map = cpu.borrow_wram().east().connected_map();
+    cpu.borrow_wram_mut().set_cur_map(connected_map);
+
+    // new X coordinate upon entering east map
+    let x_alignment = cpu.borrow_wram().east().connected_map_x_alignment();
+    cpu.borrow_wram_mut().set_x_coord(x_alignment);
+
+    // Y adjustment upon entering east map
+    let mut y_coord = cpu.borrow_wram().y_coord();
+    y_coord += cpu.borrow_wram().east().connected_map_y_alignment();
+    cpu.borrow_wram_mut().set_y_coord(y_coord);
+
+    // pointer to upper left corner of map without adjustment for Y position
+    let mut ptr = cpu.borrow_wram().east().connected_map_view_pointer();
+
+    let map_width = cpu.borrow_wram().east().connected_map_width();
+    ptr += ((map_width as u16) + (MAP_BORDER * 2)) * ((y_coord >> 1) as u16);
+
+    // pointer to upper left corner of current tile block map section
+    cpu.borrow_wram_mut()
+        .set_current_tile_block_map_view_pointer(ptr);
+
+    check_map_connections_load_new_map(cpu)
+}
+
+fn check_map_connections_move_to_north(cpu: &mut Cpu) {
+    log::debug!("check_map_connections() - moving to north map");
+
+    let connected_map = cpu.borrow_wram().north().connected_map();
+    cpu.borrow_wram_mut().set_cur_map(connected_map);
+
+    // new Y coordinate upon entering north map
+    let y_alignment = cpu.borrow_wram().north().connected_map_y_alignment();
+    cpu.borrow_wram_mut().set_y_coord(y_alignment);
+
+    // X adjustment upon entering north map
+    let mut x_coord = cpu.borrow_wram().x_coord();
+    x_coord += cpu.borrow_wram().north().connected_map_x_alignment();
+    cpu.borrow_wram_mut().set_x_coord(x_coord);
+
+    // pointer to upper left corner of map without adjustment for X position
+    let mut ptr = cpu.borrow_wram().north().connected_map_view_pointer();
+
+    ptr += (x_coord >> 1) as u16;
+
+    // pointer to upper left corner of current tile block map section
+    cpu.borrow_wram_mut()
+        .set_current_tile_block_map_view_pointer(ptr);
+
+    check_map_connections_load_new_map(cpu)
+}
+
+fn check_map_connections_move_to_south(cpu: &mut Cpu) {
+    log::debug!("check_map_connections() - moving to south map");
+
+    let connected_map = cpu.borrow_wram().south().connected_map();
+    cpu.borrow_wram_mut().set_cur_map(connected_map);
+
+    // new Y coordinate upon entering south map
+    let y_alignment = cpu.borrow_wram().south().connected_map_y_alignment();
+    cpu.borrow_wram_mut().set_y_coord(y_alignment);
+
+    // X adjustment upon entering south map
+    let mut x_coord = cpu.borrow_wram().x_coord();
+    x_coord += cpu.borrow_wram().south().connected_map_x_alignment();
+    cpu.borrow_wram_mut().set_x_coord(x_coord);
+
+    // pointer to upper left corner of map without adjustment for X position
+    let mut ptr = cpu.borrow_wram().south().connected_map_view_pointer();
+
+    ptr += (x_coord >> 1) as u16;
+
+    // pointer to upper left corner of current tile block map section
+    cpu.borrow_wram_mut()
+        .set_current_tile_block_map_view_pointer(ptr);
+
+    check_map_connections_load_new_map(cpu);
+}
+
+// load the connected map that was entered
+fn check_map_connections_load_new_map(cpu: &mut Cpu) {
+    cpu.borrow_wram_mut()
+        .set_pikachu_overworld_state_flag_4(true);
+    cpu.borrow_wram_mut().set_pikachu_spawn_state(2);
+
+    load_map_header(cpu);
+    cpu.call(0x2176); // PlayDefaultMusicFadeOutCurrent
+
+    cpu.b = palette_constants::SET_PAL_OVERWORLD;
+    cpu.call(0x3e05); // RunPaletteCommand
+
+    // Since the sprite set shouldn't change, this will just update VRAM slots at
+    // x#SPRITESTATEDATA2_IMAGEBASEOFFSET without loading any tile patterns.
+    cpu.call(0x3dba); // InitMapSprites
+
+    // call LoadTileBlockMap
+    cpu.stack_push(0x0001);
+    load_tile_block_map(cpu);
+
+    // jp OverworldLoopLessDelay
+    cpu.pc = 0x0245;
+}
+
 // function to play a sound when changing maps
 pub fn play_map_change_sound(cpu: &mut Cpu) {
     log::debug!("play_map_change_sound()");
@@ -1361,8 +1523,8 @@ fn load_player_sprite_graphics_common(cpu: &mut Cpu, bank: u8, addr: u16) {
 }
 
 // Load data from the map header
-pub fn load_map_header(cpu: &mut Cpu) {
-    log::debug!("load_map_header()");
+fn load_map_header(cpu: &mut Cpu) {
+    log::trace!("load_map_header()");
 
     // MarkTownVisitedAndLoadMissableObjects
     macros::farcall::farcall(cpu, 0x03, 0x6f93);
@@ -1384,7 +1546,6 @@ pub fn load_map_header(cpu: &mut Cpu) {
     cpu.borrow_wram_mut().set_previous_tileset(previous_tileset);
 
     if (cpu.b & (1 << 7)) != 0 {
-        cpu.pc = cpu.stack_pop(); // ret
         return;
     }
 
@@ -1530,7 +1691,6 @@ pub fn load_map_header(cpu: &mut Cpu) {
 
     cpu.a = saved_bank;
     cpu.call(0x3e7e); // BankswitchCommon
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// Copy map connection data from ROM to WRAM.
@@ -1585,7 +1745,7 @@ pub fn load_map_data(cpu: &mut Cpu) {
     reset_map_variables(cpu);
 
     cpu.call(0x36a3); // LoadTextBoxTilePatterns
-    cpu.call(0x0dab); // LoadMapHeader
+    load_map_header(cpu);
 
     // load tile pattern data for sprites
     cpu.call(0x3dba); // InitMapSprites
