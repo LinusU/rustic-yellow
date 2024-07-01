@@ -454,7 +454,10 @@ impl GameState {
     /// in this variable. FadeOutAudio checks if it's non-zero every V-Blank and
     /// fades out the current audio if it is. Once it has finished fading out the
     /// audio, it zeroes this variable and starts playing the sound ID stored in it.
-    // pub const W_AUDIO_FADE_OUT_CONTROL: u16 = 0xcfc6;
+    pub fn audio_fade_out_control(&self) -> u8 {
+        self.data[0x0fc6]
+    }
+
     pub fn set_audio_fade_out_control(&mut self, value: u8) {
         self.data[0x0fc6] = value;
     }

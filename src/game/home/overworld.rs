@@ -100,6 +100,26 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+/// Input: a = fade counter
+pub fn stop_music(cpu: &mut Cpu) {
+    let fade_counter = cpu.a;
+
+    log::debug!("stop_music(fade_counter={})", fade_counter);
+
+    cpu.borrow_wram_mut()
+        .set_audio_fade_out_control(fade_counter);
+
+    cpu.call(0x2233); // StopAllMusic
+
+    while cpu.borrow_wram().audio_fade_out_control() != 0 {
+        cpu.cycle(4);
+    }
+
+    cpu.call(0x1dd0); // StopAllSounds
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn handle_fly_warp_or_dungeon_warp(cpu: &mut Cpu) {
     log::debug!("handle_fly_warp_or_dungeon_warp()");
 
