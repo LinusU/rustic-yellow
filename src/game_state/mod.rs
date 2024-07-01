@@ -220,6 +220,15 @@ impl GameState {
         }
     }
 
+    /// Used warp pad, escape rope, dig, teleport, or fly, so the target warp is a "fly warp"
+    pub fn set_used_warp_pad(&mut self, value: bool) {
+        if value {
+            self.data[0x1731] |= 1 << 3;
+        } else {
+            self.data[0x1731] &= !(1 << 3);
+        }
+    }
+
     /// Jumped into hole (Pokemon Mansion, Seafoam Islands, Victory Road) or went down waterfall (Seafoam Islands), so the target warp is a "dungeon warp"
     pub fn jumped_into_hole(&self) -> bool {
         (self.data[0x1731] & 0b0001_0000) != 0
@@ -232,6 +241,14 @@ impl GameState {
         } else {
             self.data[0x1731] &= !(1 << 5);
         }
+    }
+
+    pub fn set_warped_from_which_warp(&mut self, value: u8) {
+        self.data[0x173a] = value;
+    }
+
+    pub fn set_warped_from_which_map(&mut self, value: u8) {
+        self.data[0x173b] = value;
     }
 
     /// `walk_bike_surf_state` is sometimes copied here, but it doesn't seem to be used for anything
@@ -287,6 +304,13 @@ impl GameState {
 
     pub fn set_simulated_joypad_states_index(&mut self, value: u8) {
         self.data[0x0d38] = value;
+    }
+
+    /// 0 = neither \
+    /// 1 = warp pad \
+    /// 2 = hole
+    pub fn standing_on_warp_pad_or_hole(&self) -> u8 {
+        self.data[0x0d5b]
     }
 
     pub fn set_joy_ignore(&mut self, value: u8) {
@@ -558,6 +582,14 @@ impl GameState {
         self.data[0x1363] = value;
     }
 
+    pub fn last_map(&self) -> u8 {
+        self.data[0x1364]
+    }
+
+    pub fn set_last_map(&mut self, value: u8) {
+        self.data[0x1364] = value;
+    }
+
     pub fn cur_map_tileset(&self) -> u8 {
         self.data[0x1366]
     }
@@ -609,6 +641,10 @@ impl GameState {
     }
 
     /// Number of warps in current map (up to 32)
+    pub fn number_of_warps(&self) -> u8 {
+        self.data[0x13ad]
+    }
+
     pub fn set_number_of_warps(&mut self, value: u8) {
         self.data[0x13ad] = value;
     }
@@ -726,6 +762,10 @@ impl GameState {
         } else {
             self.data[W_D728] = current & !1;
         }
+    }
+
+    pub fn warp_destination_map(&self) -> u8 {
+        self.high_ram[0x0b]
     }
 
     pub fn previous_tileset(&self) -> u8 {

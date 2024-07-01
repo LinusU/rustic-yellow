@@ -7,8 +7,8 @@ use crate::{
             hardware_constants::MBC1_ROM_BANK,
             input_constants::{A_BUTTON, B_BUTTON, D_DOWN, D_LEFT, D_RIGHT, D_UP, SELECT, START},
             map_constants::{
-                INDIGO_PLATEAU, ROCKET_HIDEOUT_B1F, ROCKET_HIDEOUT_B2F, ROCKET_HIDEOUT_B4F,
-                ROCK_TUNNEL_1F, ROUTE_17, ROUTE_23, SS_ANNE_3F,
+                INDIGO_PLATEAU, LAST_MAP, ROCKET_HIDEOUT_B1F, ROCKET_HIDEOUT_B2F,
+                ROCKET_HIDEOUT_B4F, ROCK_TUNNEL_1F, ROUTE_17, ROUTE_23, SS_ANNE_3F,
             },
             map_data_constants::{EAST_F, MAP_BORDER, NORTH_F, SOUTH_F, WEST_F},
             music_constants::{SFX_COLLISION, SFX_GO_INSIDE, SFX_GO_OUTSIDE},
@@ -102,6 +102,81 @@ pub fn enter_map(cpu: &mut Cpu) {
 
     // Fallthrough to OverworldLoop
     cpu.pc = 0x0242;
+}
+
+/// Input: c = which warp, where 0 is last warp
+pub fn warp_found2(cpu: &mut Cpu) {
+    log::debug!("warp_found2()");
+
+    let warp_id = cpu.borrow_wram().number_of_warps() - cpu.c;
+    cpu.borrow_wram_mut().set_warped_from_which_warp(warp_id);
+
+    let map_id = cpu.borrow_wram().cur_map();
+    cpu.borrow_wram_mut().set_warped_from_which_map(map_id);
+
+    cpu.stack_push(0x0001);
+    check_if_in_outside_map(cpu);
+    let in_outside_map = cpu.flag(CpuFlag::Z);
+
+    let destination = cpu.borrow_wram().warp_destination_map();
+
+    match (in_outside_map, destination) {
+        // this is for handling "outside" maps that can't have the 0xFF destination map
+        (true, _) => {
+            cpu.borrow_wram_mut().set_last_map(map_id);
+            cpu.borrow_wram_mut().set_cur_map(destination);
+
+            if destination == ROCK_TUNNEL_1F {
+                cpu.borrow_wram_mut().set_map_pal_offset(0x06);
+                cpu.call(0x1eb6); // GBFadeOutToBlack
+            }
+
+            macros::farcall::callfar(cpu, 0x3f, 0x45fa); // SetPikachuSpawnOutside
+
+            play_map_change_sound(cpu);
+        }
+
+        // for maps that can have the 0xFF destination map, which means to return to the outside map
+        // not all these maps are necessarily indoors, though
+        (false, LAST_MAP) => {
+            macros::farcall::callfar(cpu, 0x3f, 0x469a); // SetPikachuSpawnBackOutside
+
+            let map_id = cpu.borrow_wram().last_map();
+            cpu.borrow_wram_mut().set_cur_map(map_id);
+
+            play_map_change_sound(cpu);
+            cpu.borrow_wram_mut().set_map_pal_offset(0);
+        }
+
+        // if not going back to the previous map
+        (false, destination) => {
+            cpu.borrow_wram_mut().set_cur_map(destination);
+
+            macros::farcall::farcall(cpu, 0x1c, 0x47e7); // IsPlayerStandingOnWarpPadOrHole
+            let on_warp_pad_or_hole = cpu.borrow_wram().standing_on_warp_pad_or_hole();
+
+            // is the player on a warp pad?
+            if on_warp_pad_or_hole == 1 {
+                macros::farcall::farcall(cpu, 0x1c, 0x4615); // _LeaveMapAnim
+                cpu.borrow_wram_mut().set_used_warp_pad(true);
+            } else {
+                play_map_change_sound(cpu);
+            }
+
+            // Clear bit 0 & 1
+            let value = cpu.read_byte(wram::W_D736);
+            cpu.write_byte(wram::W_D736, value & !((1 << 0) | (1 << 1)));
+
+            macros::farcall::callfar(cpu, 0x3f, 0x465b); // SetPikachuSpawnWarpPad
+        }
+    }
+
+    // have the player's sprite step out from the door (if there is one)
+    let value = cpu.read_byte(wram::W_D736);
+    cpu.write_byte(wram::W_D736, value | (1 << 0));
+
+    ignore_input_for_half_second(cpu);
+    enter_map(cpu)
 }
 
 /// if no matching warp was found
@@ -266,9 +341,8 @@ fn check_map_connections_load_new_map(cpu: &mut Cpu) {
     cpu.pc = 0x0245;
 }
 
-// function to play a sound when changing maps
-pub fn play_map_change_sound(cpu: &mut Cpu) {
-    log::debug!("play_map_change_sound()");
+fn play_map_change_sound(cpu: &mut Cpu) {
+    log::trace!("play_map_change_sound()");
 
     let tileset = cpu.borrow_wram().cur_map_tileset();
 
@@ -294,8 +368,6 @@ fn play_map_change_sound_play_sound(cpu: &mut Cpu, sfx: u8) {
     if cpu.borrow_wram().map_pal_offset() == 0 {
         cpu.call(0x1eb6); // GBFadeOutToBlack
     }
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// Output: z flag is set if the player is in an outside map (a town or route)
@@ -1896,16 +1968,14 @@ fn get_map_header_pointer(map_id: u8) -> u16 {
     u16::from_le_bytes([ROM[pointer], ROM[pointer + 1]])
 }
 
-pub fn ignore_input_for_half_second(cpu: &mut Cpu) {
-    log::debug!("ignore_input_for_half_second()");
+fn ignore_input_for_half_second(cpu: &mut Cpu) {
+    log::trace!("ignore_input_for_half_second()");
 
     cpu.borrow_wram_mut().set_ignore_input_counter(30);
 
     // set ignore input bit
     cpu.a = cpu.read_byte(wram::W_D730) | 0b00100110;
     cpu.write_byte(wram::W_D730, cpu.a);
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 pub fn reset_using_strength_out_of_battle_bit(cpu: &mut Cpu) {

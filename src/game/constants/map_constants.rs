@@ -18,3 +18,8 @@ pub const ROCKET_HIDEOUT_B4F: u8 = 0xca;
 
 pub const SAFARI_ZONE_EAST: u8 = 0xd9;
 pub const SAFARI_ZONE_CENTER_REST_HOUSE: u8 = 0xdd;
+
+/// Indoor maps, such as houses, use this as the Map ID in their exit warps.
+///
+/// This map ID takes the player back to the last outdoor map they were on, stored in `wLastMap`.
+pub const LAST_MAP: u8 = 0xff;
