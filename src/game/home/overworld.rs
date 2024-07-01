@@ -104,6 +104,19 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+/// Input: hl = pointer to warp entry
+pub fn warp_found1(cpu: &mut Cpu) {
+    log::debug!("warp_found1()");
+
+    let warp_id = cpu.read_byte(cpu.hl());
+    cpu.borrow_wram_mut().set_destination_warp_id(warp_id);
+
+    let map_id = cpu.read_byte(cpu.hl() + 1);
+    cpu.borrow_wram_mut().set_warp_destination_map(map_id);
+
+    warp_found2(cpu)
+}
+
 /// Input: c = which warp, where 0 is last warp
 pub fn warp_found2(cpu: &mut Cpu) {
     log::debug!("warp_found2()");

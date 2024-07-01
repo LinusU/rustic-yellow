@@ -654,6 +654,10 @@ impl GameState {
         self.data[0x142e]
     }
 
+    pub fn set_destination_warp_id(&mut self, value: u8) {
+        self.data[0x142e] = value;
+    }
+
     pub fn set_pikachu_overworld_state_flag_4(&mut self, value: bool) {
         if value {
             self.data[0x142f] |= 1 << 4;
@@ -766,6 +770,10 @@ impl GameState {
 
     pub fn warp_destination_map(&self) -> u8 {
         self.high_ram[0x0b]
+    }
+
+    pub fn set_warp_destination_map(&mut self, value: u8) {
+        self.high_ram[0x0b] = value;
     }
 
     pub fn previous_tileset(&self) -> u8 {
