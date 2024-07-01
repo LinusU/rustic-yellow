@@ -104,6 +104,16 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+/// Output: z flag is set if the player is in an outside map (a town or route)
+pub fn check_if_in_outside_map(cpu: &mut Cpu) {
+    let outside = matches!(cpu.borrow_wram().cur_map_tileset(), OVERWORLD | PLATEAU);
+
+    log::debug!("check_if_in_outside_map() == {}", outside);
+
+    cpu.set_flag(CpuFlag::Z, outside);
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// This function is an extra check that sometimes has to pass in order to warp, beyond just standing on a warp. The
 /// "sometimes" qualification is necessary because of CheckWarpsNoCollision's behavior. Depending on the map, either
 /// "function 1" or "function 2" is used for the check.
