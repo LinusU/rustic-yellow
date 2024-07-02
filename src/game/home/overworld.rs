@@ -104,6 +104,41 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+/// Determine if there will be a battle and execute it (either a trainer battle or wild battle).
+///
+/// Output: sets carry if a battle occurred and unsets carry if not
+pub fn new_battle(cpu: &mut Cpu) {
+    log::trace!("new_battle()");
+
+    let flags = cpu.read_byte(wram::W_D72D);
+
+    if (flags & (1 << 4)) != 0 {
+        return new_battle_no_battle(cpu);
+    }
+
+    cpu.call(0x309d); // IsPlayerCharacterBeingControlledByGame
+
+    // no battle if the player character is under the game's control
+    if !cpu.flag(CpuFlag::Z) {
+        return new_battle_no_battle(cpu);
+    }
+
+    let flags = cpu.read_byte(wram::W_D72E);
+
+    if (flags & (1 << 4)) != 0 {
+        return new_battle_no_battle(cpu);
+    }
+
+    macros::farcall::farcall(cpu, 0x3d, 0x5ff2); // InitBattle
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
+fn new_battle_no_battle(cpu: &mut Cpu) {
+    cpu.set_flag(CpuFlag::C, false);
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 // function to make bikes twice as fast as walking
 pub fn do_bike_speedup(cpu: &mut Cpu) {
     log::trace!("do_bike_speedup()");
