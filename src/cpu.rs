@@ -89,6 +89,7 @@ impl Cpu {
                 (_, 0x0000) => break,
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
                 (_, 0x01d7) => crate::game::home::overworld::enter_map(self),
+                (_, 0x051a) => crate::game::home::overworld::check_warps_collision(self),
                 (_, 0x0543) => crate::game::home::overworld::warp_found1(self),
                 (_, 0x054a) => crate::game::home::overworld::warp_found2(self),
                 (_, 0x05db) => crate::game::home::overworld::check_map_connections(self),

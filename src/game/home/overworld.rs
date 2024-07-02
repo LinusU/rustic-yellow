@@ -104,6 +104,42 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+// check if the player has stepped onto a warp after having collided
+pub fn check_warps_collision(cpu: &mut Cpu) {
+    log::debug!("check_warps_collision()");
+
+    cpu.c = cpu.borrow_wram().number_of_warps();
+    cpu.set_hl(wram::W_WARP_ENTRIES);
+
+    loop {
+        let warp_y = cpu.read_byte(cpu.hl());
+
+        if warp_y == cpu.borrow_wram().y_coord() {
+            let warp_x = cpu.read_byte(cpu.hl() + 1);
+
+            if warp_x == cpu.borrow_wram().x_coord() {
+                let warp_id = cpu.read_byte(cpu.hl() + 2);
+                cpu.borrow_wram_mut().set_destination_warp_id(warp_id);
+
+                let map_id = cpu.read_byte(cpu.hl() + 3);
+                cpu.borrow_wram_mut().set_warp_destination_map(map_id);
+
+                log::debug!("check_warps_collision() - found warp");
+                return warp_found2(cpu);
+            }
+        }
+
+        cpu.set_hl(cpu.hl() + 4);
+        cpu.c -= 1;
+
+        if cpu.c == 0 {
+            // jp OverworldLoop
+            cpu.pc = 0x0242;
+            return;
+        }
+    }
+}
+
 /// Input: hl = pointer to warp entry
 pub fn warp_found1(cpu: &mut Cpu) {
     log::debug!("warp_found1()");
