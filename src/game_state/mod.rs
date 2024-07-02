@@ -243,6 +243,14 @@ impl GameState {
         }
     }
 
+    pub fn set_standing_on_warp(&mut self, value: bool) {
+        if value {
+            self.data[0x1735] |= 1 << 2;
+        } else {
+            self.data[0x1735] &= !(1 << 2);
+        }
+    }
+
     pub fn set_warped_from_which_warp(&mut self, value: u8) {
         self.data[0x173a] = value;
     }

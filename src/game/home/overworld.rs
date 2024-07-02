@@ -104,6 +104,59 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+/// Check if the player has stepped onto a warp after having not collided
+pub fn check_warps_no_collision(cpu: &mut Cpu) {
+    log::trace!("check_warps_no_collision()");
+
+    let count = cpu.borrow_wram().number_of_warps();
+    let y = cpu.borrow_wram().y_coord();
+    let x = cpu.borrow_wram().x_coord();
+
+    for i in 0..count {
+        let entry = wram::W_WARP_ENTRIES + ((i as u16) * 4);
+
+        let warp_y = cpu.read_byte(entry);
+        let warp_x = cpu.read_byte(entry + 1);
+
+        if warp_y != y || warp_x != x {
+            continue;
+        }
+
+        log::debug!("check_warps_no_collision() - standing on warp");
+
+        cpu.borrow_wram_mut().set_standing_on_warp(true);
+        macros::farcall::farcall(cpu, 0x03, 0x41e6); // IsPlayerStandingOnDoorTileOrWarpTile
+
+        // jump if standing on door or warp
+        if cpu.flag(CpuFlag::C) {
+            return warp_found1(cpu, entry, count - i);
+        }
+
+        cpu.stack_push(0x0001);
+        extra_warp_check(cpu);
+
+        // if the extra check passed
+        if cpu.flag(CpuFlag::C) {
+            let flags = cpu.read_byte(wram::W_FLAGS_D733);
+
+            if (flags & (1 << 2)) != 0 {
+                return warp_found1(cpu, entry, count - i);
+            }
+
+            cpu.call(0x01b9); // Joypad
+
+            let held = cpu.read_byte(hram::H_JOY_HELD);
+
+            // pass through the warp if directional buttons are being pressed
+            if (held & (D_DOWN | D_UP | D_LEFT | D_RIGHT)) != 0 {
+                return warp_found1(cpu, entry, count - i);
+            }
+        }
+    }
+
+    check_map_connections(cpu)
+}
+
 // check if the player has stepped onto a warp after having collided
 pub fn check_warps_collision(cpu: &mut Cpu) {
     log::debug!("check_warps_collision()");
@@ -140,15 +193,16 @@ pub fn check_warps_collision(cpu: &mut Cpu) {
     }
 }
 
-/// Input: hl = pointer to warp entry
-pub fn warp_found1(cpu: &mut Cpu) {
-    log::debug!("warp_found1()");
+fn warp_found1(cpu: &mut Cpu, warp_entry_pointer: u16, reverse_index: u8) {
+    log::trace!("warp_found1()");
 
-    let warp_id = cpu.read_byte(cpu.hl());
+    let warp_id = cpu.read_byte(warp_entry_pointer + 2);
     cpu.borrow_wram_mut().set_destination_warp_id(warp_id);
 
-    let map_id = cpu.read_byte(cpu.hl() + 1);
+    let map_id = cpu.read_byte(warp_entry_pointer + 3);
     cpu.borrow_wram_mut().set_warp_destination_map(map_id);
+
+    cpu.c = reverse_index;
 
     warp_found2(cpu)
 }
