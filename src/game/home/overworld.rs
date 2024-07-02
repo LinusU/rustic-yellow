@@ -104,6 +104,41 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+// function to make bikes twice as fast as walking
+pub fn do_bike_speedup(cpu: &mut Cpu) {
+    log::trace!("do_bike_speedup()");
+
+    if cpu.borrow_wram().walk_bike_surf_state() != 1 {
+        cpu.pc = cpu.stack_pop(); // ret
+        return;
+    }
+
+    if (cpu.read_byte(wram::W_D736) & (1 << 6)) != 0 {
+        cpu.pc = cpu.stack_pop(); // ret
+        return;
+    }
+
+    if cpu.borrow_wram().npc_movement_script_pointer_table_num() != 0 {
+        cpu.pc = cpu.stack_pop(); // ret
+        return;
+    }
+
+    // Cycling Road
+    if cpu.borrow_wram().cur_map() == ROUTE_17 {
+        let held = cpu.read_byte(hram::H_JOY_HELD);
+
+        if (held & (D_UP | D_LEFT | D_RIGHT)) != 0 {
+            cpu.pc = cpu.stack_pop(); // ret
+            return;
+        }
+    }
+
+    cpu.stack_push(0x0001);
+    advance_player_sprite(cpu);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Check if the player has stepped onto a warp after having not collided
 pub fn check_warps_no_collision(cpu: &mut Cpu) {
     log::trace!("check_warps_no_collision()");

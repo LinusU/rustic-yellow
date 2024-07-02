@@ -435,6 +435,13 @@ impl GameState {
         self.data[0x0c36] = value;
     }
 
+    /// Which NPC movement script pointer is being used.
+    ///
+    /// 0 if an NPC movement script is not running.
+    pub fn npc_movement_script_pointer_table_num(&self) -> u8 {
+        self.data[0x0c57]
+    }
+
     pub fn set_critical_hit_or_ohko(&mut self, value: CriticalHitOrOhko) {
         self.data[0x105d] = value as u8;
     }
