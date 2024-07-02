@@ -89,6 +89,7 @@ impl Cpu {
                 (_, 0x0000) => break,
                 (_, 0x0001) => panic!("Invalid call to 0x0001"),
                 (_, 0x01d7) => crate::game::home::overworld::enter_map(self),
+                (_, 0x0475) => crate::game::home::overworld::all_pokemon_fainted(self),
                 (_, 0x0480) => crate::game::home::overworld::new_battle(self),
                 (_, 0x049d) => crate::game::home::overworld::do_bike_speedup(self),
                 (_, 0x04bd) => crate::game::home::overworld::check_warps_no_collision(self),

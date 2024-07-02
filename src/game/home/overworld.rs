@@ -104,6 +104,20 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+pub fn all_pokemon_fainted(cpu: &mut Cpu) {
+    log::debug!("all_pokemon_fainted()");
+
+    cpu.borrow_wram_mut().set_is_in_battle(0xff);
+
+    cpu.stack_push(0x0001);
+    run_map_script(cpu);
+
+    cpu.stack_push(0x0001);
+    handle_black_out(cpu);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// Determine if there will be a battle and execute it (either a trainer battle or wild battle).
 ///
 /// Output: sets carry if a battle occurred and unsets carry if not
