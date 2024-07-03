@@ -261,9 +261,6 @@ pub const W_CUR_ENEMY_LVL: u16 = 0xd126;
 
 pub const W_LINK_STATE: u16 = 0xd12a;
 
-// after a battle, you have at least 3 steps before a random battle can occur
-pub const W_NUMBER_OF_NO_RANDOM_BATTLE_STEPS_LEFT: u16 = 0xd13b;
-
 pub const W_PLAYER_NAME: u16 = 0xd157;
 
 pub const W_PARTY_DATA_START: u16 = 0xd162;

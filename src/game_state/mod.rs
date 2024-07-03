@@ -264,6 +264,15 @@ impl GameState {
         self.data[0x1119] = value;
     }
 
+    /// Counts down once every step
+    pub fn step_counter(&self) -> u8 {
+        self.data[0x113a]
+    }
+
+    pub fn set_step_counter(&mut self, value: u8) {
+        self.data[0x113a] = value;
+    }
+
     /// after a battle, you have at least 3 steps before a random battle can occur
     pub fn number_of_no_random_battle_steps_left(&self) -> u8 {
         self.data[0x113b]
@@ -781,6 +790,24 @@ impl GameState {
         } else {
             self.data[W_D728] = current & !1;
         }
+    }
+
+    /// If not set, the 3 minimum steps between random battles have passed
+    pub fn block_random_battles(&self) -> bool {
+        self.data[0x172b] & 1 == 1
+    }
+
+    pub fn set_block_random_battles(&mut self, value: bool) {
+        if value {
+            self.data[0x172b] |= 1;
+        } else {
+            self.data[0x172b] &= !1;
+        }
+    }
+
+    /// bit 7: set if joypad states are being simulated in the overworld or an NPC's movement is being scripted
+    pub fn joypad_is_simulated(&self) -> bool {
+        self.data[0x172f] & (1 << 7) != 0
     }
 
     pub fn warp_destination_map(&self) -> u8 {

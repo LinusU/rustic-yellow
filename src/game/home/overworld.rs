@@ -104,6 +104,35 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.pc = 0x0242;
 }
 
+pub fn step_count_check(cpu: &mut Cpu) {
+    log::trace!("step_count_check()");
+
+    let wram = cpu.borrow_wram_mut();
+
+    // if button presses are being simulated, don't count steps
+    if wram.joypad_is_simulated() {
+        cpu.pc = cpu.stack_pop(); // ret
+        return;
+    }
+
+    // step counting
+    let step_counter = wram.step_counter().wrapping_sub(1);
+    wram.set_step_counter(step_counter);
+
+    if wram.block_random_battles() {
+        let steps_left = wram.number_of_no_random_battle_steps_left() - 1;
+        wram.set_number_of_no_random_battle_steps_left(steps_left);
+
+        if steps_left == 0 {
+            // indicate that the player has stepped thrice since the last battle
+            wram.set_block_random_battles(false);
+            log::debug!("step_count_check() - battle allowed");
+        }
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn all_pokemon_fainted(cpu: &mut Cpu) {
     log::debug!("all_pokemon_fainted()");
 
