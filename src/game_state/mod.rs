@@ -195,6 +195,14 @@ impl GameState {
         PartyViewMut::new(&mut self.data[PARTY_DATA_START..])
     }
 
+    pub fn set_sprite_player_state_data1_y_step_vector(&mut self, value: i8) {
+        self.data[0x0103] = value as u8;
+    }
+
+    pub fn set_sprite_player_state_data1_x_step_vector(&mut self, value: i8) {
+        self.data[0x0105] = value as u8;
+    }
+
     /// remnant of debug mode; only set by the debug build. \
     /// if it is set: \
     /// 1. skips most of Prof. Oak's speech, and uses NINTEN as the player's name and SONY as the rival's name \
@@ -221,6 +229,10 @@ impl GameState {
     }
 
     /// Used warp pad, escape rope, dig, teleport, or fly, so the target warp is a "fly warp"
+    pub fn used_warp_pad(&self) -> bool {
+        (self.data[0x1731] & 0b0000_1000) != 0
+    }
+
     pub fn set_used_warp_pad(&mut self, value: bool) {
         if value {
             self.data[0x1731] |= 1 << 3;
@@ -243,6 +255,10 @@ impl GameState {
         }
     }
 
+    pub fn standing_on_warp(&self) -> bool {
+        (self.data[0x1735] & (1 << 2)) != 0
+    }
+
     pub fn set_standing_on_warp(&mut self, value: bool) {
         if value {
             self.data[0x1735] |= 1 << 2;
@@ -262,6 +278,11 @@ impl GameState {
     /// `walk_bike_surf_state` is sometimes copied here, but it doesn't seem to be used for anything
     pub fn set_walk_bike_surf_state_copy(&mut self, value: u8) {
         self.data[0x1119] = value;
+    }
+
+    /// Non-zero when the whole party has fainted due to out-of-battle poison damage
+    pub fn out_of_battle_blackout(&self) -> u8 {
+        self.data[0x112c]
     }
 
     /// Counts down once every step
@@ -335,6 +356,10 @@ impl GameState {
     }
 
     /// Walk animation counter
+    pub fn walk_counter(&self) -> u8 {
+        self.data[0x0fc4]
+    }
+
     pub fn set_walk_counter(&mut self, value: u8) {
         self.data[0x0fc4] = value;
     }
@@ -403,8 +428,40 @@ impl GameState {
         self.data[0x1032] as u16 | ((self.data[0x1033] as u16) << 8)
     }
 
+    pub fn entering_cable_club(&self) -> bool {
+        self.data[0x0c47] != 0
+    }
+
+    pub fn set_link_timeout_counter(&mut self, value: u8) {
+        self.data[0x0c47] = value;
+    }
+
+    pub fn check_for_180_degree_turn(&self) -> u8 {
+        self.data[0x0c4b]
+    }
+
+    pub fn set_check_for_180_degree_turn(&mut self, value: u8) {
+        self.data[0x0c4b] = value;
+    }
+
+    pub fn is_player_engaged_by_trainer(&self) -> bool {
+        self.data[W_CD60] & (1 << 0) != 0
+    }
+
     pub fn boulder_dust_animation_pending(&self) -> bool {
         self.data[W_CD60] & (1 << 1) != 0
+    }
+
+    pub fn cd60_unknown_bit_2(&self) -> bool {
+        self.data[W_CD60] & (1 << 2) != 0
+    }
+
+    pub fn set_cd60_unknown_bit_2(&mut self, value: bool) {
+        if value {
+            self.data[W_CD60] |= 1 << 2;
+        } else {
+            self.data[W_CD60] &= !(1 << 2);
+        }
     }
 
     /// This has overlapping related uses. \
@@ -745,6 +802,27 @@ impl GameState {
         self.data[0x1526] = bytes[1];
     }
 
+    /// If the player is moving, the current direction. \
+    /// If the player is not moving, zero.
+    ///
+    /// Map scripts write to this in order to change the player's facing direction.
+    pub fn player_moving_direction(&self) -> u8 {
+        self.data[0x1527]
+    }
+
+    pub fn set_player_moving_direction(&mut self, value: u8) {
+        self.data[0x1527] = value;
+    }
+
+    /// The direction in which the player was moving before the player last stopped.
+    pub fn player_last_stop_direction(&self) -> u8 {
+        self.data[0x1528]
+    }
+
+    pub fn set_player_last_stop_direction(&mut self, value: u8) {
+        self.data[0x1528] = value;
+    }
+
     /// If the player is moving, the current direction \
     /// If the player is not moving, the last the direction in which the player moved
     pub fn player_direction(&self) -> u8 {
@@ -805,9 +883,30 @@ impl GameState {
         }
     }
 
-    /// bit 7: set if joypad states are being simulated in the overworld or an NPC's movement is being scripted
+    // Do scripted warp (used to warp back to Lavender Town from the top of the pokemon tower)
+    pub fn do_scripted_warp(&self) -> bool {
+        self.data[0x172c] & (1 << 3) != 0
+    }
+
+    pub fn set_do_scripted_warp(&mut self, value: bool) {
+        if value {
+            self.data[0x172c] |= 1 << 3;
+        } else {
+            self.data[0x172c] &= !(1 << 3);
+        }
+    }
+
+    pub fn d730_unknown_bit_2(&self) -> bool {
+        self.data[0x172f] & (1 << 2) != 0
+    }
+
+    /// Set if joypad states are being simulated in the overworld or an NPC's movement is being scripted
     pub fn joypad_is_simulated(&self) -> bool {
         self.data[0x172f] & (1 << 7) != 0
+    }
+
+    pub fn safari_zone_game_over(&self) -> u8 {
+        self.data[0x1a45]
     }
 
     pub fn warp_destination_map(&self) -> u8 {

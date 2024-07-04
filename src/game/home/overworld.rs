@@ -3,12 +3,17 @@ use crate::{
     game::{
         constants::{
             audio_constants::CHAN5,
+            event_constants::{EVENT_2A7, EVENT_IN_SAFARI_ZONE},
             gfx_constants,
             hardware_constants::MBC1_ROM_BANK,
-            input_constants::{A_BUTTON, B_BUTTON, D_DOWN, D_LEFT, D_RIGHT, D_UP, SELECT, START},
+            input_constants::{
+                A_BUTTON, BIT_A_BUTTON, BIT_D_DOWN, BIT_D_LEFT, BIT_D_RIGHT, BIT_D_UP, BIT_START,
+                B_BUTTON, D_DOWN, D_LEFT, D_RIGHT, D_UP, SELECT, START,
+            },
             map_constants::{
-                INDIGO_PLATEAU, LAST_MAP, ROCKET_HIDEOUT_B1F, ROCKET_HIDEOUT_B2F,
-                ROCKET_HIDEOUT_B4F, ROCK_TUNNEL_1F, ROUTE_17, ROUTE_23, SS_ANNE_3F,
+                CINNABAR_GYM, INDIGO_PLATEAU, LAST_MAP, OAKS_LAB, ROCKET_HIDEOUT_B1F,
+                ROCKET_HIDEOUT_B2F, ROCKET_HIDEOUT_B4F, ROCK_TUNNEL_1F, ROUTE_17, ROUTE_23,
+                SS_ANNE_3F,
             },
             map_data_constants::{EAST_F, MAP_BORDER, NORTH_F, SOUTH_F, WEST_F},
             music_constants::{SFX_COLLISION, SFX_GO_INSIDE, SFX_GO_OUTSIDE},
@@ -17,6 +22,7 @@ use crate::{
                 PLAYER_DIR_DOWN, PLAYER_DIR_LEFT, PLAYER_DIR_RIGHT, PLAYER_DIR_UP,
                 SPRITE_FACING_DOWN, SPRITE_FACING_LEFT, SPRITE_FACING_RIGHT, SPRITE_FACING_UP,
             },
+            text_constants::TEXT_START_MENU,
             tileset_constants::{CEMETERY, FACILITY, OVERWORLD, PLATEAU, SHIP, SHIP_PORT},
         },
         data::tilesets::bike_riding_tilesets::BIKE_RIDING_TILESETS,
@@ -100,18 +106,368 @@ pub fn enter_map(cpu: &mut Cpu) {
 
     cpu.borrow_wram_mut().set_joy_ignore(0);
 
-    // Fallthrough to OverworldLoop
-    cpu.pc = 0x0242;
+    overworld_loop(cpu)
 }
 
-pub fn step_count_check(cpu: &mut Cpu) {
+pub fn overworld_loop(cpu: &mut Cpu) {
+    log::trace!("overworld_loop()");
+
+    home::vblank::delay_frame(cpu);
+    overworld_loop_less_delay(cpu);
+}
+
+pub fn overworld_loop_less_delay(cpu: &mut Cpu) {
+    loop {
+        log::trace!("overworld_loop_less_delay()");
+
+        home::vblank::delay_frame(cpu);
+
+        cpu.call(0x342a); // IsSurfingPikachuInParty
+        cpu.call(0x1e6f); // LoadGBPal
+
+        handle_mid_jump(cpu);
+
+        // if the player sprite has not yet completed the walking animation
+        if cpu.borrow_wram().walk_counter() != 0 {
+            is_spinning(cpu);
+            cpu.call(0x231c); // UpdateSprites
+            return overworld_loop_less_delay_move_ahead(cpu);
+        }
+
+        // get joypad state (which is possibly simulated)
+        joypad_overworld(cpu);
+
+        macros::farcall::farcall(cpu, 0x07, 0x6321); // SafariZoneCheck
+
+        if cpu.borrow_wram().safari_zone_game_over() != 0 {
+            return warp_found2(cpu);
+        }
+
+        if cpu.borrow_wram().do_scripted_warp() {
+            cpu.borrow_wram_mut().set_do_scripted_warp(false);
+            return warp_found2(cpu);
+        }
+
+        // fly warp or dungeon warp
+        if cpu.borrow_wram().used_warp_pad() || cpu.borrow_wram().jumped_into_hole() {
+            handle_fly_warp_or_dungeon_warp(cpu);
+            cpu.pc = cpu.stack_pop(); // ret
+            return;
+        }
+
+        if cpu.borrow_wram().cur_opponent() != 0 {
+            return overworld_loop_less_delay_new_battle(cpu);
+        }
+
+        if cpu.borrow_wram().joypad_is_simulated() {
+            cpu.a = cpu.read_byte(hram::H_JOY_HELD);
+        } else {
+            cpu.a = cpu.read_byte(hram::H_JOY_PRESSED);
+        }
+
+        if (cpu.a & (1 << BIT_START)) != 0 {
+            cpu.write_byte(hram::H_SPRITE_INDEX_OR_TEXT_ID, TEXT_START_MENU);
+        } else if (cpu.a & (1 << BIT_A_BUTTON)) == 0 {
+            cpu.a = cpu.read_byte(hram::H_JOY_HELD);
+
+            if (cpu.a & (1 << BIT_D_DOWN)) != 0 {
+                cpu.borrow_wram_mut()
+                    .set_sprite_player_state_data1_y_step_vector(1);
+
+                return overworld_loop_handle_direction_button_press(cpu, PLAYER_DIR_DOWN);
+            }
+
+            if (cpu.a & (1 << BIT_D_UP)) != 0 {
+                cpu.borrow_wram_mut()
+                    .set_sprite_player_state_data1_y_step_vector(-1);
+
+                return overworld_loop_handle_direction_button_press(cpu, PLAYER_DIR_UP);
+            }
+
+            if (cpu.a & (1 << BIT_D_LEFT)) != 0 {
+                cpu.borrow_wram_mut()
+                    .set_sprite_player_state_data1_x_step_vector(-1);
+
+                return overworld_loop_handle_direction_button_press(cpu, PLAYER_DIR_LEFT);
+            }
+
+            if (cpu.a & (1 << BIT_D_RIGHT)) != 0 {
+                cpu.borrow_wram_mut()
+                    .set_sprite_player_state_data1_x_step_vector(1);
+
+                return overworld_loop_handle_direction_button_press(cpu, PLAYER_DIR_RIGHT);
+            }
+
+            overworld_loop_less_delay_no_direction_buttons_pressed(cpu);
+            home::vblank::delay_frame(cpu);
+            continue;
+        } else {
+            if cpu.borrow_wram().d730_unknown_bit_2() {
+                overworld_loop_less_delay_no_direction_buttons_pressed(cpu);
+                home::vblank::delay_frame(cpu);
+                continue;
+            }
+
+            cpu.call(0x309d); // IsPlayerCharacterBeingControlledByGame
+
+            if !cpu.flag(CpuFlag::Z) {
+                if cpu.borrow_wram().cur_opponent() != 0 {
+                    return overworld_loop_less_delay_new_battle(cpu);
+                }
+
+                home::vblank::delay_frame(cpu);
+                continue;
+            }
+
+            cpu.call(0x3ef9); // CheckForHiddenObjectOrBookshelfOrCardKeyDoor
+
+            // jump if a hidden object or bookshelf was found, but not if a card key door was found
+            if cpu.read_byte(hram::H_ITEM_ALREADY_FOUND) == 0 {
+                home::vblank::delay_frame(cpu);
+                continue;
+            }
+
+            cpu.write_byte(wram::W_D436, 0);
+
+            is_sprite_or_sign_in_front_of_player(cpu);
+
+            macros::farcall::farcall(cpu, 0x3f, 0x4f0c); // IsPlayerTalkingToPikachu
+
+            if cpu.read_byte(hram::H_SPRITE_INDEX_OR_TEXT_ID) == 0 {
+                home::vblank::delay_frame(cpu);
+                continue;
+            }
+        }
+
+        macros::predef::predef_call!(cpu, GetTileAndCoordsInFrontOfPlayer);
+        cpu.call(0x231c); // UpdateSprites
+
+        if cpu.borrow_wram().cd60_unknown_bit_2()
+            || cpu.borrow_wram().is_player_engaged_by_trainer()
+        {
+            if cpu.borrow_wram().cur_opponent() != 0 {
+                return overworld_loop_less_delay_new_battle(cpu);
+            }
+
+            home::vblank::delay_frame(cpu);
+            continue;
+        }
+
+        // checked when using Surf for forbidden tile pairs
+        let tile = cpu.read_byte(macros::coords::coord!(8, 9));
+        cpu.borrow_wram_mut().set_tile_player_standing_on(tile);
+
+        // display either the start menu or the NPC/sign text
+        cpu.call(0x2817); // DisplayTextID
+
+        if cpu.borrow_wram().entering_cable_club() {
+            cpu.borrow_wram_mut().set_link_timeout_counter(0);
+            return enter_map(cpu);
+        }
+
+        if cpu.borrow_wram().cur_opponent() != 0 {
+            return overworld_loop_less_delay_new_battle(cpu);
+        }
+
+        home::vblank::delay_frame(cpu);
+    }
+}
+
+fn overworld_loop_less_delay_no_direction_buttons_pressed(cpu: &mut Cpu) {
+    cpu.call(0x231c); // UpdateSprites
+
+    cpu.borrow_wram_mut().set_cd60_unknown_bit_2(false);
+    cpu.write_byte(wram::W_D435, 0);
+    cpu.borrow_wram_mut().set_check_for_180_degree_turn(1);
+
+    // the direction that was pressed last time
+    let dir = cpu.borrow_wram().player_moving_direction();
+
+    if dir != 0 {
+        // if a direction was pressed last time
+        // save the last direction
+        cpu.borrow_wram_mut().set_player_last_stop_direction(dir);
+
+        // zero the direction
+        cpu.borrow_wram_mut().set_player_moving_direction(0);
+    }
+}
+
+fn overworld_loop_handle_direction_button_press(cpu: &mut Cpu, dir: u8) {
+    // new direction
+    cpu.borrow_wram_mut().set_player_direction(dir);
+
+    // are we simulating button presses?
+    // ignore direction changes if we are
+    if !cpu.borrow_wram().joypad_is_simulated()
+        && cpu.borrow_wram().check_for_180_degree_turn() != 0
+    {
+        let new_direction = cpu.borrow_wram().player_direction();
+        let old_direction = cpu.borrow_wram().player_last_stop_direction();
+
+        if old_direction != new_direction {
+            cpu.write_byte(wram::W_D435, 8);
+
+            // unlike in red/blue, yellow does not have the 180 degrees odd code
+            cpu.borrow_wram_mut().set_cd60_unknown_bit_2(true);
+            cpu.borrow_wram_mut().set_check_for_180_degree_turn(0);
+
+            let dir = cpu.borrow_wram().player_direction();
+            cpu.borrow_wram_mut().set_player_moving_direction(dir);
+
+            if new_battle(cpu) {
+                return overworld_loop_less_delay_battle_occurred(cpu);
+            }
+
+            // jp OverworldLoop
+            cpu.pc = 0x0242;
+            return;
+        }
+    }
+
+    let dir = cpu.borrow_wram().player_direction();
+    cpu.borrow_wram_mut().set_player_moving_direction(dir);
+
+    cpu.call(0x231c); // UpdateSprites
+
+    if cpu.borrow_wram().walk_bike_surf_state() == 2 {
+        // surfing
+        if collision_check_on_water(cpu) {
+            return overworld_loop(cpu);
+        }
+    } else {
+        // not surfing
+        if collision_check_on_land(cpu) {
+            // collision occurred
+            if cpu.borrow_wram().standing_on_warp() {
+                // collision occurred while standing on a warp
+                let saved_hl = cpu.hl();
+
+                // sets carry if there is a potential to warp
+                let potential_warp = extra_warp_check(cpu);
+
+                // pop hl
+                cpu.set_hl(saved_hl);
+
+                if potential_warp {
+                    return check_warps_collision(cpu);
+                }
+            }
+
+            // jp OverworldLoop
+            cpu.pc = 0x0242;
+            // FIXME: turn overworld_loop into a loop {}
+            // overworld_loop(cpu)
+            return;
+        }
+    }
+
+    cpu.borrow_wram_mut().set_walk_counter(0x08);
+    macros::farcall::callfar(cpu, 0x3f, 0x4c08); // Func_fcc08
+
+    overworld_loop_less_delay_move_ahead(cpu)
+}
+
+fn overworld_loop_less_delay_move_ahead(cpu: &mut Cpu) {
+    cpu.borrow_wram_mut().set_cd60_unknown_bit_2(false);
+    cpu.write_byte(wram::W_D435, 0);
+
+    do_bike_speedup(cpu);
+    advance_player_sprite(cpu);
+
+    // it seems like this check will never succeed (the other place where CheckMapConnections is run works)
+    if cpu.borrow_wram().walk_counter() != 0 {
+        return check_map_connections(cpu);
+    }
+
+    // walking animation finished
+    step_count_check(cpu);
+
+    // in the safari zone?
+    if macros::scripts::events::check_event(cpu, EVENT_IN_SAFARI_ZONE) {
+        macros::farcall::farcall(cpu, 0x07, 0x6330); // SafariZoneCheckSteps
+
+        if cpu.borrow_wram().safari_zone_game_over() != 0 {
+            return warp_found2(cpu);
+        }
+    }
+
+    if cpu.borrow_wram().is_in_battle() != 0 {
+        return check_warps_no_collision(cpu);
+    }
+
+    // also increment daycare mon exp
+    macros::predef::predef_call!(cpu, ApplyOutOfBattlePoisonDamage);
+
+    // if all pokemon fainted
+    if cpu.borrow_wram().out_of_battle_blackout() != 0 {
+        handle_black_out(cpu);
+        cpu.pc = cpu.stack_pop(); // ret
+        return;
+    }
+
+    overworld_loop_less_delay_new_battle(cpu);
+}
+
+fn overworld_loop_less_delay_new_battle(cpu: &mut Cpu) {
+    let battle_occured = new_battle(cpu);
+
+    cpu.borrow_wram_mut().set_standing_on_warp(false);
+
+    // check for warps if there was no battle
+    if !battle_occured {
+        return check_warps_no_collision(cpu);
+    }
+
+    overworld_loop_less_delay_battle_occurred(cpu);
+}
+
+fn overworld_loop_less_delay_battle_occurred(cpu: &mut Cpu) {
+    let d72d = cpu.read_byte(wram::W_D72D);
+    cpu.write_byte(wram::W_D72D, d72d & !(1 << 6));
+
+    let flags_d733 = cpu.read_byte(wram::W_FLAGS_D733);
+    cpu.write_byte(wram::W_FLAGS_D733, flags_d733 & !(1 << 3));
+
+    let map_script_flags = cpu.read_byte(wram::W_CURRENT_MAP_SCRIPT_FLAGS);
+    cpu.write_byte(
+        wram::W_CURRENT_MAP_SCRIPT_FLAGS,
+        map_script_flags | (1 << 5) | (1 << 6),
+    );
+
+    cpu.write_byte(hram::H_JOY_HELD, 0);
+
+    if cpu.borrow_wram().cur_map() == CINNABAR_GYM {
+        macros::scripts::events::set_event(cpu, EVENT_2A7);
+    }
+
+    let d72e = cpu.read_byte(wram::W_D72E);
+    cpu.write_byte(wram::W_D72E, d72e | (1 << 5));
+
+    cpu.set_hl(wram::W_D72E);
+
+    // no blacking out if the player lost to the rival in Oak's lab
+    if cpu.borrow_wram().cur_map() != OAKS_LAB {
+        macros::farcall::callfar(cpu, 0x0f, 0x4ae8); // AnyPartyAlive
+
+        if cpu.d == 0 {
+            all_pokemon_fainted(cpu);
+            cpu.pc = cpu.stack_pop(); // ret
+            return;
+        }
+    }
+
+    home::delay::delay_frames(cpu, 10);
+    enter_map(cpu)
+}
+
+fn step_count_check(cpu: &mut Cpu) {
     log::trace!("step_count_check()");
 
     let wram = cpu.borrow_wram_mut();
 
     // if button presses are being simulated, don't count steps
     if wram.joypad_is_simulated() {
-        cpu.pc = cpu.stack_pop(); // ret
         return;
     }
 
@@ -129,75 +485,63 @@ pub fn step_count_check(cpu: &mut Cpu) {
             log::debug!("step_count_check() - battle allowed");
         }
     }
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
-pub fn all_pokemon_fainted(cpu: &mut Cpu) {
-    log::debug!("all_pokemon_fainted()");
+fn all_pokemon_fainted(cpu: &mut Cpu) {
+    log::trace!("all_pokemon_fainted()");
 
     cpu.borrow_wram_mut().set_is_in_battle(0xff);
-
-    cpu.stack_push(0x0001);
     run_map_script(cpu);
-
-    cpu.stack_push(0x0001);
     handle_black_out(cpu);
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// Determine if there will be a battle and execute it (either a trainer battle or wild battle).
 ///
 /// Output: sets carry if a battle occurred and unsets carry if not
-pub fn new_battle(cpu: &mut Cpu) {
+///
+/// Returns: true if a battle occurred, false if not
+fn new_battle(cpu: &mut Cpu) -> bool {
     log::trace!("new_battle()");
 
     let flags = cpu.read_byte(wram::W_D72D);
 
     if (flags & (1 << 4)) != 0 {
-        return new_battle_no_battle(cpu);
+        cpu.set_flag(CpuFlag::C, false);
+        return false;
     }
 
     cpu.call(0x309d); // IsPlayerCharacterBeingControlledByGame
 
     // no battle if the player character is under the game's control
     if !cpu.flag(CpuFlag::Z) {
-        return new_battle_no_battle(cpu);
+        cpu.set_flag(CpuFlag::C, false);
+        return false;
     }
 
     let flags = cpu.read_byte(wram::W_D72E);
 
     if (flags & (1 << 4)) != 0 {
-        return new_battle_no_battle(cpu);
+        cpu.set_flag(CpuFlag::C, false);
+        return false;
     }
 
     macros::farcall::farcall(cpu, 0x3d, 0x5ff2); // InitBattle
-
-    cpu.pc = cpu.stack_pop(); // ret
-}
-
-fn new_battle_no_battle(cpu: &mut Cpu) {
-    cpu.set_flag(CpuFlag::C, false);
-    cpu.pc = cpu.stack_pop(); // ret
+    cpu.flag(CpuFlag::C)
 }
 
 // function to make bikes twice as fast as walking
-pub fn do_bike_speedup(cpu: &mut Cpu) {
+fn do_bike_speedup(cpu: &mut Cpu) {
     log::trace!("do_bike_speedup()");
 
     if cpu.borrow_wram().walk_bike_surf_state() != 1 {
-        cpu.pc = cpu.stack_pop(); // ret
         return;
     }
 
     if (cpu.read_byte(wram::W_D736) & (1 << 6)) != 0 {
-        cpu.pc = cpu.stack_pop(); // ret
         return;
     }
 
     if cpu.borrow_wram().npc_movement_script_pointer_table_num() != 0 {
-        cpu.pc = cpu.stack_pop(); // ret
         return;
     }
 
@@ -206,15 +550,11 @@ pub fn do_bike_speedup(cpu: &mut Cpu) {
         let held = cpu.read_byte(hram::H_JOY_HELD);
 
         if (held & (D_UP | D_LEFT | D_RIGHT)) != 0 {
-            cpu.pc = cpu.stack_pop(); // ret
             return;
         }
     }
 
-    cpu.stack_push(0x0001);
     advance_player_sprite(cpu);
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// Check if the player has stepped onto a warp after having not collided
@@ -245,11 +585,8 @@ pub fn check_warps_no_collision(cpu: &mut Cpu) {
             return warp_found1(cpu, entry, count - i);
         }
 
-        cpu.stack_push(0x0001);
-        extra_warp_check(cpu);
-
         // if the extra check passed
-        if cpu.flag(CpuFlag::C) {
+        if extra_warp_check(cpu) {
             let flags = cpu.read_byte(wram::W_FLAGS_D733);
 
             if (flags & (1 << 2)) != 0 {
@@ -603,8 +940,8 @@ pub fn check_if_in_outside_map(cpu: &mut Cpu) {
 /// "function 1" passes when the player is at the edge of the map and is facing towards the outside of the map \
 /// "function 2" passes when the the tile in front of the player is among a certain set
 ///
-/// Output: sets carry if the check passes, otherwise clears carry
-pub fn extra_warp_check(cpu: &mut Cpu) {
+/// Returns `true` if the check passes, otherwise `false`
+fn extra_warp_check(cpu: &mut Cpu) -> bool {
     log::trace!("extra_warp_check()");
 
     let cur_map = cpu.borrow_wram().cur_map();
@@ -625,7 +962,7 @@ pub fn extra_warp_check(cpu: &mut Cpu) {
         _ => extra_warp_check_use_function1(cpu),
     }
 
-    cpu.pc = cpu.stack_pop(); // ret
+    cpu.flag(CpuFlag::C)
 }
 
 fn extra_warp_check_use_function1(cpu: &mut Cpu) {
@@ -658,8 +995,8 @@ fn map_entry_after_battle(cpu: &mut Cpu) {
 /// For when all the player's pokemon faint.
 ///
 /// Does not print the "blacked out" message.
-pub fn handle_black_out(cpu: &mut Cpu) {
-    log::debug!("handle_black_out()");
+fn handle_black_out(cpu: &mut Cpu) {
+    log::trace!("handle_black_out()");
 
     cpu.call(0x1eb6); // GBFadeOutToBlack
 
@@ -680,8 +1017,6 @@ pub fn handle_black_out(cpu: &mut Cpu) {
     cpu.call(0x6042); // PrepareForSpecialWarp
     cpu.call(0x2176); // PlayDefaultMusicFadeOutCurrent
     cpu.call(0x5ce4); // SpecialEnterMap
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// Input: a = fade counter
@@ -704,7 +1039,7 @@ pub fn stop_music(cpu: &mut Cpu) {
     cpu.pc = cpu.stack_pop(); // ret
 }
 
-pub fn handle_fly_warp_or_dungeon_warp(cpu: &mut Cpu) {
+fn handle_fly_warp_or_dungeon_warp(cpu: &mut Cpu) {
     log::debug!("handle_fly_warp_or_dungeon_warp()");
 
     cpu.call(0x231c); // UpdateSprites
@@ -726,8 +1061,6 @@ pub fn handle_fly_warp_or_dungeon_warp(cpu: &mut Cpu) {
 
     cpu.call(0x6042); // PrepareForSpecialWarp
     cpu.call(0x5ce4); // SpecialEnterMap
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 fn stop_bike_surf(cpu: &mut Cpu) {
@@ -963,7 +1296,7 @@ fn load_east_west_connections_tile_map(cpu: &mut Cpu, strip_length: u8, connecte
 
 /// function to check if there is a sign or sprite in front of the player \
 /// if so, carry is set. otherwise, carry is cleared
-pub fn is_sprite_or_sign_in_front_of_player(cpu: &mut Cpu) {
+fn is_sprite_or_sign_in_front_of_player(cpu: &mut Cpu) {
     cpu.write_byte(hram::H_SPRITE_INDEX_OR_TEXT_ID, 0);
     cpu.a = cpu.borrow_wram().num_signs();
 
@@ -979,7 +1312,6 @@ pub fn is_sprite_or_sign_in_front_of_player(cpu: &mut Cpu) {
         macros::predef::predef_call!(cpu, GetTileAndCoordsInFrontOfPlayer);
 
         if sign_loop(cpu, cpu.d, cpu.e) {
-            cpu.pc = cpu.stack_pop(); // ret
             log::debug!("is_sprite_or_sign_in_front_of_player() == true (sign in front of player)");
             return;
         }
@@ -998,9 +1330,12 @@ pub fn is_sprite_or_sign_in_front_of_player(cpu: &mut Cpu) {
         cpu.d = 0x20;
 
         log::debug!("is_sprite_or_sign_in_front_of_player() (counter tile in front of player)");
-        is_sprite_in_front_of_player2(cpu)
+
+        cpu.stack_push(0x0001);
+        is_sprite_in_front_of_player2(cpu);
     } else {
-        is_sprite_in_front_of_player(cpu)
+        cpu.stack_push(0x0001);
+        is_sprite_in_front_of_player(cpu);
     }
 }
 
@@ -1136,7 +1471,7 @@ fn sign_loop(cpu: &mut Cpu, y: u8, x: u8) -> bool {
 /// Check if the player will jump down a ledge and check if the tile ahead is passable (when not surfing)
 ///
 /// Sets the carry flag if there is a collision, and unsets it if there isn't a collision
-pub fn collision_check_on_land(cpu: &mut Cpu) {
+fn collision_check_on_land(cpu: &mut Cpu) -> bool {
     log::trace!("collision_check_on_land()");
 
     // no collisions when the player jumping
@@ -1209,25 +1544,20 @@ pub fn collision_check_on_land(cpu: &mut Cpu) {
         return collision_check_on_land_collision(cpu);
     }
 
-    collision_check_on_land_asm_0a5c(cpu);
+    collision_check_on_land_asm_0a5c(cpu)
 }
 
-fn collision_check_on_land_asm_0a5c(cpu: &mut Cpu) {
+fn collision_check_on_land_asm_0a5c(cpu: &mut Cpu) -> bool {
     if check_for_jumping_and_tile_pair_collisions(cpu, TILE_PAIR_COLLISIONS_LAND) {
-        return collision_check_on_land_collision(cpu);
+        collision_check_on_land_collision(cpu)
+    } else if check_tile_passable(cpu) {
+        collision_check_on_land_no_collision(cpu)
+    } else {
+        collision_check_on_land_collision(cpu)
     }
-
-    cpu.stack_push(0x0001);
-    check_tile_passable(cpu);
-
-    if cpu.flag(CpuFlag::C) {
-        return collision_check_on_land_collision(cpu);
-    }
-
-    collision_check_on_land_no_collision(cpu)
 }
 
-fn collision_check_on_land_collision(cpu: &mut Cpu) {
+fn collision_check_on_land_collision(cpu: &mut Cpu) -> bool {
     cpu.a = cpu.read_byte(wram::W_CHANNEL_SOUND_IDS + (CHAN5 as u16));
 
     // play collision sound (if it's not already playing)
@@ -1238,21 +1568,21 @@ fn collision_check_on_land_collision(cpu: &mut Cpu) {
 
     cpu.set_flag(CpuFlag::C, true);
     log::debug!("collision_check_on_land() collision");
-
-    cpu.pc = cpu.stack_pop(); // ret
+    true
 }
 
-fn collision_check_on_land_no_collision(cpu: &mut Cpu) {
+fn collision_check_on_land_no_collision(cpu: &mut Cpu) -> bool {
     cpu.set_flag(CpuFlag::C, false);
     log::trace!("collision_check_on_land() no collision");
-
-    cpu.pc = cpu.stack_pop(); // ret
+    false
 }
 
 /// Check if the tile in front of the player is passable
 ///
 /// Clears carry if it is, sets carry if not
-pub fn check_tile_passable(cpu: &mut Cpu) {
+///
+/// Returns: true if the tile is passable, false if not
+fn check_tile_passable(cpu: &mut Cpu) -> bool {
     log::trace!("check_tile_passable()");
 
     // get tile in front of player
@@ -1261,7 +1591,7 @@ pub fn check_tile_passable(cpu: &mut Cpu) {
     cpu.c = cpu.borrow_wram().tile_in_front_of_player();
     cpu.call(0x15c3); // IsTilePassable
 
-    cpu.pc = cpu.stack_pop(); // ret
+    !cpu.flag(CpuFlag::C)
 }
 
 /// Check if the player is going to jump down a small ledge and check
@@ -1410,13 +1740,9 @@ pub fn advance_player_sprite(cpu: &mut Cpu) {
     let enabled = cpu.borrow_wram().update_sprites_enabled();
 
     cpu.borrow_wram_mut().set_update_sprites_enabled(0xff);
-
-    // _AdvancePlayerSprite
-    macros::farcall::callfar(cpu, 0x3c, 0x410c);
+    macros::farcall::callfar(cpu, 0x3c, 0x410c); // _AdvancePlayerSprite
 
     cpu.borrow_wram_mut().set_update_sprites_enabled(enabled);
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 // The following 6 functions are used to tell the V-blank handler to redraw the
@@ -1550,20 +1876,19 @@ fn draw_tile_block(cpu: &mut Cpu, tile_block: u8, mut dest: u16) {
 }
 
 /// Update joypad state and simulate button presses
-pub fn joypad_overworld(cpu: &mut Cpu) {
+fn joypad_overworld(cpu: &mut Cpu) {
     log::trace!("joypad_overworld()");
 
-    cpu.write_byte(wram::W_SPRITE_PLAYER_STATE_DATA1_Y_STEP_VECTOR, 0);
-    cpu.write_byte(wram::W_SPRITE_PLAYER_STATE_DATA1_X_STEP_VECTOR, 0);
+    cpu.borrow_wram_mut()
+        .set_sprite_player_state_data1_y_step_vector(0);
+    cpu.borrow_wram_mut()
+        .set_sprite_player_state_data1_x_step_vector(0);
 
-    cpu.stack_push(0x0001);
     run_map_script(cpu);
 
     cpu.call(0x01b9); // Joypad
     force_bike_down(cpu);
     are_inputs_simulated(cpu);
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 fn force_bike_down(cpu: &mut Cpu) {
@@ -1648,7 +1973,9 @@ fn get_simulated_input(cpu: &mut Cpu) -> Option<u8> {
 /// Sets carry if there is a collision and clears carry otherwise.
 ///
 /// This function had a bug in Red/Blue, but it was fixed in Yellow.
-pub fn collision_check_on_water(cpu: &mut Cpu) {
+///
+/// Returns true if there is a collision and false otherwise.
+fn collision_check_on_water(cpu: &mut Cpu) -> bool {
     log::trace!("collision_check_on_water()");
 
     // return and clear carry if button presses are being simulated
@@ -1684,13 +2011,13 @@ pub fn collision_check_on_water(cpu: &mut Cpu) {
     cpu.call(0x15c3); // IsTilePassable
 
     if cpu.flag(CpuFlag::C) {
-        collision_check_on_water_collision(cpu);
+        collision_check_on_water_collision(cpu)
     } else {
         collision_check_on_water_stop_surfing(cpu)
     }
 }
 
-fn collision_check_on_water_collision(cpu: &mut Cpu) {
+fn collision_check_on_water_collision(cpu: &mut Cpu) -> bool {
     cpu.a = cpu.read_byte(wram::W_CHANNEL_SOUND_IDS + (CHAN5 as u16));
 
     // check if collision sound is already playing, and play it if it's not
@@ -1702,10 +2029,10 @@ fn collision_check_on_water_collision(cpu: &mut Cpu) {
     cpu.set_flag(CpuFlag::C, true);
     log::debug!("collision_check_on_water() collision");
 
-    cpu.pc = cpu.stack_pop(); // ret
+    true
 }
 
-fn collision_check_on_water_stop_surfing(cpu: &mut Cpu) {
+fn collision_check_on_water_stop_surfing(cpu: &mut Cpu) -> bool {
     cpu.borrow_wram_mut().set_pikachu_spawn_state(0x3);
     cpu.borrow_wram_mut()
         .set_pikachu_overworld_state_flag_5(true);
@@ -1717,15 +2044,15 @@ fn collision_check_on_water_stop_surfing(cpu: &mut Cpu) {
     collision_check_on_water_no_collision(cpu)
 }
 
-fn collision_check_on_water_no_collision(cpu: &mut Cpu) {
+fn collision_check_on_water_no_collision(cpu: &mut Cpu) -> bool {
     cpu.set_flag(CpuFlag::C, false);
     log::trace!("collision_check_on_water() no collision");
 
-    cpu.pc = cpu.stack_pop(); // ret
+    false
 }
 
 /// Run the current map's script
-pub fn run_map_script(cpu: &mut Cpu) {
+fn run_map_script(cpu: &mut Cpu) {
     log::trace!("run_map_script()");
 
     let saved_hl = cpu.hl();
@@ -1758,8 +2085,6 @@ pub fn run_map_script(cpu: &mut Cpu) {
 
     // Jump to the map's script
     cpu.call(ptr);
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 pub fn load_walking_player_sprite_graphics(cpu: &mut Cpu) {
@@ -2217,15 +2542,13 @@ pub fn force_bike_or_surf(cpu: &mut Cpu) {
 }
 
 // Handle the player jumping down a ledge in the overworld.
-pub fn handle_mid_jump(cpu: &mut Cpu) {
+fn handle_mid_jump(cpu: &mut Cpu) {
     if (cpu.read_byte(wram::W_D736) & (1 << 6)) != 0 {
         macros::farcall::farcall(cpu, 0x1c, 0x48df); // _HandleMidJump
     }
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
-pub fn is_spinning(cpu: &mut Cpu) {
+fn is_spinning(cpu: &mut Cpu) {
     let w_d736 = cpu.read_byte(wram::W_D736);
 
     // if spinning
@@ -2235,8 +2558,6 @@ pub fn is_spinning(cpu: &mut Cpu) {
     } else {
         log::trace!("is_spinning() not spinning");
     }
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 /// Input:

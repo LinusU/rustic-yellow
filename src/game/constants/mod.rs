@@ -1,5 +1,6 @@
 pub mod audio_constants;
 pub mod battle_constants;
+pub mod event_constants;
 pub mod gfx_constants;
 pub mod hardware_constants;
 pub mod input_constants;

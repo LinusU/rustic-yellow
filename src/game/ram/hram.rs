@@ -41,3 +41,5 @@ pub const H_VBLANK_OCCURRED: u16 = 0xffd6;
 pub const H_TILE_ANIMATIONS: u16 = 0xffd7;
 
 pub const H_START_TILE_ID: u16 = 0xffe1;
+
+pub const H_ITEM_ALREADY_FOUND: u16 = 0xffeb;

@@ -3,6 +3,7 @@ pub const ROUTE_17: u8 = 0x1c;
 pub const ROUTE_23: u8 = 0x22;
 
 pub const FIRST_INDOOR_MAP: u8 = 0x25;
+pub const OAKS_LAB: u8 = 0x28;
 
 pub const ROCK_TUNNEL_1F: u8 = 0x52;
 
@@ -10,6 +11,8 @@ pub const SS_ANNE_3F: u8 = 0x61;
 
 pub const POKEMON_TOWER_1F: u8 = 0x8e;
 pub const POKEMON_TOWER_7F: u8 = 0x94;
+
+pub const CINNABAR_GYM: u8 = 0xa6;
 
 pub const ROCKET_HIDEOUT_B1F: u8 = 0xc7;
 pub const ROCKET_HIDEOUT_B2F: u8 = 0xc8;
