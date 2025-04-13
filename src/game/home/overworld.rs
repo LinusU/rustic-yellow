@@ -6,10 +6,7 @@ use crate::{
             event_constants::{EVENT_2A7, EVENT_IN_SAFARI_ZONE},
             gfx_constants,
             hardware_constants::MBC1_ROM_BANK,
-            input_constants::{
-                A_BUTTON, BIT_A_BUTTON, BIT_D_DOWN, BIT_D_LEFT, BIT_D_RIGHT, BIT_D_UP, BIT_START,
-                B_BUTTON, D_DOWN, D_LEFT, D_RIGHT, D_UP, SELECT, START,
-            },
+            input_constants::{A_BUTTON, B_BUTTON, D_DOWN, D_LEFT, D_RIGHT, D_UP, SELECT, START},
             map_constants::{
                 CINNABAR_GYM, INDIGO_PLATEAU, LAST_MAP, OAKS_LAB, ROCKET_HIDEOUT_B1F,
                 ROCKET_HIDEOUT_B2F, ROCKET_HIDEOUT_B4F, ROCK_TUNNEL_1F, ROUTE_17, ROUTE_23,
@@ -165,42 +162,21 @@ pub fn overworld_loop_less_delay(cpu: &mut Cpu) {
             cpu.a = cpu.read_byte(hram::H_JOY_PRESSED);
         }
 
-        if (cpu.a & (1 << BIT_START)) != 0 {
+        if (cpu.a & START) != 0 {
             cpu.write_byte(hram::H_SPRITE_INDEX_OR_TEXT_ID, TEXT_START_MENU);
-        } else if (cpu.a & (1 << BIT_A_BUTTON)) == 0 {
-            cpu.a = cpu.read_byte(hram::H_JOY_HELD);
+        } else if (cpu.a & A_BUTTON) == 0 {
+            let joy_held = cpu.read_byte(hram::H_JOY_HELD);
 
-            if (cpu.a & (1 << BIT_D_DOWN)) != 0 {
-                cpu.borrow_wram_mut()
-                    .set_sprite_player_state_data1_y_step_vector(1);
+            let Some(dir) = PlayerDirection::from_joy_held(joy_held) else {
+                overworld_loop_less_delay_no_direction_buttons_pressed(cpu);
+                home::vblank::delay_frame(cpu);
+                continue;
+            };
 
-                return overworld_loop_handle_direction_button_press(cpu, PlayerDirection::Down);
-            }
+            cpu.borrow_wram_mut()
+                .set_sprite_player_state_data1_step_vector(dir.dy(), dir.dx());
 
-            if (cpu.a & (1 << BIT_D_UP)) != 0 {
-                cpu.borrow_wram_mut()
-                    .set_sprite_player_state_data1_y_step_vector(-1);
-
-                return overworld_loop_handle_direction_button_press(cpu, PlayerDirection::Up);
-            }
-
-            if (cpu.a & (1 << BIT_D_LEFT)) != 0 {
-                cpu.borrow_wram_mut()
-                    .set_sprite_player_state_data1_x_step_vector(-1);
-
-                return overworld_loop_handle_direction_button_press(cpu, PlayerDirection::Left);
-            }
-
-            if (cpu.a & (1 << BIT_D_RIGHT)) != 0 {
-                cpu.borrow_wram_mut()
-                    .set_sprite_player_state_data1_x_step_vector(1);
-
-                return overworld_loop_handle_direction_button_press(cpu, PlayerDirection::Right);
-            }
-
-            overworld_loop_less_delay_no_direction_buttons_pressed(cpu);
-            home::vblank::delay_frame(cpu);
-            continue;
+            return overworld_loop_handle_direction_button_press(cpu, dir);
         } else {
             if cpu.borrow_wram().d730_unknown_bit_2() {
                 overworld_loop_less_delay_no_direction_buttons_pressed(cpu);
@@ -1880,9 +1856,7 @@ fn joypad_overworld(cpu: &mut Cpu) {
     log::trace!("joypad_overworld()");
 
     cpu.borrow_wram_mut()
-        .set_sprite_player_state_data1_y_step_vector(0);
-    cpu.borrow_wram_mut()
-        .set_sprite_player_state_data1_x_step_vector(0);
+        .set_sprite_player_state_data1_step_vector(0, 0);
 
     run_map_script(cpu);
 

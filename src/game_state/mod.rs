@@ -196,12 +196,9 @@ impl GameState {
         PartyViewMut::new(&mut self.data[PARTY_DATA_START..])
     }
 
-    pub fn set_sprite_player_state_data1_y_step_vector(&mut self, value: i8) {
-        self.data[0x0103] = value as u8;
-    }
-
-    pub fn set_sprite_player_state_data1_x_step_vector(&mut self, value: i8) {
-        self.data[0x0105] = value as u8;
+    pub fn set_sprite_player_state_data1_step_vector(&mut self, y: i8, x: i8) {
+        self.data[0x0103] = y as u8;
+        self.data[0x0105] = x as u8;
     }
 
     /// remnant of debug mode; only set by the debug build. \

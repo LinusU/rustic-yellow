@@ -1,3 +1,5 @@
+use super::input_constants;
+
 pub const SPRITE_FACING_DOWN: u8 = 0x00;
 pub const SPRITE_FACING_UP: u8 = 0x04;
 pub const SPRITE_FACING_LEFT: u8 = 0x08;
@@ -22,6 +24,20 @@ pub enum PlayerDirection {
 }
 
 impl PlayerDirection {
+    pub fn from_joy_held(joy_held: u8) -> Option<Self> {
+        if (joy_held & input_constants::D_DOWN) != 0 {
+            Some(PlayerDirection::Down)
+        } else if (joy_held & input_constants::D_UP) != 0 {
+            Some(PlayerDirection::Up)
+        } else if (joy_held & input_constants::D_LEFT) != 0 {
+            Some(PlayerDirection::Left)
+        } else if (joy_held & input_constants::D_RIGHT) != 0 {
+            Some(PlayerDirection::Right)
+        } else {
+            None
+        }
+    }
+
     pub fn dx(&self) -> i8 {
         match self {
             PlayerDirection::Right => 1,
