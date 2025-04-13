@@ -25,6 +25,7 @@ use crate::{
         data::tilesets::bike_riding_tilesets::BIKE_RIDING_TILESETS,
         home::{
             self,
+            hidden_objects::check_for_hidden_object_or_bookshelf_or_card_key_door,
             npc_movement::{is_player_character_being_controlled_by_game, run_npc_movement_script},
         },
         macros,
@@ -197,7 +198,7 @@ pub fn overworld_loop_less_delay(cpu: &mut Cpu) {
                 continue;
             }
 
-            cpu.call(0x3ef9); // CheckForHiddenObjectOrBookshelfOrCardKeyDoor
+            check_for_hidden_object_or_bookshelf_or_card_key_door(cpu);
 
             // jump if a hidden object or bookshelf was found, but not if a card key door was found
             if cpu.read_byte(hram::H_ITEM_ALREADY_FOUND) == 0 {
