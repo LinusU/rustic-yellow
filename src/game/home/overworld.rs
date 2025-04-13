@@ -23,7 +23,10 @@ use crate::{
             tileset_constants::{CEMETERY, FACILITY, OVERWORLD, PLATEAU, SHIP, SHIP_PORT},
         },
         data::tilesets::bike_riding_tilesets::BIKE_RIDING_TILESETS,
-        home::{self, npc_movement::is_player_character_being_controlled_by_game},
+        home::{
+            self,
+            npc_movement::{is_player_character_being_controlled_by_game, run_npc_movement_script},
+        },
         macros,
         ram::{hram, vram, wram},
     },
@@ -2042,7 +2045,7 @@ fn run_map_script(cpu: &mut Cpu) {
     cpu.set_de(saved_de);
     cpu.set_hl(saved_hl);
 
-    cpu.call(0x30ae); // RunNPCMovementScript
+    run_npc_movement_script(cpu);
 
     // change to the ROM bank the map's data is in
     cpu.a = cpu.borrow_wram().cur_map();

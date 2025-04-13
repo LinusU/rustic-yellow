@@ -169,7 +169,7 @@ impl Cpu {
                 (_, 0x143e) => crate::game::home::pics::load_mon_front_sprite(self),
                 (_, 0x2238) => crate::game::home::audio::play_sound(self),
                 (_, 0x309d) => panic!("is_player_character_being_controlled_by_game should only be called from Rust"),
-                (_, 0x30ae) => crate::game::home::npc_movement::run_npc_movement_script(self),
+                (_, 0x30ae) => panic!("run_npc_movement_script should only be called from Rust"),
                 (_, 0x3422) => crate::game::home::map_objects::is_item_in_bag(self),
                 (_, 0x3ed7) => crate::game::home::predef::get_predef_registers(self),
                 (0x01, 0x42bf) => crate::game::engine::movie::title::display_title_screen_go_to_main_menu(self),
