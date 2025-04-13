@@ -91,6 +91,9 @@ pub const W_MON_DATA_LOCATION: u16 = 0xcc49;
 /// 0 if an NPC movement script is not running
 pub const W_NPC_MOVEMENT_SCRIPT_POINTER_TABLE_NUM: u16 = 0xcc57;
 
+/// ROM bank of current NPC movement script
+pub const W_NPC_MOVEMENT_SCRIPT_BANK: u16 = 0xcc58;
+
 pub const W_SIMULATED_JOYPAD_STATES_END: u16 = 0xccd3;
 
 pub const W_PARENT_MENU_ITEM: u16 = 0xccd3;
@@ -165,6 +168,9 @@ pub const W_JOY_IGNORE: u16 = 0xcd6b;
 pub const W_DOWNSCALED_MON_SIZE: u16 = 0xcd6c;
 
 pub const W_CD6D: u16 = 0xcd6d;
+
+/// which script function within the pointer table indicated by wNPCMovementScriptPointerTableNum
+pub const W_NPC_MOVEMENT_SCRIPT_FUNCTION_NUM: u16 = 0xcf10;
 
 /// if running on SGB or CGB, it's 1, else it's 0
 pub const W_ON_SGB: u16 = 0xcf1a;
