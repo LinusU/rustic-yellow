@@ -4,6 +4,10 @@ use crate::{
     PokemonSpecies,
 };
 
+mod bcd;
+
+pub use bcd::BCD;
+
 const WRAM_SIZE: usize = 0x8000;
 const ZRAM_SIZE: usize = 0x7F;
 
@@ -253,6 +257,14 @@ impl GameState {
         }
     }
 
+    pub fn set_map_dest_is_last_blackout(&mut self, value: bool) {
+        if value {
+            self.data[0x1731] |= 1 << 6;
+        } else {
+            self.data[0x1731] &= !(1 << 6);
+        }
+    }
+
     pub fn standing_on_warp(&self) -> bool {
         (self.data[0x1735] & (1 << 2)) != 0
     }
@@ -442,6 +454,10 @@ impl GameState {
         self.data[0x0c4b] = value;
     }
 
+    pub fn clear_cd60(&mut self) {
+        self.data[W_CD60] = 0;
+    }
+
     pub fn is_player_engaged_by_trainer(&self) -> bool {
         self.data[W_CD60] & (1 << 0) != 0
     }
@@ -604,6 +620,14 @@ impl GameState {
     /// When it hits 0, bit 5 (ignore input bit) of wd730 is reset.
     pub fn set_ignore_input_counter(&mut self, value: u8) {
         self.data[0x1139] = value;
+    }
+
+    pub fn player_money(&self) -> BCD {
+        BCD::new([self.data[0x1346], self.data[0x1347], self.data[0x1348]])
+    }
+
+    pub fn set_player_money(&mut self, value: BCD) {
+        [self.data[0x1346], self.data[0x1347], self.data[0x1348]] = value.into();
     }
 
     pub fn set_map_music_sound_id(&mut self, value: u8) {
