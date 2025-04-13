@@ -40,6 +40,10 @@ pub const H_VBLANK_OCCURRED: u16 = 0xffd6;
 /// `2` = water tile `$14` and flower tile `$03` are animated
 pub const H_TILE_ANIMATIONS: u16 = 0xffd7;
 
+pub const H_INTERACTED_WITH_BOOKSHELF: u16 = 0xffdb;
+
 pub const H_START_TILE_ID: u16 = 0xffe1;
 
 pub const H_ITEM_ALREADY_FOUND: u16 = 0xffeb;
+
+pub const H_DIDNT_FIND_ANY_HIDDEN_OBJECT: u16 = 0xffee;

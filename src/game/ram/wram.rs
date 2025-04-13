@@ -159,6 +159,8 @@ pub const W_PLAYER_MON_MINIMIZED: u16 = 0xccf7;
 /// Number of hits by enemy in attacks like Double Slap, etc.
 pub const W_ENEMY_NUM_HITS: u16 = 0xcd05;
 
+pub const W_HIDDEN_OBJECT_FUNCTION_ROM_BANK: u16 = 0xcd3e;
+
 /// Set buttons are ignored.
 pub const W_JOY_IGNORE: u16 = 0xcd6b;
 

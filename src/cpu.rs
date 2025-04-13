@@ -172,6 +172,7 @@ impl Cpu {
                 (_, 0x30ae) => panic!("run_npc_movement_script should only be called from Rust"),
                 (_, 0x3422) => crate::game::home::map_objects::is_item_in_bag(self),
                 (_, 0x3ed7) => crate::game::home::predef::get_predef_registers(self),
+                (_, 0x3ef9) => crate::game::home::hidden_objects::check_for_hidden_object_or_bookshelf_or_card_key_door(self),
                 (0x01, 0x42bf) => crate::game::engine::movie::title::display_title_screen_go_to_main_menu(self),
                 (0x01, 0x5ba6) => panic!("main_menu should only be called from Rust"),
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
