@@ -1,4 +1,5 @@
 use crate::{
+    game::constants::sprite_data_constants::PlayerDirection,
     save_state::{BoxView, BoxViewMut, PartyView, PartyViewMut},
     PokemonSpecies,
 };
@@ -829,8 +830,8 @@ impl GameState {
         self.data[0x1529]
     }
 
-    pub fn set_player_direction(&mut self, direction: u8) {
-        self.data[0x1529] = direction;
+    pub fn set_player_direction(&mut self, direction: PlayerDirection) {
+        self.data[0x1529] = direction as u8;
     }
 
     pub fn tileset_bank(&self) -> u8 {

@@ -19,8 +19,8 @@ use crate::{
             music_constants::{SFX_COLLISION, SFX_GO_INSIDE, SFX_GO_OUTSIDE},
             palette_constants,
             sprite_data_constants::{
-                PLAYER_DIR_DOWN, PLAYER_DIR_LEFT, PLAYER_DIR_RIGHT, PLAYER_DIR_UP,
-                SPRITE_FACING_DOWN, SPRITE_FACING_LEFT, SPRITE_FACING_RIGHT, SPRITE_FACING_UP,
+                PlayerDirection, SPRITE_FACING_DOWN, SPRITE_FACING_LEFT, SPRITE_FACING_RIGHT,
+                SPRITE_FACING_UP,
             },
             text_constants::TEXT_START_MENU,
             tileset_constants::{CEMETERY, FACILITY, OVERWORLD, PLATEAU, SHIP, SHIP_PORT},
@@ -174,28 +174,28 @@ pub fn overworld_loop_less_delay(cpu: &mut Cpu) {
                 cpu.borrow_wram_mut()
                     .set_sprite_player_state_data1_y_step_vector(1);
 
-                return overworld_loop_handle_direction_button_press(cpu, PLAYER_DIR_DOWN);
+                return overworld_loop_handle_direction_button_press(cpu, PlayerDirection::Down);
             }
 
             if (cpu.a & (1 << BIT_D_UP)) != 0 {
                 cpu.borrow_wram_mut()
                     .set_sprite_player_state_data1_y_step_vector(-1);
 
-                return overworld_loop_handle_direction_button_press(cpu, PLAYER_DIR_UP);
+                return overworld_loop_handle_direction_button_press(cpu, PlayerDirection::Up);
             }
 
             if (cpu.a & (1 << BIT_D_LEFT)) != 0 {
                 cpu.borrow_wram_mut()
                     .set_sprite_player_state_data1_x_step_vector(-1);
 
-                return overworld_loop_handle_direction_button_press(cpu, PLAYER_DIR_LEFT);
+                return overworld_loop_handle_direction_button_press(cpu, PlayerDirection::Left);
             }
 
             if (cpu.a & (1 << BIT_D_RIGHT)) != 0 {
                 cpu.borrow_wram_mut()
                     .set_sprite_player_state_data1_x_step_vector(1);
 
-                return overworld_loop_handle_direction_button_press(cpu, PLAYER_DIR_RIGHT);
+                return overworld_loop_handle_direction_button_press(cpu, PlayerDirection::Right);
             }
 
             overworld_loop_less_delay_no_direction_buttons_pressed(cpu);
@@ -293,7 +293,7 @@ fn overworld_loop_less_delay_no_direction_buttons_pressed(cpu: &mut Cpu) {
     }
 }
 
-fn overworld_loop_handle_direction_button_press(cpu: &mut Cpu, dir: u8) {
+fn overworld_loop_handle_direction_button_press(cpu: &mut Cpu, dir: PlayerDirection) {
     // new direction
     cpu.borrow_wram_mut().set_player_direction(dir);
 
@@ -1359,19 +1359,19 @@ pub fn is_sprite_in_front_of_player2(cpu: &mut Cpu) {
     let direction = match cpu.read_byte(wram::W_SPRITE_PLAYER_STATE_DATA1_FACING_DIRECTION) {
         SPRITE_FACING_UP => {
             cpu.b -= cpu.d;
-            PLAYER_DIR_UP
+            PlayerDirection::Up
         }
         SPRITE_FACING_DOWN => {
             cpu.b += cpu.d;
-            PLAYER_DIR_DOWN
+            PlayerDirection::Down
         }
         SPRITE_FACING_LEFT => {
             cpu.c -= cpu.d;
-            PLAYER_DIR_LEFT
+            PlayerDirection::Left
         }
         SPRITE_FACING_RIGHT => {
             cpu.c += cpu.d;
-            PLAYER_DIR_RIGHT
+            PlayerDirection::Right
         }
         fd => unreachable!("Unknown player sprite direction: {}", fd),
     };
