@@ -23,7 +23,8 @@ use crate::{
             tileset_constants::{CEMETERY, FACILITY, OVERWORLD, PLATEAU, SHIP, SHIP_PORT},
         },
         data::tilesets::bike_riding_tilesets::BIKE_RIDING_TILESETS,
-        home, macros,
+        home::{self, npc_movement::is_player_character_being_controlled_by_game},
+        macros,
         ram::{hram, vram, wram},
     },
     game_state::BattleResult,
@@ -184,9 +185,7 @@ pub fn overworld_loop_less_delay(cpu: &mut Cpu) {
                 continue;
             }
 
-            cpu.call(0x309d); // IsPlayerCharacterBeingControlledByGame
-
-            if !cpu.flag(CpuFlag::Z) {
+            if is_player_character_being_controlled_by_game(cpu) {
                 if cpu.borrow_wram().cur_opponent() != 0 {
                     return overworld_loop_less_delay_new_battle(cpu);
                 }
@@ -486,10 +485,8 @@ fn new_battle(cpu: &mut Cpu) -> bool {
         return false;
     }
 
-    cpu.call(0x309d); // IsPlayerCharacterBeingControlledByGame
-
     // no battle if the player character is under the game's control
-    if !cpu.flag(CpuFlag::Z) {
+    if is_player_character_being_controlled_by_game(cpu) {
         cpu.set_flag(CpuFlag::C, false);
         return false;
     }
