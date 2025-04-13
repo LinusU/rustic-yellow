@@ -168,6 +168,7 @@ impl Cpu {
                 (_, 0x10d5) => panic!("load_destination_warp_position should only be called from Rust"),
                 (_, 0x143e) => crate::game::home::pics::load_mon_front_sprite(self),
                 (_, 0x2238) => crate::game::home::audio::play_sound(self),
+                (_, 0x309d) => crate::game::home::npc_movement::is_player_character_being_controlled_by_game(self),
                 (_, 0x3422) => crate::game::home::map_objects::is_item_in_bag(self),
                 (_, 0x3ed7) => crate::game::home::predef::get_predef_registers(self),
                 (0x01, 0x42bf) => crate::game::engine::movie::title::display_title_screen_go_to_main_menu(self),

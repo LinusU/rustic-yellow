@@ -3,6 +3,7 @@ pub mod copy;
 pub mod copy2;
 pub mod delay;
 pub mod map_objects;
+pub mod npc_movement;
 pub mod overworld;
 pub mod palettes;
 pub mod pics;
