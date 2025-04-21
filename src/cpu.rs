@@ -180,6 +180,7 @@ impl Cpu {
                 (0x03, 0x44f4) => crate::game::engine::overworld::tilesets::load_tileset_header(self),
                 (0x03, 0x4b62) => crate::game::engine::overworld::wild_mons::load_wild_data(self),
                 (0x03, 0x6807) => crate::game::engine::items::item_effects::hook_send_new_mon_to_box_end(self),
+                (0x03, 0x752b) => crate::game::engine::events::heal_party::heal_party(self),
                 (0x03, 0x7735) => crate::game::engine::items::get_bag_item_quantity::get_quantity_of_item_in_bag(self),
                 (0x04, 0x783a) => crate::game::engine::battle::wild_encounters::try_do_wild_encounter(self),
                 (0x06, 0x4f0a) => crate::game::scripts::pallete_town::pallet_town_script4(self),

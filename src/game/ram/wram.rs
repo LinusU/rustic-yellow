@@ -179,6 +179,9 @@ pub const W_ON_SGB: u16 = 0xcf1a;
 
 pub const W_CF91: u16 = 0xcf90;
 
+/// which pokemon you selected
+pub const W_WHICH_POKEMON: u16 = 0xcf91;
+
 /// This is used to determine whether the default music is already playing when
 /// attempting to play the default music (in order to avoid restarting the same
 /// music) and whether the music has already been stopped when attempting to
