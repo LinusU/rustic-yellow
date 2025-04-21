@@ -1,6 +1,6 @@
 use crate::{
     cpu::{Cpu, CpuFlag},
-    game::{constants::move_constants::STRUGGLE, ram::wram},
+    game::{constants::move_constants::MoveId, ram::wram},
 };
 
 /// after using a move, decrement pp in battle and (if not transformed?) in party \
@@ -12,7 +12,7 @@ pub fn decrement_pp(cpu: &mut Cpu) {
 
     // if the pokemon is using "struggle", there's nothing to do
     // we don't decrement PP for "struggle"
-    if used_move == STRUGGLE {
+    if used_move == (MoveId::Struggle as u8) {
         cpu.pc = cpu.stack_pop(); // ret
         return;
     }
