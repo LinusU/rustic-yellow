@@ -939,6 +939,49 @@ impl GameState {
         }
     }
 
+    /// The player has a received a pokemon from Prof. Oak
+    pub fn set_has_received_pokemon_from_oak(&mut self, value: bool) {
+        if value {
+            self.data[0x172d] |= 1 << 3;
+        } else {
+            self.data[0x172d] &= !(1 << 3);
+        }
+    }
+
+    pub fn disable_battles(&self) -> bool {
+        self.data[0x172d] & (1 << 4) != 0
+    }
+
+    pub fn set_disable_battles(&mut self, value: bool) {
+        if value {
+            self.data[0x172d] |= 1 << 4;
+        } else {
+            self.data[0x172d] &= !(1 << 4);
+        }
+    }
+
+    /// Set when a battle ends and when the player blacks out in the overworld due to poison
+    pub fn battle_just_happened(&self) -> bool {
+        self.data[0x172d] & (1 << 5) != 0
+    }
+
+    pub fn set_battle_just_happened(&mut self, value: bool) {
+        if value {
+            self.data[0x172d] |= 1 << 5;
+        } else {
+            self.data[0x172d] &= !(1 << 5);
+        }
+    }
+
+    /// Using the link feature
+    pub fn set_using_link_feature(&mut self, value: bool) {
+        if value {
+            self.data[0x172d] |= 1 << 6;
+        } else {
+            self.data[0x172d] &= !(1 << 6);
+        }
+    }
+
     pub fn d730_unknown_bit_2(&self) -> bool {
         self.data[0x172f] & (1 << 2) != 0
     }

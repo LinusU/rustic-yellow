@@ -58,10 +58,8 @@ pub fn oaks_lab_text18(cpu: &mut Cpu) {
     }
 
     // set 3, [wd72e]
-    {
-        let value = cpu.read_byte(wram::W_D72E);
-        cpu.write_byte(wram::W_D72E, value | (1 << 3));
-    }
+    cpu.borrow_wram_mut()
+        .set_has_received_pokemon_from_oak(true);
 
     // jp TextScriptEnd
     cpu.jump(0x23d2);

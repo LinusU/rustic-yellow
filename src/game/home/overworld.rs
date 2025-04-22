@@ -56,12 +56,12 @@ pub fn enter_map(cpu: &mut Cpu) {
     }
 
     // did a battle happen immediately before this?
-    let w_d72e = cpu.read_byte(wram::W_D72E);
+    let battle_just_happened = cpu.borrow_wram().battle_just_happened();
 
     // unset the "battle just happened" flag
-    cpu.write_byte(wram::W_D72E, w_d72e & !(1 << 5));
+    cpu.borrow_wram_mut().set_battle_just_happened(false);
 
-    if (w_d72e & (1 << 5)) == 0 {
+    if !battle_just_happened {
         cpu.borrow_wram_mut()
             .set_using_strength_out_of_battle(false);
     } else {
@@ -80,8 +80,7 @@ pub fn enter_map(cpu: &mut Cpu) {
         cpu.write_byte(wram::W_D732, w_d732 & !(1 << 3));
 
         // reset "disable battles" flag
-        let w_d72e = cpu.read_byte(wram::W_D72E);
-        cpu.write_byte(wram::W_D72E, w_d72e & !(1 << 4));
+        cpu.borrow_wram_mut().set_disable_battles(false);
     }
 
     cpu.call(0x342a); // IsSurfingPikachuInParty
@@ -421,10 +420,7 @@ fn overworld_loop_less_delay_battle_occurred(cpu: &mut Cpu) {
         macros::scripts::events::set_event(cpu, EVENT_2A7);
     }
 
-    let d72e = cpu.read_byte(wram::W_D72E);
-    cpu.write_byte(wram::W_D72E, d72e | (1 << 5));
-
-    cpu.set_hl(wram::W_D72E);
+    cpu.borrow_wram_mut().set_battle_just_happened(true);
 
     // no blacking out if the player lost to the rival in Oak's lab
     if cpu.borrow_wram().cur_map() != OAKS_LAB {
@@ -496,9 +492,7 @@ fn new_battle(cpu: &mut Cpu) -> bool {
         return false;
     }
 
-    let flags = cpu.read_byte(wram::W_D72E);
-
-    if (flags & (1 << 4)) != 0 {
+    if cpu.borrow_wram().disable_battles() {
         cpu.set_flag(CpuFlag::C, false);
         return false;
     }
@@ -983,8 +977,7 @@ fn handle_black_out(cpu: &mut Cpu) {
     stop_music(cpu);
 
     // Reset "blacked out" bit
-    let value = cpu.read_byte(wram::W_D72E);
-    cpu.write_byte(wram::W_D72E, value & !(1 << 5));
+    cpu.borrow_wram_mut().set_battle_just_happened(false);
 
     cpu.a = 0x01; // BANK(PrepareForSpecialWarp) and BANK(SpecialEnterMap)
     cpu.call(0x3e7e); // BankswitchCommon
@@ -2227,7 +2220,7 @@ fn load_map_header(cpu: &mut Cpu) {
     }
 
     // did a battle happen immediately before this?
-    let battle_happened = (cpu.read_byte(wram::W_D72E) & (1 << 5)) != 0;
+    let battle_happened = cpu.borrow_wram().battle_just_happened();
 
     // if so, skip this because battles don't destroy this data
     if !battle_happened {

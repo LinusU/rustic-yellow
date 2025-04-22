@@ -39,10 +39,7 @@ pub fn main_menu(cpu: &mut Cpu) {
     cpu.write_byte(wram::W_DEFAULT_MAP, 0);
 
     // Toggle link feature bit off
-    {
-        let v = cpu.read_byte(wram::W_D72E);
-        cpu.write_byte(wram::W_D72E, v & !(1 << 6));
-    }
+    cpu.borrow_wram_mut().set_using_link_feature(false);
 
     let mut selected = 0;
     let layer = cpu.gpu_push_layer();

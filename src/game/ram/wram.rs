@@ -417,16 +417,6 @@ pub const W_D72C: u16 = 0xd72b;
 /// battles anyway).
 pub const W_D72D: u16 = 0xd72c;
 
-/// bit 0: the player has received Lapras in the Silph Co. building \
-/// bit 1: set in various places, but doesn't appear to have an effect \
-/// bit 2: the player has healed pokemon at a pokemon center at least once \
-/// bit 3: the player has a received a pokemon from Prof. Oak \
-/// bit 4: disable battles \
-/// bit 5: set when a battle ends and when the player blacks out in the overworld due to poison \
-/// bit 6: using the link feature \
-/// bit 7: set if scripted NPC movement has been initialised
-pub const W_D72E: u16 = 0xd72d;
-
 /// bit 0: NPC sprite being moved by script \
 /// bit 5: ignore joypad input \
 /// bit 6: print text with no delay between each letter \
