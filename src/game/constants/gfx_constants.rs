@@ -1,5 +1,8 @@
+const TILE_WIDTH: u8 = 8;
+
 pub const SCREEN_WIDTH: u8 = 20;
 pub const SCREEN_HEIGHT: u8 = 18;
+pub const SCREEN_HEIGHT_PX: u8 = SCREEN_HEIGHT * TILE_WIDTH;
 
 pub const BG_MAP_WIDTH: u8 = 32;
 

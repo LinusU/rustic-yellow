@@ -23,6 +23,7 @@ use crate::{
             tileset_constants::{CEMETERY, FACILITY, OVERWORLD, PLATEAU, SHIP, SHIP_PORT},
         },
         data::tilesets::bike_riding_tilesets::BIKE_RIDING_TILESETS,
+        engine::overworld::clear_variables::clear_variables_on_enter_map,
         home::{
             self,
             hidden_objects::check_for_hidden_object_or_bookshelf_or_card_key_door,
@@ -45,7 +46,7 @@ pub fn enter_map(cpu: &mut Cpu) {
     cpu.borrow_wram_mut().set_joy_ignore(0xff);
 
     load_map_data(cpu);
-    macros::farcall::farcall(cpu, 0x03, 0x407c); // ClearVariablesOnEnterMap
+    clear_variables_on_enter_map(cpu);
 
     // has the player already made 3 steps since the last battle?
     if (cpu.read_byte(wram::W_D72C) & 1) != 0 {

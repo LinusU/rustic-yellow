@@ -285,6 +285,11 @@ impl GameState {
         self.data[0x173b] = value;
     }
 
+    pub fn set_card_key_door_yx(&mut self, y: u8, x: u8) {
+        self.data[0x173e] = y;
+        self.data[0x173f] = x;
+    }
+
     /// `walk_bike_surf_state` is sometimes copied here, but it doesn't seem to be used for anything
     pub fn set_walk_bike_surf_state_copy(&mut self, value: u8) {
         self.data[0x1119] = value;

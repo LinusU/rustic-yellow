@@ -159,7 +159,30 @@ pub const W_PLAYER_MON_MINIMIZED: u16 = 0xccf7;
 /// Number of hits by enemy in attacks like Double Slap, etc.
 pub const W_ENEMY_NUM_HITS: u16 = 0xcd05;
 
+/// Which entry from TradeMons to select
+pub const W_WHICH_TRADE: u16 = 0xcd3d;
+
 pub const W_HIDDEN_OBJECT_FUNCTION_ROM_BANK: u16 = 0xcd3e;
+
+/// 0 = neither \
+/// 1 = warp pad \
+/// 2 = hole
+pub const W_STANDING_ON_WARP_PAD_OR_HOLE: u16 = 0xcd5b;
+
+/// This has overlapping related uses.
+///
+/// When the player tries to use an item or use certain field moves: 0 is stored
+/// when the attempt fails and 1 is stored when the attempt succeeds.
+///
+/// In addition, some items store 2 for certain types of failures, but this
+/// cannot happen in battle.
+///
+/// In battle, a non-zero value indicates the player has taken their turn using
+/// something other than a move (e.g. using an item or switching pokemon).
+///
+/// So, when an item is successfully used in battle, this value becomes non-zero
+/// and the player is not allowed to make a move and the two uses are compatible.
+pub const W_ACTION_RESULT_OR_TOOK_BATTLE_TURN: u16 = 0xcd6a;
 
 /// Set buttons are ignored.
 pub const W_JOY_IGNORE: u16 = 0xcd6b;

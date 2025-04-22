@@ -1,6 +1,9 @@
 use crate::{
     cpu::Cpu,
-    game::{home::overworld, macros, ram::wram},
+    game::{
+        engine::overworld::clear_variables::clear_variables_on_enter_map, home::overworld, macros,
+        ram::wram,
+    },
 };
 
 pub fn return_to_cable_club_room(cpu: &mut Cpu) {
@@ -15,7 +18,7 @@ pub fn return_to_cable_club_room(cpu: &mut Cpu) {
         cpu.write_byte(wram::W_D72D, 0);
         cpu.borrow_wram_mut().set_destination_warp_id(0xff);
         overworld::load_map_data(cpu);
-        macros::farcall::farcall(cpu, 0x03, 0x407c); // ClearVariablesOnEnterMap
+        clear_variables_on_enter_map(cpu);
 
         cpu.borrow_wram_mut().set_font_loaded(saved_font_loaded);
     }
