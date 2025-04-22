@@ -2,6 +2,7 @@ pub mod battle;
 pub mod events;
 pub mod gfx;
 pub mod items;
+pub mod link;
 pub mod menus;
 pub mod movie;
 pub mod overworld;

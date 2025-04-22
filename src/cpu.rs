@@ -174,6 +174,7 @@ impl Cpu {
                 (_, 0x3ed7) => crate::game::home::predef::get_predef_registers(self),
                 (_, 0x3ef9) => panic!("check_for_hidden_object_or_bookshelf_or_card_key_door should only be called from Rust"),
                 (0x01, 0x42bf) => crate::game::engine::movie::title::display_title_screen_go_to_main_menu(self),
+                (0x01, 0x581e) => crate::game::engine::link::cable_club::return_to_cable_club_room(self),
                 (0x01, 0x5ba6) => panic!("main_menu should only be called from Rust"),
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
                 (0x02, 0x5064) => crate::game::audio::play_battle_music::play_battle_music(self),
