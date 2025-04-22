@@ -14,6 +14,7 @@ pub mod music_constants;
 pub mod palette_constants;
 pub mod pikachu_emotion_constants;
 pub mod pokemon_constants;
+pub mod pokemon_data_constants;
 pub mod serial_constants;
 pub mod sprite_data_constants;
 pub mod text_constants;
