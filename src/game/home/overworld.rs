@@ -44,7 +44,7 @@ pub fn enter_map(cpu: &mut Cpu) {
 
     cpu.borrow_wram_mut().set_joy_ignore(0xff);
 
-    cpu.call(0x0ecb); // LoadMapData
+    load_map_data(cpu);
     macros::farcall::farcall(cpu, 0x03, 0x407c); // ClearVariablesOnEnterMap
 
     // has the player already made 3 steps since the last battle?
@@ -2363,7 +2363,6 @@ pub fn load_map_data(cpu: &mut Cpu) {
 
     cpu.a = saved_bank;
     cpu.call(0x3e7e); // BankswitchCommon
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 pub fn load_screen_related_data(cpu: &mut Cpu) {

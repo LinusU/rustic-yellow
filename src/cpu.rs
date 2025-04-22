@@ -146,7 +146,7 @@ impl Cpu {
                 (_, 0x0dab) => panic!("load_map_header should only be called from Rust"),
                 (_, 0x0eaa) => crate::game::home::overworld::copy_map_connection_header(self),
                 (_, 0x0eb3) => panic!("copy_sign_data should only be called from Rust"),
-                (_, 0x0ecb) => crate::game::home::overworld::load_map_data(self),
+                (_, 0x0ecb) => panic!("load_map_data should only be called from Rust"),
                 (_, 0x0f0c) => panic!("load_screen_related_data should only be called from Rust"),
                 (_, 0x0f16) => crate::game::home::overworld::reload_map_after_surfing_minigame(self),
                 (_, 0x0f3d) => crate::game::home::overworld::reload_map_after_printer(self),
