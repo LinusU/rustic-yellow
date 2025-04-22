@@ -27,6 +27,7 @@ use crate::{
         home::{
             self,
             hidden_objects::check_for_hidden_object_or_bookshelf_or_card_key_door,
+            map_objects,
             npc_movement::{is_player_character_being_controlled_by_game, run_npc_movement_script},
         },
         macros,
@@ -83,7 +84,7 @@ pub fn enter_map(cpu: &mut Cpu) {
         cpu.borrow_wram_mut().set_disable_battles(false);
     }
 
-    cpu.call(0x342a); // IsSurfingPikachuInParty
+    map_objects::is_surfing_pikachu_in_party(cpu);
 
     // handle currents in SF islands and forced bike riding in cycling road
     macros::farcall::farcall(cpu, 0x03, 0x40d2); // CheckForceBikeOrSurf
@@ -124,7 +125,7 @@ pub fn overworld_loop_less_delay(cpu: &mut Cpu) {
 
         home::vblank::delay_frame(cpu);
 
-        cpu.call(0x342a); // IsSurfingPikachuInParty
+        map_objects::is_surfing_pikachu_in_party(cpu);
         cpu.call(0x1e6f); // LoadGBPal
 
         handle_mid_jump(cpu);
