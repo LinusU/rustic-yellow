@@ -365,6 +365,22 @@ impl GameState {
         self.data[0x0d6b] = value;
     }
 
+    /// The space in VRAM that is used to store walk animation tile patterns
+    /// for the player and NPCs is in use for font tile patterns.
+    ///
+    /// This means that NPC movement must be disabled.
+    pub fn font_loaded(&self) -> bool {
+        self.data[0x0fc3] & 1 != 0
+    }
+
+    pub fn set_font_loaded(&mut self, value: bool) {
+        if value {
+            self.data[0x0fc3] |= 1;
+        } else {
+            self.data[0x0fc3] &= !1;
+        }
+    }
+
     /// Walk animation counter
     pub fn walk_counter(&self) -> u8 {
         self.data[0x0fc4]
