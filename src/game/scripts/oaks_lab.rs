@@ -3,7 +3,7 @@ use crate::{
     game::{constants::item_constants, ram::wram},
 };
 
-pub fn oaks_lab_text18(cpu: &mut Cpu) {
+pub fn oaks_lab_player_received_mon_text(cpu: &mut Cpu) {
     cpu.write_byte(wram::W_PLAYER_STARTER, cpu.starter.into_index());
     cpu.write_byte(wram::W_D11E, cpu.starter.into_index());
 
