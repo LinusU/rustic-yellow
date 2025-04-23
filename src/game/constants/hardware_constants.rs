@@ -14,3 +14,6 @@ pub const R_BGP: u16 = 0xff47;
 pub const R_OBP0: u16 = 0xff48;
 /// Object Palette 1 Data (R/W) - Non CGB Mode Only
 pub const R_OBP1: u16 = 0xff49;
+
+/// Window Y Position (R/W)
+pub const R_WY: u16 = 0xff4a;

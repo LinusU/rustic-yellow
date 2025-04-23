@@ -1,3 +1,5 @@
+pub const W_CHANNEL_SOUND_IDS: u16 = 0xc026;
+
 pub const W_NEW_SOUND_ID: u16 = 0xc0ee;
 
 pub const W_AUDIO_ROM_BANK: u16 = 0xc0ef;
@@ -7,9 +9,21 @@ pub const W_FREQUENCY_MODIFIER: u16 = 0xc0f1;
 pub const W_TEMPO_MODIFIER: u16 = 0xc0f2;
 
 pub const W_SPRITE_DATA_START: u16 = 0xc100;
+pub const W_SPRITE01_STATE_DATA1: u16 = 0xc110;
+pub const W_SPRITE01_STATE_DATA1_IMAGE_INDEX: u16 = 0xc112;
+pub const W_SPRITE_PLAYER_STATE_DATA1_FACING_DIRECTION: u16 = 0xc109;
+pub const W_SPRITE_PLAYER_STATE_DATA1_COLLISION_DATA: u16 = 0xc10c;
+pub const W_SPRITE01_STATE_DATA2: u16 = 0xc210;
 pub const W_SPRITE_DATA_END: u16 = 0xc300;
 
 pub const W_TILE_MAP: u16 = 0xc3a0;
+
+pub const W_TILE_MAP_BACKUP: u16 = 0xc508;
+
+pub const W_OVERWORLD_MAP: u16 = 0xc6e8;
+pub const W_OVERWORLD_MAP_END: u16 = 0xcbfc;
+
+pub const W_REDRAW_ROW_OR_COLUMN_SRC_TILES: u16 = 0xcbfc;
 
 pub const W_TOP_MENU_ITEM_Y: u16 = 0xcc24;
 pub const W_TOP_MENU_ITEM_X: u16 = 0xcc25;
@@ -77,6 +91,11 @@ pub const W_MON_DATA_LOCATION: u16 = 0xcc49;
 /// 0 if an NPC movement script is not running
 pub const W_NPC_MOVEMENT_SCRIPT_POINTER_TABLE_NUM: u16 = 0xcc57;
 
+/// ROM bank of current NPC movement script
+pub const W_NPC_MOVEMENT_SCRIPT_BANK: u16 = 0xcc58;
+
+pub const W_SIMULATED_JOYPAD_STATES_END: u16 = 0xccd3;
+
 pub const W_PARENT_MENU_ITEM: u16 = 0xccd3;
 
 /// if [wAILayer2Encouragement] != 1, the second AI layer is not applied
@@ -140,6 +159,31 @@ pub const W_PLAYER_MON_MINIMIZED: u16 = 0xccf7;
 /// Number of hits by enemy in attacks like Double Slap, etc.
 pub const W_ENEMY_NUM_HITS: u16 = 0xcd05;
 
+/// Which entry from TradeMons to select
+pub const W_WHICH_TRADE: u16 = 0xcd3d;
+
+pub const W_HIDDEN_OBJECT_FUNCTION_ROM_BANK: u16 = 0xcd3e;
+
+/// 0 = neither \
+/// 1 = warp pad \
+/// 2 = hole
+pub const W_STANDING_ON_WARP_PAD_OR_HOLE: u16 = 0xcd5b;
+
+/// This has overlapping related uses.
+///
+/// When the player tries to use an item or use certain field moves: 0 is stored
+/// when the attempt fails and 1 is stored when the attempt succeeds.
+///
+/// In addition, some items store 2 for certain types of failures, but this
+/// cannot happen in battle.
+///
+/// In battle, a non-zero value indicates the player has taken their turn using
+/// something other than a move (e.g. using an item or switching pokemon).
+///
+/// So, when an item is successfully used in battle, this value becomes non-zero
+/// and the player is not allowed to make a move and the two uses are compatible.
+pub const W_ACTION_RESULT_OR_TOOK_BATTLE_TURN: u16 = 0xcd6a;
+
 /// Set buttons are ignored.
 pub const W_JOY_IGNORE: u16 = 0xcd6b;
 
@@ -148,12 +192,19 @@ pub const W_JOY_IGNORE: u16 = 0xcd6b;
 /// $01 = 3×3
 pub const W_DOWNSCALED_MON_SIZE: u16 = 0xcd6c;
 
-pub const W_CD6D: u16 = 0xcd6d;
+/// storage buffer for various name strings
+pub const W_NAME_BUFFER: u16 = 0xcd6d;
+
+/// which script function within the pointer table indicated by wNPCMovementScriptPointerTableNum
+pub const W_NPC_MOVEMENT_SCRIPT_FUNCTION_NUM: u16 = 0xcf10;
 
 /// if running on SGB or CGB, it's 1, else it's 0
 pub const W_ON_SGB: u16 = 0xcf1a;
 
-pub const W_CF91: u16 = 0xcf90;
+pub const W_CUR_PARTY_SPECIES: u16 = 0xcf90;
+
+/// which pokemon you selected
+pub const W_WHICH_POKEMON: u16 = 0xcf91;
 
 /// This is used to determine whether the default music is already playing when
 /// attempting to play the default music (in order to avoid restarting the same
@@ -231,8 +282,11 @@ pub const W_SAVED_TILE_ANIMATIONS: u16 = 0xd0d3;
 
 pub const W_REPEL_REMAINING_STEPS: u16 = 0xd0da;
 
-/// used as a Pokemon and Item storage value. Also used as an output value for CountSetBits
-pub const W_D11E: u16 = 0xd11e;
+pub const W_UNUSED_D119: u16 = 0xd118;
+
+pub const W_NAMED_OBJECT_INDEX: u16 = 0xd11e;
+pub const W_POKEDEX_NUM: u16 = 0xd11e;
+pub const W_USING_PP_UP: u16 = 0xd11e;
 
 /// not exactly sure what this is used for, but it seems to be used as a multipurpose temp flag value
 pub const W_CURRENT_MAP_SCRIPT_FLAGS: u16 = 0xd125;
@@ -240,9 +294,6 @@ pub const W_CURRENT_MAP_SCRIPT_FLAGS: u16 = 0xd125;
 pub const W_CUR_ENEMY_LVL: u16 = 0xd126;
 
 pub const W_LINK_STATE: u16 = 0xd12a;
-
-// after a battle, you have at least 3 steps before a random battle can occur
-pub const W_NUMBER_OF_NO_RANDOM_BATTLE_STEPS_LEFT: u16 = 0xd13b;
 
 pub const W_PLAYER_NAME: u16 = 0xd157;
 
@@ -293,9 +344,42 @@ pub const W_PLAYER_ID: u16 = 0xd358;
 
 pub const W_CUR_MAP: u16 = 0xd35d;
 
+pub const W_CUR_MAP_HEADER: u16 = 0xd366;
 pub const W_CUR_MAP_TILESET: u16 = 0xd366;
+pub const W_CUR_MAP_SCRIPT_PTR: u16 = 0xd36d;
+pub const W_CUR_MAP_CONNECTIONS: u16 = 0xd36f;
+pub const W_CUR_MAP_HEADER_END: u16 = 0xd370;
+
+pub const W_NORTH_CONNECTION_HEADER: u16 = 0xd370;
+pub const W_NORTH_CONNECTED_MAP: u16 = 0xd370;
+
+pub const W_SOUTH_CONNECTION_HEADER: u16 = 0xd37b;
+pub const W_SOUTH_CONNECTED_MAP: u16 = 0xd37b;
+
+pub const W_WEST_CONNECTION_HEADER: u16 = 0xd386;
+pub const W_WEST_CONNECTED_MAP: u16 = 0xd386;
+
+pub const W_EAST_CONNECTION_HEADER: u16 = 0xd391;
+pub const W_EAST_CONNECTED_MAP: u16 = 0xd391;
+
+pub const W_WARP_ENTRIES: u16 = 0xd3ae;
+
+pub const W_D435: u16 = 0xd434;
+pub const W_D436: u16 = 0xd435;
+
+pub const W_D472: u16 = 0xd471;
+pub const W_D473: u16 = 0xd472;
 
 pub const W_PRINTER_SETTINGS: u16 = 0xd497;
+
+pub const W_SIGN_COORDS: u16 = 0xd4b0;
+pub const W_SIGN_TEXT_IDS: u16 = 0xd4d0;
+
+/// movement byte 2, text ID
+pub const W_MAP_SPRITE_DATA: u16 = 0xd4e3;
+
+/// trainer class/item ID, trainer set ID
+pub const W_MAP_SPRITE_EXTRA_DATA: u16 = 0xd503;
 
 pub const W_GRASS_TILE: u16 = 0xd534;
 
@@ -308,21 +392,38 @@ pub const W_PALLET_TOWN_CUR_SCRIPT: u16 = 0xd5f0;
 pub const W_RIVAL_STARTER: u16 = 0xd714;
 pub const W_PLAYER_STARTER: u16 = 0xd716;
 
-/// bit 0: the player has received Lapras in the Silph Co. building
-/// bit 1: set in various places, but doesn't appear to have an effect
-/// bit 2: the player has healed pokemon at a pokemon center at least once
-/// bit 3: the player has a received a pokemon from Prof. Oak
-/// bit 4: disable battles
-/// bit 5: set when a battle ends and when the player blacks out in the overworld due to poison
-/// bit 6: using the link feature
-/// bit 7: set if scripted NPC movement has been initialised
-pub const W_D72E: u16 = 0xd72d;
+/// bit 0: using Strength outside of battle \
+/// bit 1: set by IsSurfingAllowed when surfing's allowed, but the caller resets it after checking the result \
+/// bit 3: received Old Rod \
+/// bit 4: received Good Rod \
+/// bit 5: received Super Rod \
+/// bit 6: gave one of the Saffron guards a drink \
+/// bit 7: set by ItemUseCardKey, which is leftover code from a previous implementation of the Card Key
+pub const W_D728: u16 = 0xd727;
+
+/// bit 0: if not set, the 3 minimum steps between random battles have passed \
+/// bit 1: prevent audio fade out
+pub const W_D72C: u16 = 0xd72b;
+
+/// This variable is used for temporary flags and as the destination map when
+/// warping to the Trade Center or Colosseum.
+///
+/// bit 0: sprite facing directions have been initialised in the Trade Center \
+/// bit 3: do scripted warp (used to warp back to Lavender Town from the top of the pokemon tower) \
+/// bit 4: on a dungeon warp \
+/// bit 5: don't make NPCs face the player when spoken to
+///
+/// Bits 6 and 7 are set by scripts when starting major battles in the storyline,
+/// but they do not appear to affect anything. Bit 6 is reset after all battles
+/// and bit 7 is reset after trainer battles (but it's only set before trainer
+/// battles anyway).
+pub const W_D72D: u16 = 0xd72c;
 
 /// bit 0: NPC sprite being moved by script \
 /// bit 5: ignore joypad input \
 /// bit 6: print text with no delay between each letter \
 /// bit 7: set if joypad states are being simulated in the overworld or an NPC's movement is being scripted
-pub const W_D730: u16 = 0xd730;
+pub const W_D730: u16 = 0xd72f;
 
 /// bit 0: check if the player is standing on a door and make him walk down a step if so \
 /// bit 1: the player is currently stepping down from a door \
@@ -349,6 +450,14 @@ pub const W_D736: u16 = 0xd735;
 // bit 5: currently being forced to ride bike (cycling road)
 // bit 6: map destination is [wLastBlackoutMap] (usually the last used pokemon center, but could be the player's house)
 pub const W_D732: u16 = 0xd731;
+
+/// bit 0: running a test battle (unused in non-debug builds) \
+/// bit 1: prevent music from changing when entering new map \
+/// bit 2: skip the joypad check in CheckWarpsNoCollision (used for the forced warp down the waterfall in the Seafoam Islands) \
+/// bit 3: trainer wants to battle \
+/// bit 4: use variable [wCurMapScript] instead of the provided index for next frame's map script (used to start battle when talking to trainers) \
+/// bit 7: used fly out of battle
+pub const W_FLAGS_D733: u16 = 0xd732;
 
 pub const W_EVENT_FLAGS: u16 = 0xd746;
 

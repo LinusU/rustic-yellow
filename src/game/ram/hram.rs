@@ -1,6 +1,9 @@
 pub const H_BASE_TILE_ID: u16 = 0xff8b;
 pub const H_SPRITE_INDEX_OR_TEXT_ID: u16 = 0xff8c;
 
+pub const H_LOAD_SPRITE_TEMP1: u16 = 0xff8d;
+pub const H_LOAD_SPRITE_TEMP2: u16 = 0xff8e;
+
 // these values are copied to rSCX, rSCY, and rWY during V-blank
 pub const H_SCX: u16 = 0xffae;
 pub const H_SCY: u16 = 0xffaf;
@@ -10,6 +13,7 @@ pub const H_JOY_LAST: u16 = 0xffb1;
 pub const H_JOY_RELEASED: u16 = 0xffb2;
 pub const H_JOY_PRESSED: u16 = 0xffb3;
 pub const H_JOY_HELD: u16 = 0xffb4;
+pub const H_JOY_5: u16 = 0xffb5;
 
 pub const H_LOADED_ROM_BANK: u16 = 0xffb8;
 
@@ -36,4 +40,10 @@ pub const H_VBLANK_OCCURRED: u16 = 0xffd6;
 /// `2` = water tile `$14` and flower tile `$03` are animated
 pub const H_TILE_ANIMATIONS: u16 = 0xffd7;
 
+pub const H_INTERACTED_WITH_BOOKSHELF: u16 = 0xffdb;
+
 pub const H_START_TILE_ID: u16 = 0xffe1;
+
+pub const H_ITEM_ALREADY_FOUND: u16 = 0xffeb;
+
+pub const H_DIDNT_FIND_ANY_HIDDEN_OBJECT: u16 = 0xffee;

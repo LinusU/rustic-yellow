@@ -5,3 +5,7 @@ pub const MUSIC_FINAL_BATTLE: u8 = 0xf3;
 pub const MUSIC_DEFEATED_TRAINER: u8 = 0xf6;
 pub const MUSIC_DEFEATED_WILD_MON: u8 = 0xf9;
 pub const MUSIC_DEFEATED_GYM_LEADER: u8 = 0xfc;
+
+pub const SFX_GO_INSIDE: u8 = 0xad;
+pub const SFX_COLLISION: u8 = 0xb4;
+pub const SFX_GO_OUTSIDE: u8 = 0xb5;

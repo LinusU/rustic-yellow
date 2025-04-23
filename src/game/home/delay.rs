@@ -6,7 +6,7 @@ use super::vblank;
 pub fn delay_frames(cpu: &mut Cpu, frames: u8) {
     assert!(frames > 0);
 
-    for _ in 0..=frames {
+    for _ in 0..frames {
         vblank::delay_frame(cpu);
     }
 }

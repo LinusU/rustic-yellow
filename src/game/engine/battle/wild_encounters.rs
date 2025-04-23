@@ -127,7 +127,7 @@ fn try_do_wild_encounter_got_encounter_slot(cpu: &mut Cpu, double_slot_number: u
     let species = cpu.read_byte(mons_data + (double_slot_number as u16) + 1);
 
     cpu.write_byte(wram::W_CUR_ENEMY_LVL, level);
-    cpu.write_byte(wram::W_CF91, species);
+    cpu.write_byte(wram::W_CUR_PARTY_SPECIES, species);
     cpu.write_byte(wram::W_ENEMY_MON_SPECIES2, species);
 
     if cpu.read_byte(wram::W_REPEL_REMAINING_STEPS) == 0 {

@@ -1,1 +1,15 @@
+pub const OVERWORLD: u8 = 0;
 pub const FOREST: u8 = 3;
+pub const GYM: u8 = 7;
+pub const MUSEUM: u8 = 10;
+pub const UNDERGROUND: u8 = 11;
+pub const GATE: u8 = 12;
+pub const SHIP: u8 = 13;
+pub const SHIP_PORT: u8 = 14;
+pub const CEMETERY: u8 = 15;
+pub const CAVERN: u8 = 17;
+pub const LOBBY: u8 = 18;
+pub const MANSION: u8 = 19;
+pub const LAB: u8 = 20;
+pub const FACILITY: u8 = 22;
+pub const PLATEAU: u8 = 23;

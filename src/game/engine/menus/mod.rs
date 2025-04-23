@@ -8,6 +8,12 @@ pub mod main_menu;
 pub mod pokedex;
 pub mod save;
 
+fn truncate_and_pad(s: &str, len: usize) -> String {
+    let mut s = s.chars().take(len).collect::<String>();
+    s.push_str(&" ".repeat(len - s.chars().count()));
+    s
+}
+
 pub fn menu_single_choice(
     cpu: &mut Cpu,
     layer: usize,
@@ -20,30 +26,34 @@ pub fn menu_single_choice(
         18,
     );
 
-    // TODO: Implement scrolling
+    let mut scroll_pos = 0;
+
+    if *selected >= scroll_pos + 8 {
+        scroll_pos = *selected - 7;
+    }
+
     let height = usize::min(choices.len(), 8) * 2;
+    let max_menu_item = choices.len() - 1;
 
     text::text_box_border(cpu.gpu_mut_layer(layer), pos.0, pos.1, width, height);
 
-    for (i, choice) in choices.iter().enumerate() {
-        text::place_string(
-            cpu.gpu_mut_layer(layer),
-            pos.0 + 2,
-            pos.1 + 2 + i * 2,
-            choice,
-        );
-    }
-
-    let max_menu_item = choices.len() - 1;
-
-    text::place_char(
-        cpu.gpu_mut_layer(layer),
-        pos.0 + 1,
-        pos.1 + 2 + *selected * 2,
-        '▶',
-    );
-
     loop {
+        for (i, choice) in choices.iter().skip(scroll_pos).take(8).enumerate() {
+            text::place_string(
+                cpu.gpu_mut_layer(layer),
+                pos.0 + 2,
+                pos.1 + 2 + i * 2,
+                &truncate_and_pad(choice, width - 1),
+            );
+        }
+
+        text::place_char(
+            cpu.gpu_mut_layer(layer),
+            pos.0 + 1,
+            pos.1 + 2 + (*selected - scroll_pos) * 2,
+            '▶',
+        );
+
         cpu.gpu_update_screen();
         let key = cpu.keypad_wait();
 
@@ -62,32 +72,26 @@ pub fn menu_single_choice(
                 text::place_char(
                     cpu.gpu_mut_layer(layer),
                     pos.0 + 1,
-                    pos.1 + 2 + *selected * 2,
+                    pos.1 + 2 + (*selected - scroll_pos) * 2,
                     ' ',
                 );
                 *selected -= 1;
-                text::place_char(
-                    cpu.gpu_mut_layer(layer),
-                    pos.0 + 1,
-                    pos.1 + 2 + *selected * 2,
-                    '▶',
-                );
+                if *selected < scroll_pos {
+                    scroll_pos = *selected;
+                }
             }
 
             KeypadKey::Down if *selected < max_menu_item => {
                 text::place_char(
                     cpu.gpu_mut_layer(layer),
                     pos.0 + 1,
-                    pos.1 + 2 + *selected * 2,
+                    pos.1 + 2 + (*selected - scroll_pos) * 2,
                     ' ',
                 );
                 *selected += 1;
-                text::place_char(
-                    cpu.gpu_mut_layer(layer),
-                    pos.0 + 1,
-                    pos.1 + 2 + *selected * 2,
-                    '▶',
-                );
+                if *selected >= scroll_pos + 8 {
+                    scroll_pos = *selected - 7;
+                }
             }
 
             _ => {}

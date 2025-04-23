@@ -45,8 +45,8 @@ pub fn load_sav(cpu: &mut Cpu) {
     );
 
     {
-        let v = cpu.read_byte(wram::W_CUR_MAP_TILESET);
-        cpu.write_byte(wram::W_CUR_MAP_TILESET, v | (1 << 7))
+        let v = cpu.borrow_wram().cur_map_tileset();
+        cpu.borrow_wram_mut().set_cur_map_tileset(v | (1 << 7));
     }
 
     home::copy::copy_data(

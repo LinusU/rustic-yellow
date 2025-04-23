@@ -2,7 +2,11 @@
 macro_rules! predef_id {
     (CopyUncompressedPicToTilemap) => { 0x01 };
     (CopyDownscaledMonTiles) => { 0x05 };
+    (HealParty) => { 0x07 };
+    (ApplyOutOfBattlePoisonDamage) => { 0x13 };
+    (LoadTilesetHeader) => { 0x19 };
     (GetQuantityOfItemInBag) => { 0x1c };
+    (GetTileAndCoordsInFrontOfPlayer) => { 0x35 };
     (_RunPaletteCommand) => { 0x45 };
     (LoadSAV) => { 0x52 };
 }
