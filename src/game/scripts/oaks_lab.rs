@@ -5,7 +5,7 @@ use crate::{
 
 pub fn oaks_lab_player_received_mon_text(cpu: &mut Cpu) {
     cpu.write_byte(wram::W_PLAYER_STARTER, cpu.starter.into_index());
-    cpu.write_byte(wram::W_D11E, cpu.starter.into_index());
+    cpu.write_byte(wram::W_NAMED_OBJECT_INDEX, cpu.starter.into_index());
 
     {
         let source = cpu.starter.name();
@@ -36,8 +36,8 @@ pub fn oaks_lab_player_received_mon_text(cpu: &mut Cpu) {
     cpu.write_byte(wram::W_MON_DATA_LOCATION, 0);
     cpu.write_byte(wram::W_CUR_ENEMY_LVL, 5);
 
-    // ld [wd11e], STARTER_PIKACHU
-    cpu.write_byte(wram::W_D11E, cpu.starter.into_index());
+    // ld [wPokedexNum], STARTER_PIKACHU
+    cpu.write_byte(wram::W_POKEDEX_NUM, cpu.starter.into_index());
 
     // ld [wCurPartySpecies], STARTER_PIKACHU
     cpu.write_byte(wram::W_CUR_PARTY_SPECIES, cpu.starter.into_index());

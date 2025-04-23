@@ -29,7 +29,7 @@ pub fn heal_party(cpu: &mut Cpu) {
 
         cpu.borrow_wram_mut().party_mut().set(i, pokemon);
 
-        cpu.write_byte(wram::W_D11E, 0);
+        cpu.write_byte(wram::W_USING_PP_UP, 0);
         cpu.write_byte(wram::W_WHICH_POKEMON, i as u8);
         cpu.call(0x654a); // RestoreBonusPP
     }
