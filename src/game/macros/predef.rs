@@ -9,6 +9,7 @@ macro_rules! predef_id {
     (GetTileAndCoordsInFrontOfPlayer) => { 0x35 };
     (_RunPaletteCommand) => { 0x45 };
     (LoadSAV) => { 0x52 };
+    (DrawHP) => { 0x5f  };
 }
 
 macro_rules! predef_call {

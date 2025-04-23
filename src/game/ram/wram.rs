@@ -201,10 +201,18 @@ pub const W_NPC_MOVEMENT_SCRIPT_FUNCTION_NUM: u16 = 0xcf10;
 /// if running on SGB or CGB, it's 1, else it's 0
 pub const W_ON_SGB: u16 = 0xcf1a;
 
+pub const W_PLAYER_HP_BAR_COLOR: u16 = 0xcf1c;
+
 pub const W_CUR_PARTY_SPECIES: u16 = 0xcf90;
 
 /// which pokemon you selected
 pub const W_WHICH_POKEMON: u16 = 0xcf91;
+
+/// LoadMonData copies mon data here
+pub const W_LOADED_MON: u16 = 0xcf97;
+pub const W_LOADED_MON_SPECIES: u16 = 0xcf97;
+pub const W_LOADED_MON_STATUS: u16 = 0xcf9b;
+pub const W_LOADED_MON_LEVEL: u16 = 0xcfb8;
 
 /// This is used to determine whether the default music is already playing when
 /// attempting to play the default music (in order to avoid restarting the same
@@ -238,6 +246,11 @@ pub const W_ENEMY_MON_NICK: u16 = 0xcfd9;
 
 pub const W_ENEMY_MON_PARTY_POS: u16 = 0xcfe7;
 
+pub const W_BATTLE_MON_NICK: u16 = 0xd008;
+pub const W_BATTLE_MON_SPECIES: u16 = 0xd013;
+pub const W_BATTLE_MON_HP: u16 = 0xd014;
+pub const W_BATTLE_MON_DVS: u16 = 0xd01f;
+pub const W_BATTLE_MON_LEVEL: u16 = 0xd021;
 pub const W_BATTLE_MON_PP: u16 = 0xd02c;
 
 pub const W_TRAINER_CLASS: u16 = 0xd030;
@@ -262,6 +275,8 @@ pub const W_BATTLE_TYPE: u16 = 0xd059;
 
 /// the map you will start at when the debug bit is set
 pub const W_DEFAULT_MAP: u16 = 0xd07b;
+
+pub const W_LOW_HEALTH_ALARM: u16 = 0xd082;
 
 /// 1 = no save file or save file is corrupted
 /// 2 = save file exists and no corruption has been detected
