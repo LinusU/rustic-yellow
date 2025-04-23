@@ -192,7 +192,8 @@ pub const W_JOY_IGNORE: u16 = 0xcd6b;
 /// $01 = 3×3
 pub const W_DOWNSCALED_MON_SIZE: u16 = 0xcd6c;
 
-pub const W_CD6D: u16 = 0xcd6d;
+/// storage buffer for various name strings
+pub const W_NAME_BUFFER: u16 = 0xcd6d;
 
 /// which script function within the pointer table indicated by wNPCMovementScriptPointerTableNum
 pub const W_NPC_MOVEMENT_SCRIPT_FUNCTION_NUM: u16 = 0xcf10;

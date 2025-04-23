@@ -9,7 +9,7 @@ pub fn oaks_lab_text18(cpu: &mut Cpu) {
 
     {
         let source = cpu.starter.name();
-        let target = wram::W_CD6D;
+        let target = wram::W_NAME_BUFFER;
 
         for (idx, byte) in source.iter().enumerate() {
             cpu.write_byte(target + (idx as u16), byte);
