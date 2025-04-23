@@ -23,7 +23,7 @@ pub fn init_opponent(cpu: &mut Cpu) {
     let opponent = cpu.borrow_wram().cur_opponent();
     log::debug!("Starting battle with Trainer {}", opponent);
 
-    cpu.write_byte(wram::W_CF91, opponent);
+    cpu.write_byte(wram::W_CUR_PARTY_SPECIES, opponent);
     cpu.borrow_wram_mut().set_enemy_mon_species2(opponent);
 
     init_battle_common(cpu)
@@ -155,15 +155,14 @@ fn init_wild_battle_is_ghost(cpu: &mut Cpu) {
 
     cpu.set_hl(wram::W_ENEMY_MON_NICK + 5); // Probably not needed
 
-    let saved_cf91 = cpu.read_byte(wram::W_CF91);
-    cpu.write_byte(wram::W_CF91, pokemon_constants::MON_GHOST);
+    let saved_species = cpu.read_byte(wram::W_CUR_PARTY_SPECIES);
+    cpu.write_byte(wram::W_CUR_PARTY_SPECIES, pokemon_constants::MON_GHOST);
     cpu.set_de(vram::V_FRONT_PIC);
 
     cpu.stack_push(0x0001);
     home::pics::load_mon_front_sprite(cpu);
 
-    // Restore CF91
-    cpu.write_byte(wram::W_CF91, saved_cf91);
+    cpu.write_byte(wram::W_CUR_PARTY_SPECIES, saved_species);
 
     init_wild_battle_sprite_loaded(cpu)
 }
@@ -279,7 +278,7 @@ pub fn load_mon_back_pic(cpu: &mut Cpu) {
 
     // Probably not needed, but is done by the GameBoy code
     {
-        cpu.write_byte(wram::W_CF91, pokemon_index);
+        cpu.write_byte(wram::W_CUR_PARTY_SPECIES, pokemon_index);
 
         // hlcoord 1, 5
         cpu.set_hl(macros::coords::coord!(1, 5));

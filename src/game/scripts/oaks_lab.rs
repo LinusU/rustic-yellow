@@ -39,8 +39,8 @@ pub fn oaks_lab_text18(cpu: &mut Cpu) {
     // ld [wd11e], STARTER_PIKACHU
     cpu.write_byte(wram::W_D11E, cpu.starter.into_index());
 
-    // ld [wcf91], STARTER_PIKACHU
-    cpu.write_byte(wram::W_CF91, cpu.starter.into_index());
+    // ld [wCurPartySpecies], STARTER_PIKACHU
+    cpu.write_byte(wram::W_CUR_PARTY_SPECIES, cpu.starter.into_index());
 
     // call AddPartyMon
     cpu.call(0x391c);

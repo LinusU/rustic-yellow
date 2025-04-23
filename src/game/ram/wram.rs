@@ -200,7 +200,7 @@ pub const W_NPC_MOVEMENT_SCRIPT_FUNCTION_NUM: u16 = 0xcf10;
 /// if running on SGB or CGB, it's 1, else it's 0
 pub const W_ON_SGB: u16 = 0xcf1a;
 
-pub const W_CF91: u16 = 0xcf90;
+pub const W_CUR_PARTY_SPECIES: u16 = 0xcf90;
 
 /// which pokemon you selected
 pub const W_WHICH_POKEMON: u16 = 0xcf91;
