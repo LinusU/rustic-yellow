@@ -299,9 +299,9 @@ pub const W_REPEL_REMAINING_STEPS: u16 = 0xd0da;
 
 pub const W_UNUSED_D119: u16 = 0xd118;
 
-pub const W_NAMED_OBJECT_INDEX: u16 = 0xd11e;
-pub const W_POKEDEX_NUM: u16 = 0xd11e;
-pub const W_USING_PP_UP: u16 = 0xd11e;
+pub const W_NAMED_OBJECT_INDEX: u16 = 0xd11d;
+pub const W_POKEDEX_NUM: u16 = 0xd11d;
+pub const W_USING_PP_UP: u16 = 0xd11d;
 
 /// not exactly sure what this is used for, but it seems to be used as a multipurpose temp flag value
 pub const W_CURRENT_MAP_SCRIPT_FLAGS: u16 = 0xd125;
