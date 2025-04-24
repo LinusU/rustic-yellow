@@ -329,6 +329,7 @@ pub const W_CALCULATE_WHOSE_STATS: u16 = 0xd11d;
 
 pub const W_NAMED_OBJECT_INDEX: u16 = 0xd11d;
 pub const W_POKEDEX_NUM: u16 = 0xd11d;
+pub const W_TEMP_BYTE_VALUE: u16 = 0xd11d;
 pub const W_USING_PP_UP: u16 = 0xd11d;
 
 /// not exactly sure what this is used for, but it seems to be used as a multipurpose temp flag value
