@@ -16,11 +16,15 @@ macro_rules! predef_call {
     ($cpu:ident, $id:ident) => {
         // LD A,u8
         $cpu.a = crate::game::macros::predef::predef_id!($id);
+        $cpu.pc += 2;
         $cpu.cycle(8);
 
         // CALL u16
+        $cpu.pc += 3;
+        let pc = $cpu.pc;
         $cpu.cycle(24);
         $cpu.call(0x3eb4);
+        $cpu.pc = pc;
     };
 }
 
