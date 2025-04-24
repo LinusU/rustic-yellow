@@ -66,6 +66,9 @@ pub const W_BATTLE_AND_START_SAVED_MENU_ITEM: u16 = 0xcc2d;
 
 pub const W_PLAYER_MOVE_LIST_INDEX: u16 = 0xcc2e;
 
+/// index in party of currently battling mon
+pub const W_PLAYER_MON_NUMBER: u16 = 0xcc2f;
+
 /// how many times should HandleMenuInput poll the joypad state before it returns?
 pub const W_MENU_JOYPAD_POLL_COUNT: u16 = 0xcc34;
 
@@ -93,6 +96,8 @@ pub const W_NPC_MOVEMENT_SCRIPT_POINTER_TABLE_NUM: u16 = 0xcc57;
 
 /// ROM bank of current NPC movement script
 pub const W_NPC_MOVEMENT_SCRIPT_BANK: u16 = 0xcc58;
+
+pub const W_CAN_EVOLVE_FLAGS: u16 = 0xccd3;
 
 pub const W_SIMULATED_JOYPAD_STATES_END: u16 = 0xccd3;
 
@@ -159,6 +164,8 @@ pub const W_PLAYER_MON_MINIMIZED: u16 = 0xccf7;
 /// Number of hits by enemy in attacks like Double Slap, etc.
 pub const W_ENEMY_NUM_HITS: u16 = 0xcd05;
 
+pub const W_PLAYER_MON_UNMODIFIED_LEVEL: u16 = 0xcd0f;
+
 /// Which entry from TradeMons to select
 pub const W_WHICH_TRADE: u16 = 0xcd3d;
 
@@ -203,6 +210,10 @@ pub const W_ON_SGB: u16 = 0xcf1a;
 
 pub const W_PLAYER_HP_BAR_COLOR: u16 = 0xcf1c;
 
+/// the total amount of exp a mon gained
+pub const W_EXP_AMOUNT_GAINED: u16 = 0xcf4a;
+pub const W_GAIN_BOOSTED_EXP: u16 = 0xcf4c;
+
 pub const W_CUR_PARTY_SPECIES: u16 = 0xcf90;
 
 /// which pokemon you selected
@@ -246,6 +257,12 @@ pub const W_ENEMY_MON_NICK: u16 = 0xcfd9;
 
 pub const W_ENEMY_MON_PARTY_POS: u16 = 0xcfe7;
 
+pub const W_ENEMY_MON_LEVEL: u16 = 0xcff2;
+
+pub const W_ENEMY_MON_BASE_STATS: u16 = 0xd001;
+
+pub const W_ENEMY_MON_BASE_EXP: u16 = 0xd007;
+
 pub const W_BATTLE_MON_NICK: u16 = 0xd008;
 pub const W_BATTLE_MON_SPECIES: u16 = 0xd013;
 pub const W_BATTLE_MON_HP: u16 = 0xd014;
@@ -258,6 +275,9 @@ pub const W_TRAINER_CLASS: u16 = 0xd030;
 pub const W_TRAINER_PIC_POINTER: u16 = 0xd032;
 
 pub const W_IS_IN_BATTLE: u16 = 0xd056;
+
+/// flags that indicate which party members should be be given exp when GainExperience is called
+pub const W_PARTY_GAIN_EXP_FLAGS: u16 = 0xd057;
 
 // which entry in LoneAttacks to use
 // it's actually the same thing as ^
@@ -273,6 +293,8 @@ pub const W_CUR_OPPONENT: u16 = 0xd058;
 /// in safari battle, this is 2
 pub const W_BATTLE_TYPE: u16 = 0xd059;
 
+pub const W_PLAYER_BATTLE_STATUS3: u16 = 0xd063;
+
 /// the map you will start at when the debug bit is set
 pub const W_DEFAULT_MAP: u16 = 0xd07b;
 
@@ -286,6 +308,9 @@ pub const W_OPTIONS_INITIALIZED: u16 = 0xd089;
 
 pub const W_SPRITE_FLIPPED: u16 = 0xd0a9;
 
+/// input for GetMonHeader
+pub const W_CUR_SPECIES: u16 = 0xd0b4;
+
 pub const W_NAME_LIST_TYPE: u16 = 0xd0b5;
 
 pub const W_MON_HEADER: u16 = 0xd0b7;
@@ -298,6 +323,9 @@ pub const W_SAVED_TILE_ANIMATIONS: u16 = 0xd0d3;
 pub const W_REPEL_REMAINING_STEPS: u16 = 0xd0da;
 
 pub const W_UNUSED_D119: u16 = 0xd118;
+
+/// 0 for player, non-zero for enemy
+pub const W_CALCULATE_WHOSE_STATS: u16 = 0xd11d;
 
 pub const W_NAMED_OBJECT_INDEX: u16 = 0xd11d;
 pub const W_POKEDEX_NUM: u16 = 0xd11d;
@@ -313,10 +341,19 @@ pub const W_LINK_STATE: u16 = 0xd12a;
 pub const W_PLAYER_NAME: u16 = 0xd157;
 
 pub const W_PARTY_DATA_START: u16 = 0xd162;
+pub const W_PARTY_SPECIES: u16 = 0xd163;
 pub const W_PARTY_MON1: u16 = 0xd16a;
+pub const W_PARTY_MON1_SPECIES: u16 = 0xd16a;
+pub const W_PARTY_MON1_HP: u16 = 0xd16b;
+pub const W_PARTY_MON1_OTID: u16 = 0xd176;
+pub const W_PARTY_MON1_EXP: u16 = 0xd178;
+pub const W_PARTY_MON1_HP_EXP: u16 = 0xd17b;
+pub const W_PARTY_MON1_DVS: u16 = 0xd185;
 pub const W_PARTY_MON1_PP: u16 = 0xd187;
 pub const W_PARTY_MON1_LEVEL: u16 = 0xd18b;
+pub const W_PARTY_MON1_MAX_HP: u16 = 0xd18c;
 pub const W_PARTY_MON2: u16 = 0xd196;
+pub const W_PARTY_MON_NICKS: u16 = 0xd2b4;
 pub const W_PARTY_DATA_END: u16 = 0xd2f6;
 
 pub const W_MAIN_DATA_START: u16 = 0xd2f6;

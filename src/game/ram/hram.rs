@@ -4,6 +4,12 @@ pub const H_SPRITE_INDEX_OR_TEXT_ID: u16 = 0xff8c;
 pub const H_LOAD_SPRITE_TEMP1: u16 = 0xff8d;
 pub const H_LOAD_SPRITE_TEMP2: u16 = 0xff8e;
 
+pub const H_QUOTIENT: u16 = 0xff95;
+pub const H_EXPERIENCE: u16 = 0xff96;
+pub const H_MULTIPLICAND: u16 = 0xff96;
+pub const H_DIVISOR: u16 = 0xff99;
+pub const H_MULTIPLIER: u16 = 0xff99;
+
 // these values are copied to rSCX, rSCY, and rWY during V-blank
 pub const H_SCX: u16 = 0xffae;
 pub const H_SCY: u16 = 0xffaf;
