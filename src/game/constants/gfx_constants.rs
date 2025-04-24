@@ -1,4 +1,5 @@
 const TILE_WIDTH: u8 = 8;
+pub const LEN_2BPP_TILE: u8 = 2 * TILE_WIDTH;
 
 pub const SCREEN_WIDTH: u8 = 20;
 pub const SCREEN_HEIGHT: u8 = 18;
