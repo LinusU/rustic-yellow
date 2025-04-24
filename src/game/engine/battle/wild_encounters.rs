@@ -126,7 +126,7 @@ fn try_do_wild_encounter_got_encounter_slot(cpu: &mut Cpu, double_slot_number: u
     let level = cpu.read_byte(mons_data + (double_slot_number as u16));
     let species = cpu.read_byte(mons_data + (double_slot_number as u16) + 1);
 
-    cpu.write_byte(wram::W_CUR_ENEMY_LVL, level);
+    cpu.write_byte(wram::W_CUR_ENEMY_LEVEL, level);
     cpu.write_byte(wram::W_CUR_PARTY_SPECIES, species);
     cpu.write_byte(wram::W_ENEMY_MON_SPECIES2, species);
 
@@ -135,7 +135,7 @@ fn try_do_wild_encounter_got_encounter_slot(cpu: &mut Cpu, double_slot_number: u
     }
 
     // repel prevents encounters if the leading party mon's level is higher than the wild mon
-    if cpu.read_byte(wram::W_CUR_ENEMY_LVL) < cpu.read_byte(wram::W_PARTY_MON1_LEVEL) {
+    if cpu.read_byte(wram::W_CUR_ENEMY_LEVEL) < cpu.read_byte(wram::W_PARTY_MON1_LEVEL) {
         try_do_wild_encounter_cant_encounter(cpu)
     } else {
         try_do_wild_encounter_will_encounter(cpu)

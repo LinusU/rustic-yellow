@@ -306,7 +306,7 @@ pub const W_USING_PP_UP: u16 = 0xd11e;
 /// not exactly sure what this is used for, but it seems to be used as a multipurpose temp flag value
 pub const W_CURRENT_MAP_SCRIPT_FLAGS: u16 = 0xd125;
 
-pub const W_CUR_ENEMY_LVL: u16 = 0xd126;
+pub const W_CUR_ENEMY_LEVEL: u16 = 0xd126;
 
 pub const W_LINK_STATE: u16 = 0xd12a;
 
