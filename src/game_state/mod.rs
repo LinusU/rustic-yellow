@@ -340,6 +340,10 @@ impl GameState {
         self.data[0x1357] = value;
     }
 
+    pub fn player_id(&self) -> u16 {
+        u16::from_be_bytes([self.data[0x1358], self.data[0x1359]])
+    }
+
     pub fn player_move_list_index(&self) -> u8 {
         self.data[0x0c2e]
     }

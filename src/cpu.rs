@@ -194,6 +194,7 @@ impl Cpu {
                 (0x0f, 0x59ac) => crate::game::engine::battle::core::is_ghost_battle(self),
                 (0x15, 0x525f) => crate::game::engine::battle::experience::gain_experience(self),
                 (0x15, 0x547b) => panic!("divide_exp_data_by_num_mons_gaining_exp should only be called from Rust"),
+                (0x15, 0x54ae) => panic!("boost_exp should only be called from Rust"),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
                 (0x1c, 0x7b91) => crate::game::engine::menus::save::save_sav_to_sram(self),
                 (0x3c, 0x4000) => crate::game::engine::pikachu::pikachu_pcm::play_pikachu_sound_clip(self),
