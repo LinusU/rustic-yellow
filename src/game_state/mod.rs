@@ -570,8 +570,16 @@ impl GameState {
         self.data[0x0f12]
     }
 
+    pub fn player_hp_bar_color(&self) -> u8 {
+        self.data[0x0f1c]
+    }
+
     pub fn set_player_hp_bar_color(&mut self, value: u8) {
         self.data[0x0f1c] = value;
+    }
+
+    pub fn enemy_hp_bar_color(&self) -> u8 {
+        self.data[0x0f1d]
     }
 
     pub fn set_enemy_hp_bar_color(&mut self, value: u8) {

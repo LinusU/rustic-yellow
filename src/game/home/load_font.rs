@@ -5,6 +5,7 @@ use crate::{
     game::{constants::gfx_constants::LEN_2BPP_TILE, ram::vram},
 };
 
+const EXP_BAR_PNG: &[u8] = include_bytes!("../../../gfx/exp_bar.png");
 const HP_BAR_AND_STATUS_PNG: &[u8] = include_bytes!("../../../gfx/font_battle_extra.png");
 
 pub fn png_to_2bpp(bytes: &[u8]) -> image::ImageResult<Vec<u8>> {
@@ -16,6 +17,13 @@ pub fn load_hp_bar_and_status_tile_patterns(cpu: &mut Cpu) {
 
     let data = png_to_2bpp(HP_BAR_AND_STATUS_PNG).unwrap();
     let target = vram::V_CHARS_2 + (LEN_2BPP_TILE as u16) * 0x62;
+
+    for (i, &byte) in data.iter().enumerate() {
+        cpu.write_byte(target + i as u16, byte);
+    }
+
+    let data = png_to_2bpp(EXP_BAR_PNG).unwrap();
+    let target = vram::V_CHARS_1 + (LEN_2BPP_TILE as u16) * 0x40;
 
     for (i, &byte) in data.iter().enumerate() {
         cpu.write_byte(target + i as u16, byte);
