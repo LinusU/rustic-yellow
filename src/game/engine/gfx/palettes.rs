@@ -1,11 +1,17 @@
 use crate::{
     cpu::Cpu,
     game::{
-        constants::{hardware_constants, palette_constants},
+        constants::{
+            gfx_constants::{CONVERT_BGP, CONVERT_OBP0, CONVERT_OBP1},
+            hardware_constants,
+            palette_constants::{self, NUM_ACTIVE_PALS},
+        },
         data::sgb::sgb_packets::PAL_PACKET_EMPTY,
         ram::{hram, wram},
     },
 };
+
+const CGB_BASE_PAL_POINTERS: u16 = 0xdee1;
 
 // uses PalPacket_Empty to build a packet based on mon IDs and health color
 pub fn set_pal_battle(cpu: &mut Cpu) {
@@ -90,6 +96,55 @@ pub fn send_sgb_packets(cpu: &mut Cpu) {
 
     if cpu.a != 0 {
         cpu.call(0x3ddb); // Delay3
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
+pub fn init_cgb_palettes(cpu: &mut Cpu) {
+    log::debug!("init_cgb_palettes()");
+
+    let packet = cpu.hl();
+
+    cpu.a = cpu.read_byte(packet) & 0xf8;
+
+    if cpu.a == 0x20 {
+        cpu.call(0x65be); // TranslatePalPacketToBGMapAttributes
+        cpu.pc = cpu.stack_pop(); // ret
+        return;
+    }
+
+    for index in 0..NUM_ACTIVE_PALS {
+        cpu.a = cpu.read_byte(packet + 1 + (index as u16 * 2));
+        cpu.call(0x63fe); // GetCGBBasePalAddress
+        let base = cpu.de();
+
+        cpu.write_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2), base as u8);
+        cpu.write_byte(
+            CGB_BASE_PAL_POINTERS + (index as u16 * 2) + 1,
+            (base >> 8) as u8,
+        );
+
+        cpu.a = CONVERT_BGP;
+        cpu.set_de(base);
+        cpu.call(0x640f); // DMGPalToCGBPal
+
+        cpu.a = index;
+        cpu.call(0x6470); // TransferCurBGPData
+
+        cpu.a = CONVERT_OBP0;
+        cpu.set_de(base);
+        cpu.call(0x640f); // DMGPalToCGBPal
+
+        cpu.a = index;
+        cpu.call(0x64df); // TransferCurOBPData
+
+        cpu.a = CONVERT_OBP1;
+        cpu.set_de(base);
+        cpu.call(0x640f); // DMGPalToCGBPal
+
+        cpu.a = index + 4;
+        cpu.call(0x64df); // TransferCurOBPData
     }
 
     cpu.pc = cpu.stack_pop(); // ret

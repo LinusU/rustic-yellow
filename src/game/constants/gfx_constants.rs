@@ -7,6 +7,11 @@ pub const SCREEN_HEIGHT_PX: u8 = SCREEN_HEIGHT * TILE_WIDTH;
 
 pub const BG_MAP_WIDTH: u8 = 32;
 
+// DMGPalToCGBPal
+pub const CONVERT_BGP: u8 = 0;
+pub const CONVERT_OBP0: u8 = 1;
+pub const CONVERT_OBP1: u8 = 2;
+
 // HP bar
 pub const HP_BAR_RED: u8 = 2;
 

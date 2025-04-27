@@ -1,3 +1,5 @@
+pub const NUM_ACTIVE_PALS: u8 = 4;
+
 // SetPalFunctions indexes (see engine/gfx/palettes)
 pub const SET_PAL_BATTLE_BLACK: u8 = 0x00;
 pub const SET_PAL_BATTLE: u8 = 0x01;
