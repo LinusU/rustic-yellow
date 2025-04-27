@@ -54,3 +54,6 @@ pub const H_START_TILE_ID: u16 = 0xffe1;
 pub const H_ITEM_ALREADY_FOUND: u16 = 0xffeb;
 
 pub const H_DIDNT_FIND_ANY_HIDDEN_OBJECT: u16 = 0xffee;
+
+/// 0 if DMG, != 0 if CGB
+pub const H_ON_CGB: u16 = 0xfffe;

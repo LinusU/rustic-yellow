@@ -1,6 +1,10 @@
 use crate::{
     cpu::Cpu,
-    game::{constants::palette_constants, data::sgb::sgb_packets::PAL_PACKET_EMPTY, ram::wram},
+    game::{
+        constants::{hardware_constants, palette_constants},
+        data::sgb::sgb_packets::PAL_PACKET_EMPTY,
+        ram::{hram, wram},
+    },
 };
 
 // uses PalPacket_Empty to build a packet based on mon IDs and health color
@@ -60,4 +64,33 @@ pub fn load_sgb(cpu: &mut Cpu) {
 
     // ret
     cpu.pc = cpu.stack_pop();
+}
+
+/// Input:
+/// - hl: Pointer to the first packet to be sent
+/// - de: Pointer to the second packet to be sent
+pub fn send_sgb_packets(cpu: &mut Cpu) {
+    log::trace!("send_sgb_packets()");
+
+    if cpu.read_byte(hram::H_ON_CGB) == 0 {
+        panic!("send_sgb_packets called on non-SGB device");
+    }
+
+    let first_packet = cpu.hl();
+    let second_packet = cpu.de();
+
+    cpu.set_hl(first_packet);
+    cpu.call(0x6346); // InitCGBPalettes
+
+    cpu.set_hl(second_packet);
+    cpu.call(0x6346); // InitCGBPalettes
+
+    cpu.a = cpu.read_byte(hardware_constants::R_LCDC);
+    cpu.a &= 1 << hardware_constants::R_LCDC_ENABLE;
+
+    if cpu.a != 0 {
+        cpu.call(0x3ddb); // Delay3
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
 }
