@@ -12,6 +12,9 @@ pub const SRAM_ENABLE: u8 = 0x0a;
 pub const R_LCDC: u16 = 0xff40;
 pub const R_LCDC_ENABLE: u8 = 7;
 
+/// LCDC Status (R/W)
+pub const R_STAT: u16 = 0xff41;
+
 /// BG Palette Data (R/W) - Non CGB Mode Only
 pub const R_BGP: u16 = 0xff47;
 /// Object Palette 0 Data (R/W) - Non CGB Mode Only

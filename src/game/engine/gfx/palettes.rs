@@ -188,6 +188,23 @@ pub fn transfer_cur_bgp_data(cpu: &mut Cpu) {
     cpu.pc = cpu.stack_pop(); // ret
 }
 
+/// Transfer a palette color while the LCD is enabled.
+pub fn transfer_pal_color_lcd_enabled(cpu: &mut Cpu) {
+    // In case we're already in H-blank or V-blank, wait for it to end. This is a
+    // precaution so that the transfer doesn't extend past the blanking period.
+    while (cpu.read_byte(hardware_constants::R_STAT) & cpu.b) == 0 {
+        cpu.cycle(4);
+    }
+
+    // Wait for H-blank or V-blank to begin.
+    while (cpu.read_byte(hardware_constants::R_STAT) & cpu.b) != 0 {
+        cpu.cycle(4);
+    }
+
+    // fall through
+    transfer_pal_color_lcd_disabled(cpu)
+}
+
 /// Transfer a palette color while the LCD is disabled.
 pub fn transfer_pal_color_lcd_disabled(cpu: &mut Cpu) {
     let byte = cpu.read_byte(cpu.hl());
