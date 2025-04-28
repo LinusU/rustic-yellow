@@ -534,3 +534,5 @@ pub const W_MAIN_DATA_END: u16 = 0xda7f;
 
 pub const W_BOX_DATA_START: u16 = 0xda7f;
 pub const W_BOX_DATA_END: u16 = 0xdee1;
+
+pub const W_CGB_PAL: u16 = 0xdee9;

@@ -21,3 +21,6 @@ pub const R_OBP1: u16 = 0xff49;
 
 /// Window Y Position (R/W)
 pub const R_WY: u16 = 0xff4a;
+
+/// CGB Mode Only - Background Palette Index
+pub const R_BGPI: u16 = 0xff68;

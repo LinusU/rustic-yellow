@@ -1,3 +1,5 @@
+pub const NUM_PAL_COLORS: u8 = 4;
+
 pub const NUM_ACTIVE_PALS: u8 = 4;
 
 // SetPalFunctions indexes (see engine/gfx/palettes)
