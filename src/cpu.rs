@@ -200,6 +200,7 @@ impl Cpu {
                 (0x1c, 0x6328) => crate::game::engine::gfx::palettes::send_sgb_packets(self),
                 (0x1c, 0x6346) => crate::game::engine::gfx::palettes::init_cgb_palettes(self),
                 (0x1c, 0x6470) => crate::game::engine::gfx::palettes::transfer_cur_bgp_data(self),
+                (0x1c, 0x651b) => crate::game::engine::gfx::palettes::transfer_pal_color_lcd_disabled(self),
                 (0x1c, 0x7b91) => crate::game::engine::menus::save::save_sav_to_sram(self),
                 (0x3c, 0x4000) => crate::game::engine::pikachu::pikachu_pcm::play_pikachu_sound_clip(self),
                 (0x3c, 0x4274) => crate::game::engine::events::black_out::reset_status_and_halve_money_on_blackout(self),

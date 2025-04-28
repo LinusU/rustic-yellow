@@ -187,3 +187,16 @@ pub fn transfer_cur_bgp_data(cpu: &mut Cpu) {
 
     cpu.pc = cpu.stack_pop(); // ret
 }
+
+/// Transfer a palette color while the LCD is disabled.
+pub fn transfer_pal_color_lcd_disabled(cpu: &mut Cpu) {
+    let byte = cpu.read_byte(cpu.hl());
+    cpu.write_byte(cpu.de(), byte);
+
+    let byte = cpu.read_byte(cpu.hl() + 1);
+    cpu.write_byte(cpu.de(), byte);
+
+    cpu.set_hl(cpu.hl() + 2);
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
