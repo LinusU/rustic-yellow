@@ -438,6 +438,15 @@ impl Gpu {
         }
     }
 
+    pub fn set_bg_palette_color(&mut self, palnum: usize, colnum: usize, color: [u8; 3]) {
+        assert!(palnum < 8);
+        assert!(colnum < 4);
+        assert!(color[0] < 32);
+        assert!(color[1] < 32);
+        assert!(color[2] < 32);
+        self.cbgpal[palnum][colnum] = color;
+    }
+
     fn clear_screen(&mut self) {
         for v in self.data.iter_mut() {
             *v = 255;

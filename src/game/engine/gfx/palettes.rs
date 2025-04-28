@@ -3,7 +3,7 @@ use crate::{
     game::{
         constants::{
             gfx_constants::{CONVERT_BGP, CONVERT_OBP0, CONVERT_OBP1},
-            hardware_constants::{self, R_BGPI, R_LCDC, R_LCDC_ENABLE},
+            hardware_constants::{self, R_LCDC, R_LCDC_ENABLE},
             palette_constants::{self, NUM_ACTIVE_PALS, NUM_PAL_COLORS},
         },
         data::sgb::sgb_packets::PAL_PACKET_EMPTY,
@@ -151,39 +151,35 @@ pub fn init_cgb_palettes(cpu: &mut Cpu) {
 }
 
 pub fn transfer_cur_bgp_data(cpu: &mut Cpu) {
-    log::trace!("transfer_cur_bgp_data({:02x})", cpu.a);
+    let pal_index = cpu.a as usize;
 
-    let saved_de = cpu.de();
+    log::trace!("transfer_cur_bgp_data({:02x})", pal_index);
 
-    cpu.a <<= 3;
+    if (cpu.read_byte(R_LCDC) & (1 << R_LCDC_ENABLE)) != 0 {
+        // mask for non-V-blank/non-H-blank STAT mode
+        let mask = 0b10;
 
-    // auto-increment
-    cpu.a |= 0x80;
-
-    cpu.write_byte(R_BGPI, cpu.a);
-
-    cpu.set_de(0xff69); // rBGPD
-    cpu.set_hl(wram::W_CGB_PAL);
-
-    // mask for non-V-blank/non-H-blank STAT mode
-    cpu.b = 0b10;
-
-    cpu.a = cpu.read_byte(R_LCDC);
-    cpu.a &= 1 << R_LCDC_ENABLE;
-
-    if cpu.a != 0 {
-        // REPT NUM_PAL_COLORS
-        for _ in 0..NUM_PAL_COLORS {
-            cpu.call(0x6511); // TransferPalColorLCDEnabled
+        // In case we're already in H-blank or V-blank, wait for it to end. This is a
+        // precaution so that the transfer doesn't extend past the blanking period.
+        while cpu.read_byte(hardware_constants::R_STAT) & mask == 0 {
+            cpu.cycle(4);
         }
-    } else {
-        // REPT NUM_PAL_COLORS
-        for _ in 0..NUM_PAL_COLORS {
-            cpu.call(0x651b); // TransferPalColorLCDDisabled
+
+        while cpu.read_byte(hardware_constants::R_STAT) & mask != 0 {
+            cpu.cycle(4);
         }
     }
 
-    cpu.set_de(saved_de);
+    for i in 0..NUM_PAL_COLORS {
+        let hi = cpu.read_byte(wram::W_CGB_PAL + (i as u16 * 2));
+        let lo = cpu.read_byte(wram::W_CGB_PAL + (i as u16 * 2) + 1);
+
+        let r = hi & 0x1F;
+        let g = (hi >> 5) | ((lo & 0x3) << 3);
+        let b = (lo >> 2) & 0x1F;
+
+        cpu.gpu_set_bg_palette_color(pal_index, i as usize, [r, g, b]);
+    }
 
     cpu.pc = cpu.stack_pop(); // ret
 }

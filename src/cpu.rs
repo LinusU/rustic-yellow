@@ -290,6 +290,10 @@ impl Cpu {
         self.mmu.gpu.update_screen();
     }
 
+    pub fn gpu_set_bg_palette_color(&mut self, palnum: usize, colnum: usize, color: [u8; 3]) {
+        self.mmu.gpu.set_bg_palette_color(palnum, colnum, color);
+    }
+
     pub fn keypad_wait(&mut self) -> KeypadKey {
         self.mmu.keypad.wait()
     }
