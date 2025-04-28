@@ -1,5 +1,5 @@
 use crate::{
-    cpu::{Cpu, CpuFlag},
+    cpu::Cpu,
     game::{
         constants::{
             gfx_constants::{CONVERT_BGP, CONVERT_OBP0, CONVERT_OBP1},
@@ -153,141 +153,37 @@ pub fn init_cgb_palettes(cpu: &mut Cpu) {
 pub fn transfer_cur_bgp_data(cpu: &mut Cpu) {
     log::trace!("transfer_cur_bgp_data({:02x})", cpu.a);
 
-    cpu.pc = 0x6470;
+    let saved_de = cpu.de();
 
-    // push de
-    cpu.stack_push(cpu.de());
-    cpu.pc += 1;
-    cpu.cycle(16);
-
-    // add a
-    cpu.set_flag(CpuFlag::H, (cpu.a & 0x0f) + (cpu.a & 0x0f) > 0x0f);
-    cpu.set_flag(CpuFlag::C, (cpu.a as u16) + (cpu.a as u16) > 0xff);
-    cpu.a = cpu.a.wrapping_add(cpu.a);
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // add a
-    cpu.set_flag(CpuFlag::H, (cpu.a & 0x0f) + (cpu.a & 0x0f) > 0x0f);
-    cpu.set_flag(CpuFlag::C, (cpu.a as u16) + (cpu.a as u16) > 0xff);
-    cpu.a = cpu.a.wrapping_add(cpu.a);
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.pc += 1;
-    cpu.cycle(4);
-
-    // add a
-    cpu.set_flag(CpuFlag::H, (cpu.a & 0x0f) + (cpu.a & 0x0f) > 0x0f);
-    cpu.set_flag(CpuFlag::C, (cpu.a as u16) + (cpu.a as u16) > 0xff);
-    cpu.a = cpu.a.wrapping_add(cpu.a);
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.pc += 1;
-    cpu.cycle(4);
+    cpu.a <<= 3;
 
     // auto-increment
-    // or a, $80
     cpu.a |= 0x80;
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.set_flag(CpuFlag::H, false);
-    cpu.set_flag(CpuFlag::C, false);
-    cpu.pc += 2;
-    cpu.cycle(8);
 
-    // ldh [rBGPI], a
     cpu.write_byte(R_BGPI, cpu.a);
-    cpu.pc += 2;
-    cpu.cycle(12);
 
-    // ld de, rBGPD
-    cpu.set_de(0xff69);
-    cpu.pc += 3;
-    cpu.cycle(12);
-
-    // ld hl, wCGBPal
+    cpu.set_de(0xff69); // rBGPD
     cpu.set_hl(wram::W_CGB_PAL);
-    cpu.pc += 3;
-    cpu.cycle(12);
 
     // mask for non-V-blank/non-H-blank STAT mode
-    // ld b, %10
     cpu.b = 0b10;
-    cpu.pc += 2;
-    cpu.cycle(8);
 
-    // ldh a, [rLCDC]
     cpu.a = cpu.read_byte(R_LCDC);
-    cpu.pc += 2;
-    cpu.cycle(12);
-
-    // and 1 << rLCDC_ENABLE
     cpu.a &= 1 << R_LCDC_ENABLE;
-    cpu.set_flag(CpuFlag::Z, cpu.a == 0);
-    cpu.set_flag(CpuFlag::N, false);
-    cpu.set_flag(CpuFlag::H, true);
-    cpu.set_flag(CpuFlag::C, false);
-    cpu.pc += 2;
-    cpu.cycle(8);
 
-    // jr nz, .lcdEnabled
-    if !cpu.flag(CpuFlag::Z) {
-        cpu.cycle(12);
-        return transfer_cur_bgpdata_lcd_enabled(cpu);
-    } else {
-        cpu.pc += 2;
-        cpu.cycle(8);
-    }
-
-    // REPT NUM_PAL_COLORS
-    for _ in 0..NUM_PAL_COLORS {
-        // call TransferPalColorLCDDisabled
-        {
-            cpu.pc += 3;
-            let pc = cpu.pc;
-            cpu.cycle(24);
-            cpu.call(0x651b); // TransferPalColorLCDDisabled
-            cpu.pc = pc;
-        }
-    }
-
-    // jr .done
-    cpu.cycle(12);
-    transfer_cur_bgpdata_done(cpu)
-}
-
-fn transfer_cur_bgpdata_lcd_enabled(cpu: &mut Cpu) {
-    cpu.pc = 0x6494;
-
-    // REPT NUM_PAL_COLORS
-    for _ in 0..NUM_PAL_COLORS {
-        // call TransferPalColorLCDEnabled
-        {
-            cpu.pc += 3;
-            let pc = cpu.pc;
-            cpu.cycle(24);
+    if cpu.a != 0 {
+        // REPT NUM_PAL_COLORS
+        for _ in 0..NUM_PAL_COLORS {
             cpu.call(0x6511); // TransferPalColorLCDEnabled
-            cpu.pc = pc;
+        }
+    } else {
+        // REPT NUM_PAL_COLORS
+        for _ in 0..NUM_PAL_COLORS {
+            cpu.call(0x651b); // TransferPalColorLCDDisabled
         }
     }
 
-    transfer_cur_bgpdata_done(cpu);
-}
+    cpu.set_de(saved_de);
 
-fn transfer_cur_bgpdata_done(cpu: &mut Cpu) {
-    cpu.pc = 0x64a0;
-
-    // pop de
-    {
-        let de = cpu.stack_pop();
-        cpu.set_de(de);
-        cpu.pc += 1;
-        cpu.cycle(12);
-    }
-
-    // ret
-    cpu.pc = cpu.stack_pop();
-    cpu.cycle(16);
+    cpu.pc = cpu.stack_pop(); // ret
 }
