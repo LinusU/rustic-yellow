@@ -44,8 +44,8 @@ pub fn run_palette_command(cpu: &mut Cpu) {
         palette_constants::SET_PAL_OVERWORLD => cpu.call(0x5fa5), // SetPal_Overworld
         palette_constants::SET_PAL_PARTY_MENU => set_pal_party_menu(cpu),
         palette_constants::SET_PAL_POKEMON_WHOLE_SCREEN => set_pal_pokemon_whole_screen(cpu),
-        palette_constants::SET_PAL_GAME_FREAK_INTRO => cpu.call(0x5f99), // SetPal_GameFreakIntro
-        palette_constants::SET_PAL_TRAINER_CARD => cpu.call(0x6025),     // SetPal_TrainerCard
+        palette_constants::SET_PAL_GAME_FREAK_INTRO => set_pal_game_freak_intro(cpu),
+        palette_constants::SET_PAL_TRAINER_CARD => cpu.call(0x6025), // SetPal_TrainerCard
         palette_constants::SET_PAL_SURFING_PIKACHU_TITLE => cpu.call(0x605d), // SetPal_PikachusBeach
         palette_constants::SET_PAL_SURFING_PIKACHU_MINIGAME => cpu.call(0x6064), // SetPal_PikachusBeachTitle
         i => panic!("Invalid SetPalFunctions index: {i}"),
@@ -187,6 +187,16 @@ fn set_pal_generic(cpu: &mut Cpu) {
 fn set_pal_nidorino_intro(cpu: &mut Cpu) {
     cpu.set_hl(0x67f1); // PalPacket_NidorinoIntro
     cpu.set_de(0x66a1); // BlkPacket_NidorinoIntro
+}
+
+fn set_pal_game_freak_intro(cpu: &mut Cpu) {
+    cpu.set_hl(0x6801); // PalPacket_GameFreakIntro
+    cpu.set_de(0x6731); // BlkPacket_GameFreakIntro
+
+    cpu.write_byte(
+        wram::W_DEFAULT_PALETTE_COMMAND,
+        palette_constants::SET_PAL_GENERIC,
+    );
 }
 
 // used when a Pokemon is the only thing on the screen
