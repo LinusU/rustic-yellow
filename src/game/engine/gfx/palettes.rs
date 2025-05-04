@@ -42,7 +42,7 @@ pub fn run_palette_command(cpu: &mut Cpu) {
         palette_constants::SET_PAL_GENERIC => cpu.call(0x5f8b),  // SetPal_Generic
         palette_constants::SET_PAL_OVERWORLD => cpu.call(0x5fa5), // SetPal_Overworld
         palette_constants::SET_PAL_PARTY_MENU => cpu.call(0x5f59), // SetPal_PartyMenu
-        palette_constants::SET_PAL_POKEMON_WHOLE_SCREEN => cpu.call(0x6001), // SetPal_PokemonWholeScreen
+        palette_constants::SET_PAL_POKEMON_WHOLE_SCREEN => set_pal_pokemon_whole_screen(cpu),
         palette_constants::SET_PAL_GAME_FREAK_INTRO => cpu.call(0x5f99), // SetPal_GameFreakIntro
         palette_constants::SET_PAL_TRAINER_CARD => cpu.call(0x6025),     // SetPal_TrainerCard
         palette_constants::SET_PAL_SURFING_PIKACHU_TITLE => cpu.call(0x605d), // SetPal_PikachusBeach
@@ -101,6 +101,28 @@ fn set_pal_battle(cpu: &mut Cpu) {
     cpu.set_de(0x6621); //BlkPacket_Battle
     cpu.a = palette_constants::SET_PAL_BATTLE;
     cpu.write_byte(wram::W_DEFAULT_PALETTE_COMMAND, cpu.a);
+}
+
+// used when a Pokemon is the only thing on the screen
+// such as evolution, trading and the Hall of Fame
+fn set_pal_pokemon_whole_screen(cpu: &mut Cpu) {
+    log::debug!("set_pal_pokemon_whole_screen({:02x})", cpu.c);
+
+    for (i, byte) in PAL_PACKET_EMPTY.iter().enumerate() {
+        cpu.write_byte(wram::W_PAL_PACKET + i as u16, *byte);
+    }
+
+    if cpu.c != 0 {
+        cpu.a = palette_constants::PAL_BLACK;
+    } else {
+        cpu.a = cpu.read_byte(wram::W_WHOLE_SCREEN_PALETTE_MON_SPECIES);
+        cpu.call(0x6094); // DeterminePaletteIDOutOfBattle
+    }
+
+    cpu.write_byte(wram::W_PAL_PACKET + 1, cpu.a);
+
+    cpu.set_hl(wram::W_PAL_PACKET);
+    cpu.set_de(0x6611); // BlkPacket_WholeScreen
 }
 
 pub fn load_sgb(cpu: &mut Cpu) {

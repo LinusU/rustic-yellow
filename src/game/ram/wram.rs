@@ -209,6 +209,7 @@ pub const W_NPC_MOVEMENT_SCRIPT_FUNCTION_NUM: u16 = 0xcf10;
 pub const W_ON_SGB: u16 = 0xcf1a;
 
 pub const W_DEFAULT_PALETTE_COMMAND: u16 = 0xcf1b;
+pub const W_WHOLE_SCREEN_PALETTE_MON_SPECIES: u16 = 0xcf1c;
 pub const W_PLAYER_HP_BAR_COLOR: u16 = 0xcf1c;
 pub const W_ENEMY_HP_BAR_COLOR: u16 = 0xcf1d;
 
