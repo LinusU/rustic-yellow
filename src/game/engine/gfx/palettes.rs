@@ -39,7 +39,7 @@ pub fn run_palette_command(cpu: &mut Cpu) {
         palette_constants::SET_PAL_POKEDEX => set_pal_pokedex(cpu),
         palette_constants::SET_PAL_SLOTS => set_pal_slots(cpu),
         palette_constants::SET_PAL_TITLE_SCREEN => set_pal_title_screen(cpu),
-        palette_constants::SET_PAL_NIDORINO_INTRO => cpu.call(0x5f92), // SetPal_NidorinoIntro
+        palette_constants::SET_PAL_NIDORINO_INTRO => set_pal_nidorino_intro(cpu),
         palette_constants::SET_PAL_GENERIC => set_pal_generic(cpu),
         palette_constants::SET_PAL_OVERWORLD => cpu.call(0x5fa5), // SetPal_Overworld
         palette_constants::SET_PAL_PARTY_MENU => set_pal_party_menu(cpu),
@@ -182,6 +182,11 @@ fn set_pal_title_screen(cpu: &mut Cpu) {
 fn set_pal_generic(cpu: &mut Cpu) {
     cpu.set_hl(0x67e1); // PalPacket_Generic
     cpu.set_de(0x6611); // BlkPacket_WholeScreen
+}
+
+fn set_pal_nidorino_intro(cpu: &mut Cpu) {
+    cpu.set_hl(0x67f1); // PalPacket_NidorinoIntro
+    cpu.set_de(0x66a1); // BlkPacket_NidorinoIntro
 }
 
 // used when a Pokemon is the only thing on the screen
