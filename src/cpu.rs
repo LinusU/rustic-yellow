@@ -202,6 +202,7 @@ impl Cpu {
                 (0x1c, 0x5f2d) => panic!("set_pal_status_screen should only be called from Rust"),
                 (0x1c, 0x5f59) => panic!("set_pal_party_menu should only be called from Rust"),
                 (0x1c, 0x5f60) => panic!("set_pal_pokedex should only be called from Rust"),
+                (0x1c, 0x5f7d) => panic!("set_pal_slots should only be called from Rust"),
                 (0x1c, 0x6001) => panic!("set_pal_pokemon_whole_screen should only be called from Rust"),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
                 (0x1c, 0x6328) => crate::game::engine::gfx::palettes::send_sgb_packets(self),
