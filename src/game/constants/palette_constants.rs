@@ -22,6 +22,7 @@ pub const SET_PAL_SURFING_PIKACHU_MINIGAME: u8 = 0x0f;
 pub const SET_PAL_PARTY_MENU_HP_BARS: u8 = 0xfc;
 pub const SET_PAL_DEFAULT: u8 = 0xff;
 
+pub const PAL_BROWNMON: u8 = 0x15;
 pub const PAL_BLACK: u8 = 0x1e;
 pub const PAL_GREENBAR: u8 = 0x1f;
 pub const PAL_YELLOWBAR: u8 = 0x20;

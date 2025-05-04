@@ -7,7 +7,7 @@ use crate::{
             palette_constants::{self, NUM_ACTIVE_PALS, NUM_PAL_COLORS},
             pokemon_constants,
         },
-        data::sgb::sgb_packets::PAL_PACKET_EMPTY,
+        data::sgb::sgb_packets::{PAL_PACKET_EMPTY, PAL_PACKET_POKEDEX},
         ram::{hram, wram},
     },
 };
@@ -36,8 +36,8 @@ pub fn run_palette_command(cpu: &mut Cpu) {
         palette_constants::SET_PAL_BATTLE => set_pal_battle(cpu),
         palette_constants::SET_PAL_TOWN_MAP => set_pal_town_map(cpu),
         palette_constants::SET_PAL_STATUS_SCREEN => set_pal_status_screen(cpu),
-        palette_constants::SET_PAL_POKEDEX => cpu.call(0x5f60), // SetPal_Pokedex
-        palette_constants::SET_PAL_SLOTS => cpu.call(0x5f7d),   // SetPal_Slots
+        palette_constants::SET_PAL_POKEDEX => set_pal_pokedex(cpu),
+        palette_constants::SET_PAL_SLOTS => cpu.call(0x5f7d), // SetPal_Slots
         palette_constants::SET_PAL_TITLE_SCREEN => cpu.call(0x5f84), // SetPal_TitleScreen
         palette_constants::SET_PAL_NIDORINO_INTRO => cpu.call(0x5f92), // SetPal_NidorinoIntro
         palette_constants::SET_PAL_GENERIC => cpu.call(0x5f8b), // SetPal_Generic
@@ -149,6 +149,23 @@ fn set_pal_status_screen(cpu: &mut Cpu) {
 fn set_pal_party_menu(cpu: &mut Cpu) {
     cpu.set_hl(0x6771); // PalPacket_PartyMenu
     cpu.set_de(wram::W_PARTY_MENU_BLK_PACKET);
+}
+
+fn set_pal_pokedex(cpu: &mut Cpu) {
+    log::debug!("set_pal_pokedex()");
+
+    for (i, byte) in PAL_PACKET_POKEDEX.iter().enumerate() {
+        cpu.write_byte(wram::W_PAL_PACKET + i as u16, *byte);
+    }
+
+    cpu.a = cpu.read_byte(wram::W_CUR_PARTY_SPECIES);
+    cpu.call(0x6094); // DeterminePaletteIDOutOfBattle
+    let mon_pal = cpu.a;
+
+    cpu.write_byte(wram::W_PAL_PACKET + 3, mon_pal);
+
+    cpu.set_hl(wram::W_PAL_PACKET);
+    cpu.set_de(0x6651); // BlkPacket_Pokedex
 }
 
 // used when a Pokemon is the only thing on the screen
