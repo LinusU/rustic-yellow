@@ -196,6 +196,7 @@ impl Cpu {
                 (0x15, 0x547b) => panic!("divide_exp_data_by_num_mons_gaining_exp should only be called from Rust"),
                 (0x15, 0x54ae) => panic!("boost_exp should only be called from Rust"),
                 (0x1c, 0x5eb3) => crate::game::engine::gfx::palettes::run_palette_command(self),
+                (0x1c, 0x5ed3) => panic!("set_pal_battle_black should only be called from Rust"),
                 (0x1c, 0x5eda) => panic!("set_pal_battle should only be called from Rust"),
                 (0x1c, 0x6001) => panic!("set_pal_pokemon_whole_screen should only be called from Rust"),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),

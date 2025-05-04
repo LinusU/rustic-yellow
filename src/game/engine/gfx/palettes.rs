@@ -31,7 +31,7 @@ pub fn run_palette_command(cpu: &mut Cpu) {
     }
 
     match pal_fn {
-        palette_constants::SET_PAL_BATTLE_BLACK => cpu.call(0x5ed3), // SetPal_BattleBlack
+        palette_constants::SET_PAL_BATTLE_BLACK => set_pal_battle_black(cpu),
         palette_constants::SET_PAL_BATTLE => set_pal_battle(cpu),
         palette_constants::SET_PAL_TOWN_MAP => cpu.call(0x5f26), // SetPal_TownMap
         palette_constants::SET_PAL_STATUS_SCREEN => cpu.call(0x5f2d), // SetPal_StatusScreen
@@ -53,6 +53,11 @@ pub fn run_palette_command(cpu: &mut Cpu) {
     cpu.call(0x6328); // SendSGBPackets
 
     cpu.pc = cpu.stack_pop(); // ret
+}
+
+fn set_pal_battle_black(cpu: &mut Cpu) {
+    cpu.set_hl(0x6781); // PalPacket_Black
+    cpu.set_de(0x6621); // BlkPacket_Battle
 }
 
 // uses PalPacket_Empty to build a packet based on mon IDs and health color
