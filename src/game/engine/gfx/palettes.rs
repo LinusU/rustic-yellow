@@ -40,8 +40,8 @@ pub fn run_palette_command(cpu: &mut Cpu) {
         palette_constants::SET_PAL_SLOTS => set_pal_slots(cpu),
         palette_constants::SET_PAL_TITLE_SCREEN => set_pal_title_screen(cpu),
         palette_constants::SET_PAL_NIDORINO_INTRO => cpu.call(0x5f92), // SetPal_NidorinoIntro
-        palette_constants::SET_PAL_GENERIC => cpu.call(0x5f8b),        // SetPal_Generic
-        palette_constants::SET_PAL_OVERWORLD => cpu.call(0x5fa5),      // SetPal_Overworld
+        palette_constants::SET_PAL_GENERIC => set_pal_generic(cpu),
+        palette_constants::SET_PAL_OVERWORLD => cpu.call(0x5fa5), // SetPal_Overworld
         palette_constants::SET_PAL_PARTY_MENU => set_pal_party_menu(cpu),
         palette_constants::SET_PAL_POKEMON_WHOLE_SCREEN => set_pal_pokemon_whole_screen(cpu),
         palette_constants::SET_PAL_GAME_FREAK_INTRO => cpu.call(0x5f99), // SetPal_GameFreakIntro
@@ -176,6 +176,12 @@ fn set_pal_slots(cpu: &mut Cpu) {
 fn set_pal_title_screen(cpu: &mut Cpu) {
     cpu.set_hl(0x67c1); // PalPacket_Titlescreen
     cpu.set_de(0x6681); // BlkPacket_Titlescreen
+}
+
+// used mostly for menus and the Oak intro
+fn set_pal_generic(cpu: &mut Cpu) {
+    cpu.set_hl(0x67e1); // PalPacket_Generic
+    cpu.set_de(0x6611); // BlkPacket_WholeScreen
 }
 
 // used when a Pokemon is the only thing on the screen
