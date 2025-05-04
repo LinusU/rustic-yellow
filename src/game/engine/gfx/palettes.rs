@@ -1,5 +1,5 @@
 use crate::{
-    cpu::Cpu,
+    cpu::{Cpu, CpuFlag},
     game::{
         constants::{
             gfx_constants::{CONVERT_BGP, CONVERT_OBP0, CONVERT_OBP1},
@@ -8,6 +8,7 @@ use crate::{
             pokemon_constants,
         },
         data::sgb::sgb_packets::{PAL_PACKET_EMPTY, PAL_PACKET_POKEDEX},
+        macros,
         ram::{hram, wram},
     },
 };
@@ -370,4 +371,180 @@ pub fn transfer_pal_color_lcd_disabled(cpu: &mut Cpu) {
     cpu.set_hl(cpu.hl() + 2);
 
     cpu.pc = cpu.stack_pop(); // ret
+}
+
+/// translate the SGB pal packets into something usable for the CGB
+pub fn translate_pal_packet_to_bg_map_attributes(cpu: &mut Cpu) {
+    log::info!("Translating SGB palette packet to BG map attributes");
+
+    cpu.pc = 0x65be;
+
+    // push hl
+    cpu.stack_push(cpu.hl());
+    cpu.pc += 1;
+    cpu.cycle(16);
+
+    // pop de
+    {
+        let de = cpu.stack_pop();
+        cpu.set_de(de);
+        cpu.pc += 1;
+        cpu.cycle(12);
+    }
+
+    // ld hl, PalPacketPointers
+    cpu.set_hl(0x65e2); // PalPacketPointers
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld c, a
+    cpu.c = cpu.a;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    translate_pal_packet_to_bg_map_attributes_loop(cpu);
+}
+
+fn translate_pal_packet_to_bg_map_attributes_loop(cpu: &mut Cpu) {
+    cpu.pc = 0x65c5;
+
+    // ld a, e
+    cpu.a = cpu.e;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    translate_pal_packet_to_bg_map_attributes_inner_loop(cpu);
+}
+
+fn translate_pal_packet_to_bg_map_attributes_inner_loop(cpu: &mut Cpu) {
+    cpu.pc = 0x65c6;
+
+    // cp a, [hl]
+    {
+        let value = cpu.read_byte(cpu.hl());
+        cpu.set_flag(CpuFlag::Z, cpu.a == value);
+        cpu.set_flag(CpuFlag::H, (cpu.a & 0x0f) < (value & 0x0f));
+        cpu.set_flag(CpuFlag::N, true);
+        cpu.set_flag(CpuFlag::C, cpu.a < value);
+    }
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // jr z, .checkHighByte
+    if cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return translate_pal_packet_to_bg_map_attributes_check_high_byte(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // inc hl
+    cpu.set_hl(cpu.hl().wrapping_add(1));
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // inc hl
+    cpu.set_hl(cpu.hl().wrapping_add(1));
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // dec c
+    cpu.set_flag(CpuFlag::H, (cpu.c & 0x0f) == 0x00);
+    cpu.c = cpu.c.wrapping_sub(1);
+    cpu.set_flag(CpuFlag::Z, cpu.c == 0);
+    cpu.set_flag(CpuFlag::N, true);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // jr nz, .innerLoop
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return translate_pal_packet_to_bg_map_attributes_inner_loop(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // ret
+    cpu.pc = cpu.stack_pop();
+    cpu.cycle(16);
+}
+
+fn translate_pal_packet_to_bg_map_attributes_check_high_byte(cpu: &mut Cpu) {
+    cpu.pc = 0x65cf;
+
+    // the low byte of pointer matched, so check the high byte
+    // inc hl
+    cpu.set_hl(cpu.hl().wrapping_add(1));
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld a, d
+    cpu.a = cpu.d;
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // cp a, [hl]
+    {
+        let value = cpu.read_byte(cpu.hl());
+        cpu.set_flag(CpuFlag::Z, cpu.a == value);
+        cpu.set_flag(CpuFlag::H, (cpu.a & 0x0f) < (value & 0x0f));
+        cpu.set_flag(CpuFlag::N, true);
+        cpu.set_flag(CpuFlag::C, cpu.a < value);
+    }
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // jr z, .foundMatchingPointer
+    if cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return translate_pal_packet_to_bg_map_attributes_found_matching_pointer(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // inc hl
+    cpu.set_hl(cpu.hl().wrapping_add(1));
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // dec c
+    cpu.set_flag(CpuFlag::H, (cpu.c & 0x0f) == 0x00);
+    cpu.c = cpu.c.wrapping_sub(1);
+    cpu.set_flag(CpuFlag::Z, cpu.c == 0);
+    cpu.set_flag(CpuFlag::N, true);
+    cpu.pc += 1;
+    cpu.cycle(4);
+
+    // jr nz, .loop
+    if !cpu.flag(CpuFlag::Z) {
+        cpu.cycle(12);
+        return translate_pal_packet_to_bg_map_attributes_loop(cpu);
+    } else {
+        cpu.pc += 2;
+        cpu.cycle(8);
+    }
+
+    // ret
+    cpu.pc = cpu.stack_pop();
+    cpu.cycle(16);
+}
+
+fn translate_pal_packet_to_bg_map_attributes_found_matching_pointer(cpu: &mut Cpu) {
+    cpu.pc = 0x65d9;
+
+    // farcall LoadBGMapAttributes
+    macros::farcall::farcall(cpu, 0x2f, 0x7450);
+
+    // ret
+    cpu.pc = cpu.stack_pop();
+    cpu.cycle(16);
 }
