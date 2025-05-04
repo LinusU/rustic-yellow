@@ -97,6 +97,8 @@ pub const W_NPC_MOVEMENT_SCRIPT_POINTER_TABLE_NUM: u16 = 0xcc57;
 /// ROM bank of current NPC movement script
 pub const W_NPC_MOVEMENT_SCRIPT_BANK: u16 = 0xcc58;
 
+pub const W_TRAINER_CARD_BLK_PACKET: u16 = 0xcc5b;
+
 pub const W_CAN_EVOLVE_FLAGS: u16 = 0xccd3;
 
 pub const W_SIMULATED_JOYPAD_STATES_END: u16 = 0xccd3;

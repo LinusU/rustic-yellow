@@ -214,7 +214,7 @@ impl Cpu {
                 (0x1c, 0x6470) => crate::game::engine::gfx::palettes::transfer_cur_bgp_data(self),
                 (0x1c, 0x6511) => crate::game::engine::gfx::palettes::transfer_pal_color_lcd_enabled(self),
                 (0x1c, 0x651b) => crate::game::engine::gfx::palettes::transfer_pal_color_lcd_disabled(self),
-                (0x1c, 0x65be) => crate::game::engine::gfx::palettes::translate_pal_packet_to_bg_map_attributes(self),
+                (0x1c, 0x65be) => panic!("translate_pal_packet_to_bg_map_attributes should only be called from Rust"),
                 (0x1c, 0x7b91) => crate::game::engine::menus::save::save_sav_to_sram(self),
                 (0x3c, 0x4000) => crate::game::engine::pikachu::pikachu_pcm::play_pikachu_sound_clip(self),
                 (0x3c, 0x4274) => crate::game::engine::events::black_out::reset_status_and_halve_money_on_blackout(self),
