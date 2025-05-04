@@ -13,8 +13,50 @@ use crate::{
 
 const CGB_BASE_PAL_POINTERS: u16 = 0xdee1;
 
+pub fn run_palette_command(cpu: &mut Cpu) {
+    cpu.call(0x3ed7); // GetPredefRegisters
+
+    let mut pal_fn = cpu.b;
+
+    log::debug!("run_palette_command({:02x})", pal_fn);
+
+    if pal_fn == palette_constants::SET_PAL_DEFAULT {
+        pal_fn = cpu.read_byte(wram::W_DEFAULT_PALETTE_COMMAND);
+    }
+
+    if pal_fn == palette_constants::SET_PAL_PARTY_MENU_HP_BARS {
+        cpu.call(0x618b); // UpdatePartyMenuBlkPacket
+        cpu.pc = cpu.stack_pop(); // ret
+        return;
+    }
+
+    match pal_fn {
+        palette_constants::SET_PAL_BATTLE_BLACK => cpu.call(0x5ed3), // SetPal_BattleBlack
+        palette_constants::SET_PAL_BATTLE => set_pal_battle(cpu),
+        palette_constants::SET_PAL_TOWN_MAP => cpu.call(0x5f26), // SetPal_TownMap
+        palette_constants::SET_PAL_STATUS_SCREEN => cpu.call(0x5f2d), // SetPal_StatusScreen
+        palette_constants::SET_PAL_POKEDEX => cpu.call(0x5f60),  // SetPal_Pokedex
+        palette_constants::SET_PAL_SLOTS => cpu.call(0x5f7d),    // SetPal_Slots
+        palette_constants::SET_PAL_TITLE_SCREEN => cpu.call(0x5f84), // SetPal_TitleScreen
+        palette_constants::SET_PAL_NIDORINO_INTRO => cpu.call(0x5f92), // SetPal_NidorinoIntro
+        palette_constants::SET_PAL_GENERIC => cpu.call(0x5f8b),  // SetPal_Generic
+        palette_constants::SET_PAL_OVERWORLD => cpu.call(0x5fa5), // SetPal_Overworld
+        palette_constants::SET_PAL_PARTY_MENU => cpu.call(0x5f59), // SetPal_PartyMenu
+        palette_constants::SET_PAL_POKEMON_WHOLE_SCREEN => cpu.call(0x6001), // SetPal_PokemonWholeScreen
+        palette_constants::SET_PAL_GAME_FREAK_INTRO => cpu.call(0x5f99), // SetPal_GameFreakIntro
+        palette_constants::SET_PAL_TRAINER_CARD => cpu.call(0x6025),     // SetPal_TrainerCard
+        palette_constants::SET_PAL_SURFING_PIKACHU_TITLE => cpu.call(0x605d), // SetPal_PikachusBeach
+        palette_constants::SET_PAL_SURFING_PIKACHU_MINIGAME => cpu.call(0x6064), // SetPal_PikachusBeachTitle
+        i => panic!("Invalid SetPalFunctions index: {i}"),
+    }
+
+    cpu.call(0x6328); // SendSGBPackets
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 // uses PalPacket_Empty to build a packet based on mon IDs and health color
-pub fn set_pal_battle(cpu: &mut Cpu) {
+fn set_pal_battle(cpu: &mut Cpu) {
     log::debug!("set_pal_battle()");
 
     for (i, byte) in PAL_PACKET_EMPTY.iter().enumerate() {
@@ -59,8 +101,6 @@ pub fn set_pal_battle(cpu: &mut Cpu) {
     cpu.set_de(0x6621); //BlkPacket_Battle
     cpu.a = palette_constants::SET_PAL_BATTLE;
     cpu.write_byte(wram::W_DEFAULT_PALETTE_COMMAND, cpu.a);
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 pub fn load_sgb(cpu: &mut Cpu) {
