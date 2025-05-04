@@ -216,6 +216,7 @@ pub const W_ENEMY_HP_BAR_COLOR: u16 = 0xcf1d;
 pub const W_STATUS_SCREEN_HP_BAR_COLOR: u16 = 0xcf24;
 
 pub const W_PAL_PACKET: u16 = 0xcf2c;
+pub const W_PARTY_MENU_BLK_PACKET: u16 = 0xcf2d;
 
 /// the total amount of exp a mon gained
 pub const W_EXP_AMOUNT_GAINED: u16 = 0xcf4a;

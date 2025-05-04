@@ -42,7 +42,7 @@ pub fn run_palette_command(cpu: &mut Cpu) {
         palette_constants::SET_PAL_NIDORINO_INTRO => cpu.call(0x5f92), // SetPal_NidorinoIntro
         palette_constants::SET_PAL_GENERIC => cpu.call(0x5f8b), // SetPal_Generic
         palette_constants::SET_PAL_OVERWORLD => cpu.call(0x5fa5), // SetPal_Overworld
-        palette_constants::SET_PAL_PARTY_MENU => cpu.call(0x5f59), // SetPal_PartyMenu
+        palette_constants::SET_PAL_PARTY_MENU => set_pal_party_menu(cpu),
         palette_constants::SET_PAL_POKEMON_WHOLE_SCREEN => set_pal_pokemon_whole_screen(cpu),
         palette_constants::SET_PAL_GAME_FREAK_INTRO => cpu.call(0x5f99), // SetPal_GameFreakIntro
         palette_constants::SET_PAL_TRAINER_CARD => cpu.call(0x6025),     // SetPal_TrainerCard
@@ -144,6 +144,11 @@ fn set_pal_status_screen(cpu: &mut Cpu) {
 
     cpu.set_hl(wram::W_PAL_PACKET);
     cpu.set_de(0x6641); // BlkPacket_StatusScreen
+}
+
+fn set_pal_party_menu(cpu: &mut Cpu) {
+    cpu.set_hl(0x6771); // PalPacket_PartyMenu
+    cpu.set_de(wram::W_PARTY_MENU_BLK_PACKET);
 }
 
 // used when a Pokemon is the only thing on the screen
