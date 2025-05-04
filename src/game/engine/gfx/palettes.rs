@@ -33,15 +33,15 @@ pub fn run_palette_command(cpu: &mut Cpu) {
     match pal_fn {
         palette_constants::SET_PAL_BATTLE_BLACK => set_pal_battle_black(cpu),
         palette_constants::SET_PAL_BATTLE => set_pal_battle(cpu),
-        palette_constants::SET_PAL_TOWN_MAP => cpu.call(0x5f26), // SetPal_TownMap
+        palette_constants::SET_PAL_TOWN_MAP => set_pal_town_map(cpu),
         palette_constants::SET_PAL_STATUS_SCREEN => cpu.call(0x5f2d), // SetPal_StatusScreen
-        palette_constants::SET_PAL_POKEDEX => cpu.call(0x5f60),  // SetPal_Pokedex
-        palette_constants::SET_PAL_SLOTS => cpu.call(0x5f7d),    // SetPal_Slots
-        palette_constants::SET_PAL_TITLE_SCREEN => cpu.call(0x5f84), // SetPal_TitleScreen
+        palette_constants::SET_PAL_POKEDEX => cpu.call(0x5f60),       // SetPal_Pokedex
+        palette_constants::SET_PAL_SLOTS => cpu.call(0x5f7d),         // SetPal_Slots
+        palette_constants::SET_PAL_TITLE_SCREEN => cpu.call(0x5f84),  // SetPal_TitleScreen
         palette_constants::SET_PAL_NIDORINO_INTRO => cpu.call(0x5f92), // SetPal_NidorinoIntro
-        palette_constants::SET_PAL_GENERIC => cpu.call(0x5f8b),  // SetPal_Generic
-        palette_constants::SET_PAL_OVERWORLD => cpu.call(0x5fa5), // SetPal_Overworld
-        palette_constants::SET_PAL_PARTY_MENU => cpu.call(0x5f59), // SetPal_PartyMenu
+        palette_constants::SET_PAL_GENERIC => cpu.call(0x5f8b),       // SetPal_Generic
+        palette_constants::SET_PAL_OVERWORLD => cpu.call(0x5fa5),     // SetPal_Overworld
+        palette_constants::SET_PAL_PARTY_MENU => cpu.call(0x5f59),    // SetPal_PartyMenu
         palette_constants::SET_PAL_POKEMON_WHOLE_SCREEN => set_pal_pokemon_whole_screen(cpu),
         palette_constants::SET_PAL_GAME_FREAK_INTRO => cpu.call(0x5f99), // SetPal_GameFreakIntro
         palette_constants::SET_PAL_TRAINER_CARD => cpu.call(0x6025),     // SetPal_TrainerCard
@@ -106,6 +106,11 @@ fn set_pal_battle(cpu: &mut Cpu) {
     cpu.set_de(0x6621); //BlkPacket_Battle
     cpu.a = palette_constants::SET_PAL_BATTLE;
     cpu.write_byte(wram::W_DEFAULT_PALETTE_COMMAND, cpu.a);
+}
+
+fn set_pal_town_map(cpu: &mut Cpu) {
+    cpu.set_hl(0x6791); // PalPacket_TownMap
+    cpu.set_de(0x6611); // BlkPacket_WholeScreen
 }
 
 // used when a Pokemon is the only thing on the screen
