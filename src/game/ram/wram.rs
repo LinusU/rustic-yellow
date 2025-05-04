@@ -213,6 +213,8 @@ pub const W_WHOLE_SCREEN_PALETTE_MON_SPECIES: u16 = 0xcf1c;
 pub const W_PLAYER_HP_BAR_COLOR: u16 = 0xcf1c;
 pub const W_ENEMY_HP_BAR_COLOR: u16 = 0xcf1d;
 
+pub const W_STATUS_SCREEN_HP_BAR_COLOR: u16 = 0xcf24;
+
 pub const W_PAL_PACKET: u16 = 0xcf2c;
 
 /// the total amount of exp a mon gained

@@ -199,6 +199,7 @@ impl Cpu {
                 (0x1c, 0x5ed3) => panic!("set_pal_battle_black should only be called from Rust"),
                 (0x1c, 0x5eda) => panic!("set_pal_battle should only be called from Rust"),
                 (0x1c, 0x5f26) => panic!("set_pal_town_map should only be called from Rust"),
+                (0x1c, 0x5f2d) => panic!("set_pal_status_screen should only be called from Rust"),
                 (0x1c, 0x6001) => panic!("set_pal_pokemon_whole_screen should only be called from Rust"),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
                 (0x1c, 0x6328) => crate::game::engine::gfx::palettes::send_sgb_packets(self),
