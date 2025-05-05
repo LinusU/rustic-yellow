@@ -1,16 +1,20 @@
 use crate::{
-    cpu::{Cpu, CpuFlag},
+    cpu::Cpu,
     game::{
         constants::{
             gfx_constants::{CONVERT_BGP, CONVERT_OBP0, CONVERT_OBP1},
             hardware_constants::{self, R_LCDC, R_LCDC_ENABLE},
-            palette_constants::{self, NUM_ACTIVE_PALS, NUM_PAL_COLORS},
+            palette_constants::{self, NUM_ACTIVE_PALS, NUM_PAL_COLORS, PAL_GREENMON},
             pokemon_constants,
         },
-        data::sgb::sgb_packets::{PAL_PACKET_EMPTY, PAL_PACKET_POKEDEX},
+        data::{
+            pokemon::palettes::monster_palette,
+            sgb::sgb_packets::{PAL_PACKET_EMPTY, PAL_PACKET_POKEDEX},
+        },
         macros,
         ram::{hram, wram},
     },
+    PokemonSpecies,
 };
 
 const CGB_BASE_PAL_POINTERS: u16 = 0xdee1;
@@ -70,19 +74,17 @@ fn set_pal_battle(cpu: &mut Cpu) {
         cpu.write_byte(wram::W_PAL_PACKET + i as u16, *byte);
     }
 
-    if cpu.read_byte(wram::W_BATTLE_MON_SPECIES) == 0 {
-        cpu.set_hl(wram::W_BATTLE_MON_SPECIES);
+    let player_species_index = if cpu.read_byte(wram::W_BATTLE_MON_SPECIES) == 0 {
+        0
     } else {
         let idx = cpu.read_byte(wram::W_PLAYER_MON_NUMBER) as u16;
-        cpu.set_hl(wram::W_PARTY_MON1 + (wram::W_PARTY_MON2 - wram::W_PARTY_MON1) * idx);
-    }
+        cpu.read_byte(wram::W_PARTY_MON1 + (wram::W_PARTY_MON2 - wram::W_PARTY_MON1) * idx)
+    };
 
-    cpu.call(0x6093); // DeterminePaletteID
-    let player_palette_id = cpu.a;
+    let player_palette_id = determine_palette_id(player_species_index);
 
-    cpu.set_hl(wram::W_ENEMY_MON_SPECIES2);
-    cpu.call(0x6093); // DeterminePaletteID
-    let enemy_palette_id = cpu.a;
+    let enemy_species_index = cpu.read_byte(wram::W_ENEMY_MON_SPECIES2);
+    let enemy_palette_id = determine_palette_id(enemy_species_index);
 
     let player_hp_palette_id = match cpu.read_byte(wram::W_PLAYER_HP_BAR_COLOR) {
         0 => palette_constants::PAL_GREENBAR,
@@ -123,15 +125,14 @@ fn set_pal_status_screen(cpu: &mut Cpu) {
         cpu.write_byte(wram::W_PAL_PACKET + i as u16, *byte);
     }
 
-    cpu.a = cpu.read_byte(wram::W_CUR_PARTY_SPECIES);
+    let species = cpu.read_byte(wram::W_CUR_PARTY_SPECIES);
 
-    if cpu.a > pokemon_constants::NUM_POKEMON_INDEXES {
+    let mon_pal = if species > pokemon_constants::NUM_POKEMON_INDEXES {
         // not pokemon
-        cpu.a = 1;
-    }
-
-    cpu.call(0x6094); // DeterminePaletteIDOutOfBattle
-    let mon_pal = cpu.a;
+        PAL_GREENMON
+    } else {
+        determine_palette_id(species)
+    };
 
     let hp_pal = match cpu.read_byte(wram::W_STATUS_SCREEN_HP_BAR_COLOR) {
         0 => palette_constants::PAL_GREENBAR,
@@ -159,9 +160,8 @@ fn set_pal_pokedex(cpu: &mut Cpu) {
         cpu.write_byte(wram::W_PAL_PACKET + i as u16, *byte);
     }
 
-    cpu.a = cpu.read_byte(wram::W_CUR_PARTY_SPECIES);
-    cpu.call(0x6094); // DeterminePaletteIDOutOfBattle
-    let mon_pal = cpu.a;
+    let species = cpu.read_byte(wram::W_CUR_PARTY_SPECIES);
+    let mon_pal = determine_palette_id(species);
 
     cpu.write_byte(wram::W_PAL_PACKET + 3, mon_pal);
 
@@ -209,17 +209,21 @@ fn set_pal_pokemon_whole_screen(cpu: &mut Cpu) {
         cpu.write_byte(wram::W_PAL_PACKET + i as u16, *byte);
     }
 
-    if cpu.c != 0 {
-        cpu.a = palette_constants::PAL_BLACK;
+    let pal = if cpu.c != 0 {
+        palette_constants::PAL_BLACK
     } else {
-        cpu.a = cpu.read_byte(wram::W_WHOLE_SCREEN_PALETTE_MON_SPECIES);
-        cpu.call(0x6094); // DeterminePaletteIDOutOfBattle
-    }
+        let species = cpu.read_byte(wram::W_WHOLE_SCREEN_PALETTE_MON_SPECIES);
+        determine_palette_id(species)
+    };
 
-    cpu.write_byte(wram::W_PAL_PACKET + 1, cpu.a);
+    cpu.write_byte(wram::W_PAL_PACKET + 1, pal);
 
     cpu.set_hl(wram::W_PAL_PACKET);
     cpu.set_de(0x6611); // BlkPacket_WholeScreen
+}
+
+pub fn determine_palette_id(species_index: u8) -> u8 {
+    monster_palette(PokemonSpecies::from_index(species_index))
 }
 
 pub fn load_sgb(cpu: &mut Cpu) {

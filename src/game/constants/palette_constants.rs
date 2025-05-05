@@ -22,7 +22,16 @@ pub const SET_PAL_SURFING_PIKACHU_MINIGAME: u8 = 0x0f;
 pub const SET_PAL_PARTY_MENU_HP_BARS: u8 = 0xfc;
 pub const SET_PAL_DEFAULT: u8 = 0xff;
 
+pub const PAL_MEWMON: u8 = 0x10;
+pub const PAL_BLUEMON: u8 = 0x11;
+pub const PAL_REDMON: u8 = 0x12;
+pub const PAL_CYANMON: u8 = 0x13;
+pub const PAL_PURPLEMON: u8 = 0x14;
 pub const PAL_BROWNMON: u8 = 0x15;
+pub const PAL_GREENMON: u8 = 0x16;
+pub const PAL_PINKMON: u8 = 0x17;
+pub const PAL_YELLOWMON: u8 = 0x18;
+pub const PAL_GRAYMON: u8 = 0x19;
 pub const PAL_BLACK: u8 = 0x1e;
 pub const PAL_GREENBAR: u8 = 0x1f;
 pub const PAL_YELLOWBAR: u8 = 0x20;
