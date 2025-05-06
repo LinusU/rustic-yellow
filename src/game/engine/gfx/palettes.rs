@@ -55,7 +55,7 @@ pub fn run_palette_command(cpu: &mut Cpu) {
         SET_PAL_GAME_FREAK_INTRO => set_pal_game_freak_intro(cpu),
         SET_PAL_TRAINER_CARD => set_pal_trainer_card(cpu),
         SET_PAL_SURFING_PIKACHU_TITLE => set_pal_pikachus_beach(cpu),
-        SET_PAL_SURFING_PIKACHU_MINIGAME => cpu.call(0x6064), // SetPal_PikachusBeachTitle
+        SET_PAL_SURFING_PIKACHU_MINIGAME => set_pal_pikachus_beach_title(cpu),
         i => panic!("Invalid SetPalFunctions index: {i}"),
     }
 
@@ -298,6 +298,11 @@ fn set_pal_trainer_card(cpu: &mut Cpu) {
 pub fn set_pal_pikachus_beach(cpu: &mut Cpu) {
     cpu.set_hl(0x6811); // PalPacket_PikachusBeach
     cpu.set_de(0x6611); // BlkPacket_WholeScreen
+}
+
+pub fn set_pal_pikachus_beach_title(cpu: &mut Cpu) {
+    cpu.set_hl(0x6821); // PalPacket_PikachusBeachTitle
+    cpu.set_de(0x6751); // BlkPacket_PikachusBeachTitle
 }
 
 /// The length of the blk data of each badge on the Trainer Card.
