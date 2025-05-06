@@ -192,6 +192,7 @@ impl Cpu {
                 (0x08, 0x5495) => crate::game::engine::pokemon::bills_pc::bills_pc_menu(self),
                 (0x0f, 0x4e25) => crate::game::engine::battle::core::draw_player_hud_and_hp_bar(self),
                 (0x0f, 0x59ac) => crate::game::engine::battle::core::is_ghost_battle(self),
+                (0x0f, 0x6fe7) => crate::game::engine::battle::core::load_hud_tile_patterns(self),
                 (0x15, 0x525f) => crate::game::engine::battle::experience::gain_experience(self),
                 (0x15, 0x547b) => panic!("divide_exp_data_by_num_mons_gaining_exp should only be called from Rust"),
                 (0x15, 0x54ae) => panic!("boost_exp should only be called from Rust"),
