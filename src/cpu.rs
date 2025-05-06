@@ -4,6 +4,7 @@ use std::{
 };
 
 use crate::{
+    game::constants::hardware_constants,
     game_state::GameState,
     gpu::GpuLayer,
     keypad::{KeyboardEvent, KeypadKey, TextEvent},
@@ -320,6 +321,17 @@ impl Cpu {
 
     pub fn keyboard_text(&mut self) -> TextEvent {
         self.mmu.keypad.text()
+    }
+
+    pub fn wait_for_blank(&mut self) {
+        const LCDC_MASK: u8 = 1 << hardware_constants::R_LCDC_ENABLE;
+        const STAT_MASK: u8 = 0b10; // mask for non-V-blank/non-H-blank STAT mode
+
+        if (self.read_byte(hardware_constants::R_LCDC) & LCDC_MASK) != 0 {
+            while self.read_byte(hardware_constants::R_STAT) & STAT_MASK != 0 {
+                self.cycle(4);
+            }
+        }
     }
 
     pub fn start_music<T, TSource>(&mut self, music: T)

@@ -3,7 +3,7 @@ use crate::{
     game::{
         constants::{
             gfx_constants::{CONVERT_BGP, CONVERT_OBP0, CONVERT_OBP1},
-            hardware_constants::{self, R_LCDC, R_LCDC_ENABLE},
+            hardware_constants,
             map_constants::*,
             palette_constants::*,
             pokemon_constants,
@@ -387,20 +387,7 @@ pub fn transfer_cur_bgp_data(cpu: &mut Cpu) {
 
     log::trace!("transfer_cur_bgp_data({:02x})", pal_index);
 
-    if (cpu.read_byte(R_LCDC) & (1 << R_LCDC_ENABLE)) != 0 {
-        // mask for non-V-blank/non-H-blank STAT mode
-        let mask = 0b10;
-
-        // In case we're already in H-blank or V-blank, wait for it to end. This is a
-        // precaution so that the transfer doesn't extend past the blanking period.
-        while cpu.read_byte(hardware_constants::R_STAT) & mask == 0 {
-            cpu.cycle(4);
-        }
-
-        while cpu.read_byte(hardware_constants::R_STAT) & mask != 0 {
-            cpu.cycle(4);
-        }
-    }
+    cpu.wait_for_blank();
 
     for i in 0..NUM_PAL_COLORS {
         let hi = cpu.read_byte(wram::W_CGB_PAL + (i as u16 * 2));
@@ -418,16 +405,7 @@ pub fn transfer_cur_bgp_data(cpu: &mut Cpu) {
 
 /// Transfer a palette color while the LCD is enabled.
 pub fn transfer_pal_color_lcd_enabled(cpu: &mut Cpu) {
-    // In case we're already in H-blank or V-blank, wait for it to end. This is a
-    // precaution so that the transfer doesn't extend past the blanking period.
-    while (cpu.read_byte(hardware_constants::R_STAT) & cpu.b) == 0 {
-        cpu.cycle(4);
-    }
-
-    // Wait for H-blank or V-blank to begin.
-    while (cpu.read_byte(hardware_constants::R_STAT) & cpu.b) != 0 {
-        cpu.cycle(4);
-    }
+    cpu.wait_for_blank();
 
     // fall through
     transfer_pal_color_lcd_disabled(cpu)
