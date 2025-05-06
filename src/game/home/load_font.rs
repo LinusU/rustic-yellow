@@ -6,7 +6,7 @@ use crate::{
 };
 
 const EXP_BAR_PNG: &[u8] = include_bytes!("../../../gfx/exp_bar.png");
-const HP_BAR_AND_STATUS_PNG: &[u8] = include_bytes!("../../../gfx/font_battle_extra.png");
+const HP_BAR_AND_STATUS_PNG: &[u8] = include_bytes!("../../../gfx/font/font_battle_extra.png");
 
 pub fn png_to_2bpp(bytes: &[u8]) -> image::ImageResult<Vec<u8>> {
     Ok(image::load_from_memory_with_format(bytes, image::ImageFormat::Png)?.into_gb2bpp())

@@ -168,7 +168,7 @@ impl Gpu {
             update_screen,
             layers: vec![],
             atlas_box_border: load_png(include_bytes!("../gfx/box_border.png")),
-            atlas_font: load_png(include_bytes!("../gfx/font.png")),
+            atlas_font: load_png(include_bytes!("../gfx/font/font.png")),
             atlas_pokemon_icons: load_png(include_bytes!("../gfx/pokemon_icons.png")),
         }
     }
