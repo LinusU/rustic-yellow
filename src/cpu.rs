@@ -205,6 +205,7 @@ impl Cpu {
                 (0x1c, 0x5f7d) => panic!("set_pal_slots should only be called from Rust"),
                 (0x1c, 0x5f84) => panic!("set_pal_title_screen should only be called from Rust"),
                 (0x1c, 0x5f8b) => panic!("set_pal_generic should only be called from Rust"),
+                (0x1c, 0x5fa5) => panic!("set_pal_overworld should only be called from Rust"),
                 (0x1c, 0x5f92) => panic!("set_pal_nidorino_intro should only be called from Rust"),
                 (0x1c, 0x5f99) => panic!("set_pal_game_freak_intro should only be called from Rust"),
                 (0x1c, 0x6001) => panic!("set_pal_pokemon_whole_screen should only be called from Rust"),
