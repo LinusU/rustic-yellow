@@ -58,15 +58,10 @@ pub fn run_palette_command(cpu: &mut Cpu) {
         SET_PAL_SURFING_PIKACHU_MINIGAME => set_pal_pikachus_beach_title(cpu),
         i => panic!("Invalid SetPalFunctions index: {i}"),
     }
-
-    cpu.call(0x6328); // SendSGBPackets
-
-    cpu.pc = cpu.stack_pop(); // ret
 }
 
 fn set_pal_battle_black(cpu: &mut Cpu) {
-    cpu.set_hl(0x6781); // PalPacket_Black
-    cpu.set_de(0x6621); // BlkPacket_Battle
+    send_sgb_packets(cpu, 0x6781, 0x6621); // PalPacket_Black, BlkPacket_Battle
 }
 
 // uses PalPacket_Empty to build a packet based on mon IDs and health color
@@ -108,16 +103,13 @@ fn set_pal_battle(cpu: &mut Cpu) {
     cpu.write_byte(wram::W_PAL_PACKET + 5, player_palette_id);
     cpu.write_byte(wram::W_PAL_PACKET + 7, enemy_palette_id);
 
-    cpu.set_hl(wram::W_PAL_PACKET);
+    cpu.write_byte(wram::W_DEFAULT_PALETTE_COMMAND, SET_PAL_BATTLE);
 
-    cpu.set_de(0x6621); //BlkPacket_Battle
-    cpu.a = SET_PAL_BATTLE;
-    cpu.write_byte(wram::W_DEFAULT_PALETTE_COMMAND, cpu.a);
+    send_sgb_packets(cpu, wram::W_PAL_PACKET, 0x6621); // _, BlkPacket_Battle
 }
 
 fn set_pal_town_map(cpu: &mut Cpu) {
-    cpu.set_hl(0x6791); // PalPacket_TownMap
-    cpu.set_de(0x6611); // BlkPacket_WholeScreen
+    send_sgb_packets(cpu, 0x6791, 0x6611); // PalPacket_TownMap, BlkPacket_WholeScreen
 }
 
 // uses PalPacket_Empty to build a packet based the mon ID
@@ -147,13 +139,11 @@ fn set_pal_status_screen(cpu: &mut Cpu) {
     cpu.write_byte(wram::W_PAL_PACKET + 1, hp_pal);
     cpu.write_byte(wram::W_PAL_PACKET + 3, mon_pal);
 
-    cpu.set_hl(wram::W_PAL_PACKET);
-    cpu.set_de(0x6641); // BlkPacket_StatusScreen
+    send_sgb_packets(cpu, wram::W_PAL_PACKET, 0x6641); // _, BlkPacket_StatusScreen
 }
 
 fn set_pal_party_menu(cpu: &mut Cpu) {
-    cpu.set_hl(0x6771); // PalPacket_PartyMenu
-    cpu.set_de(wram::W_PARTY_MENU_BLK_PACKET);
+    send_sgb_packets(cpu, 0x6771, wram::W_PARTY_MENU_BLK_PACKET); // PalPacket_PartyMenu, _
 }
 
 fn set_pal_pokedex(cpu: &mut Cpu) {
@@ -168,36 +158,29 @@ fn set_pal_pokedex(cpu: &mut Cpu) {
 
     cpu.write_byte(wram::W_PAL_PACKET + 3, mon_pal);
 
-    cpu.set_hl(wram::W_PAL_PACKET);
-    cpu.set_de(0x6651); // BlkPacket_Pokedex
+    send_sgb_packets(cpu, wram::W_PAL_PACKET, 0x6651); // _, BlkPacket_Pokedex
 }
 
 fn set_pal_slots(cpu: &mut Cpu) {
-    cpu.set_hl(0x67b1); // PalPacket_Slots
-    cpu.set_de(0x6661); // BlkPacket_Slots
+    send_sgb_packets(cpu, 0x67b1, 0x6661); // PalPacket_Slots, BlkPacket_Slots
 }
 
 fn set_pal_title_screen(cpu: &mut Cpu) {
-    cpu.set_hl(0x67c1); // PalPacket_Titlescreen
-    cpu.set_de(0x6681); // BlkPacket_Titlescreen
+    send_sgb_packets(cpu, 0x67c1, 0x6681); // PalPacket_Titlescreen, BlkPacket_Titlescreen
 }
 
 // used mostly for menus and the Oak intro
 fn set_pal_generic(cpu: &mut Cpu) {
-    cpu.set_hl(0x67e1); // PalPacket_Generic
-    cpu.set_de(0x6611); // BlkPacket_WholeScreen
+    send_sgb_packets(cpu, 0x67e1, 0x6611); // PalPacket_Generic, BlkPacket_WholeScreen
 }
 
 fn set_pal_nidorino_intro(cpu: &mut Cpu) {
-    cpu.set_hl(0x67f1); // PalPacket_NidorinoIntro
-    cpu.set_de(0x66a1); // BlkPacket_NidorinoIntro
+    send_sgb_packets(cpu, 0x67f1, 0x66a1); // PalPacket_NidorinoIntro, BlkPacket_NidorinoIntro
 }
 
 fn set_pal_game_freak_intro(cpu: &mut Cpu) {
-    cpu.set_hl(0x6801); // PalPacket_GameFreakIntro
-    cpu.set_de(0x6731); // BlkPacket_GameFreakIntro
-
     cpu.write_byte(wram::W_DEFAULT_PALETTE_COMMAND, SET_PAL_GENERIC);
+    send_sgb_packets(cpu, 0x6801, 0x6731); // PalPacket_GameFreakIntro, BlkPacket_GameFreakIntro
 }
 
 // uses PalPacket_Empty to build a packet based on the current map
@@ -236,10 +219,9 @@ fn set_pal_overworld(cpu: &mut Cpu) {
 
     cpu.write_byte(wram::W_PAL_PACKET + 1, pal);
 
-    cpu.set_hl(wram::W_PAL_PACKET);
-    cpu.set_de(0x6611); // BlkPacket_WholeScreen
-
     cpu.write_byte(wram::W_DEFAULT_PALETTE_COMMAND, SET_PAL_OVERWORLD);
+
+    send_sgb_packets(cpu, wram::W_PAL_PACKET, 0x6611); // _, BlkPacket_WholeScreen
 }
 
 // used when a Pokemon is the only thing on the screen
@@ -260,8 +242,7 @@ fn set_pal_pokemon_whole_screen(cpu: &mut Cpu) {
 
     cpu.write_byte(wram::W_PAL_PACKET + 1, pal);
 
-    cpu.set_hl(wram::W_PAL_PACKET);
-    cpu.set_de(0x6611); // BlkPacket_WholeScreen
+    send_sgb_packets(cpu, wram::W_PAL_PACKET, 0x6611); // _, BlkPacket_WholeScreen
 }
 
 fn set_pal_trainer_card(cpu: &mut Cpu) {
@@ -291,18 +272,15 @@ fn set_pal_trainer_card(cpu: &mut Cpu) {
         }
     }
 
-    cpu.set_hl(0x67d1); // PalPacket_TrainerCard
-    cpu.set_de(wram::W_TRAINER_CARD_BLK_PACKET);
+    send_sgb_packets(cpu, 0x67d1, wram::W_TRAINER_CARD_BLK_PACKET); // PalPacket_TrainerCard, _
 }
 
 pub fn set_pal_pikachus_beach(cpu: &mut Cpu) {
-    cpu.set_hl(0x6811); // PalPacket_PikachusBeach
-    cpu.set_de(0x6611); // BlkPacket_WholeScreen
+    send_sgb_packets(cpu, 0x6811, 0x6611); // PalPacket_PikachusBeach,  BlkPacket_WholeScreen
 }
 
 pub fn set_pal_pikachus_beach_title(cpu: &mut Cpu) {
-    cpu.set_hl(0x6821); // PalPacket_PikachusBeachTitle
-    cpu.set_de(0x6751); // BlkPacket_PikachusBeachTitle
+    send_sgb_packets(cpu, 0x6821, 0x6751); // PalPacket_PikachusBeachTitle,  BlkPacket_PikachusBeachTitle
 }
 
 /// The length of the blk data of each badge on the Trainer Card.
@@ -332,18 +310,12 @@ pub fn load_sgb(cpu: &mut Cpu) {
     cpu.pc = cpu.stack_pop();
 }
 
-/// Input:
-/// - hl: Pointer to the first packet to be sent
-/// - de: Pointer to the second packet to be sent
-pub fn send_sgb_packets(cpu: &mut Cpu) {
+pub fn send_sgb_packets(cpu: &mut Cpu, first_packet: u16, second_packet: u16) {
     log::trace!("send_sgb_packets()");
 
     if cpu.read_byte(hram::H_ON_CGB) == 0 {
         panic!("send_sgb_packets called on non-SGB device");
     }
-
-    let first_packet = cpu.hl();
-    let second_packet = cpu.de();
 
     cpu.set_hl(first_packet);
     cpu.call(0x6346); // InitCGBPalettes
