@@ -7,6 +7,7 @@ use crate::{
             map_constants::*,
             palette_constants::*,
             pokemon_constants,
+            ram_constants::NUM_BADGES,
             tileset_constants::{CAVERN, CEMETERY},
         },
         data::{
@@ -52,7 +53,7 @@ pub fn run_palette_command(cpu: &mut Cpu) {
         SET_PAL_PARTY_MENU => set_pal_party_menu(cpu),
         SET_PAL_POKEMON_WHOLE_SCREEN => set_pal_pokemon_whole_screen(cpu),
         SET_PAL_GAME_FREAK_INTRO => set_pal_game_freak_intro(cpu),
-        SET_PAL_TRAINER_CARD => cpu.call(0x6025), // SetPal_TrainerCard
+        SET_PAL_TRAINER_CARD => set_pal_trainer_card(cpu),
         SET_PAL_SURFING_PIKACHU_TITLE => cpu.call(0x605d), // SetPal_PikachusBeach
         SET_PAL_SURFING_PIKACHU_MINIGAME => cpu.call(0x6064), // SetPal_PikachusBeachTitle
         i => panic!("Invalid SetPalFunctions index: {i}"),
@@ -262,6 +263,51 @@ fn set_pal_pokemon_whole_screen(cpu: &mut Cpu) {
     cpu.set_hl(wram::W_PAL_PACKET);
     cpu.set_de(0x6611); // BlkPacket_WholeScreen
 }
+
+fn set_pal_trainer_card(cpu: &mut Cpu) {
+    const BLK_PACKET_TRAINER_CARD: u16 = 0x66f1;
+
+    for i in 0..0x40 {
+        let value = cpu.read_byte(BLK_PACKET_TRAINER_CARD + i);
+        cpu.write_byte(wram::W_TRAINER_CARD_BLK_PACKET + i, value);
+    }
+
+    let mut addr = wram::W_TRAINER_CARD_BLK_PACKET + 2;
+    let mut badges = cpu.read_byte(wram::W_OBTAINED_BADGES);
+
+    for byte_count in BADGE_BLK_DATA_LENGTHS {
+        let have_badge = badges & 1 != 0;
+        badges >>= 1;
+
+        if have_badge {
+            // The player does have the badge, so skip past the badge's blk data.
+            addr += byte_count as u16;
+        } else {
+            // The player doens't have the badge, so zero the badge's blk data.
+            for _ in 0..byte_count {
+                cpu.write_byte(addr, 0);
+                addr += 1;
+            }
+        }
+    }
+
+    cpu.set_hl(0x67d1); // PalPacket_TrainerCard
+    cpu.set_de(wram::W_TRAINER_CARD_BLK_PACKET);
+}
+
+/// The length of the blk data of each badge on the Trainer Card.
+///
+/// The Rainbow Badge has 3 entries because of its many colors.
+const BADGE_BLK_DATA_LENGTHS: [u8; NUM_BADGES] = [
+    6,     // Boulder Badge
+    6,     // Cascade Badge
+    6,     // Thunder Badge
+    6 * 3, // Rainbow Badge
+    6,     // Soul Badge
+    6,     // Marsh Badge
+    6,     // Volcano Badge
+    6,     // Earth Badge
+];
 
 pub fn determine_palette_id(species_index: u8) -> u8 {
     monster_palette(PokemonSpecies::from_index(species_index))
