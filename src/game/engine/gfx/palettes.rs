@@ -424,6 +424,25 @@ pub fn transfer_pal_color_lcd_disabled(cpu: &mut Cpu) {
     cpu.pc = cpu.stack_pop(); // ret
 }
 
+pub fn update_cgbpal_bgp(cpu: &mut Cpu) {
+    log::debug!("update_cgbpal_bgp()");
+
+    for index in 0..NUM_ACTIVE_PALS {
+        cpu.e = cpu.read_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2));
+        cpu.d = cpu.read_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2) + 1);
+
+        cpu.a = CONVERT_BGP;
+        cpu.call(0x640f); // DMGPalToCGBPal
+
+        cpu.a = index;
+        cpu.call(0x64a2); // BufferBGPPal
+    }
+
+    cpu.call(0x64ba); // TransferBGPPals
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn update_cgbpal_obp(cpu: &mut Cpu) {
     log::debug!("update_cgbpal_obp({})", cpu.c);
 
