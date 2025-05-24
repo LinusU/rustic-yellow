@@ -424,6 +424,28 @@ pub fn transfer_pal_color_lcd_disabled(cpu: &mut Cpu) {
     cpu.pc = cpu.stack_pop(); // ret
 }
 
+pub fn update_cgbpal_obp(cpu: &mut Cpu) {
+    log::debug!("update_cgbpal_obp({})", cpu.c);
+
+    for index in 0..NUM_ACTIVE_PALS {
+        cpu.e = cpu.read_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2));
+        cpu.d = cpu.read_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2) + 1);
+
+        cpu.a = cpu.c;
+        cpu.call(0x640f); // DMGPalToCGBPal
+
+        cpu.a = match cpu.c {
+            CONVERT_OBP0 => index,
+            CONVERT_OBP1 => 4 + index,
+            n => panic!("Invalid conversion type: {n}"),
+        };
+
+        cpu.call(0x64df); // TransferCurOBPData
+    }
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 /// translate the SGB pal packets into something usable for the CGB
 pub fn translate_pal_packet_to_bg_map_attributes(cpu: &mut Cpu) {
     log::debug!(
