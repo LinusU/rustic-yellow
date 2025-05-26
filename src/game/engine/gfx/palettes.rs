@@ -301,6 +301,37 @@ pub fn determine_palette_id(species_index: u8) -> u8 {
     monster_palette(PokemonSpecies::from_index(species_index))
 }
 
+pub fn yellow_intro_palette_action(cpu: &mut Cpu) {
+    log::debug!("yellow_intro_palette_action({})", cpu.e);
+
+    assert_ne!(cpu.read_byte(hram::H_ON_CGB), 0);
+
+    if cpu.e == 0 {
+        cpu.set_hl(0x67e1); // PalPacket_Generic
+        return init_cgb_palettes(cpu);
+    }
+
+    cpu.set_hl(0x6811); // PalPacket_PikachusBeach
+    cpu.call(0x6346); // InitCGBPalettes
+
+    cpu.a = cpu.read_byte(0x67e1 + 1); // PalPacket_Generic + 1
+    cpu.set_hl(0x67e1 + 2); // PalPacket_Generic
+    cpu.call(0x63fe); // GetCGBBasePalAddress
+
+    let index = 1;
+
+    cpu.write_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2), cpu.e);
+    cpu.write_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2) + 1, cpu.d);
+
+    cpu.a = CONVERT_BGP;
+    cpu.call(0x640f); // DMGPalToCGBPal
+
+    cpu.a = index;
+    cpu.call(0x6470); // TransferCurBGPData
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
+
 pub fn load_sgb(cpu: &mut Cpu) {
     // This function should only be called once
     assert_eq!(cpu.read_byte(wram::W_ON_SGB), 0x00);

@@ -216,6 +216,7 @@ impl Cpu {
                 (0x1c, 0x6064) => panic!("set_pal_pikachus_beach_title should only be called from Rust"),
                 (0x1c, 0x6093) => panic!("determine_palette_id should only be called from Rust"),
                 (0x1c, 0x6094) => panic!("determine_palette_id_out_of_battle should only be called from Rust"),
+                (0x1c, 0x60ad) => crate::game::engine::gfx::palettes::yellow_intro_palette_action(self),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
                 (0x1c, 0x6328) => panic!("send_sgb_packets should only be called from Rust"),
                 (0x1c, 0x6346) => crate::game::engine::gfx::palettes::init_cgb_palettes(self),
