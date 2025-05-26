@@ -61,6 +61,24 @@ pub enum CriticalHitOrOhko {
     FailedOhko = 0xff,
 }
 
+pub struct BattleMonView<'a> {
+    data: &'a [u8],
+}
+
+impl BattleMonView<'_> {
+    pub fn new(data: &[u8]) -> BattleMonView<'_> {
+        BattleMonView { data }
+    }
+
+    pub fn species(&self) -> Option<PokemonSpecies> {
+        PokemonSpecies::from_index(self.data[0])
+    }
+
+    pub fn level(&self) -> u8 {
+        self.data[0xe]
+    }
+}
+
 pub struct BattleMonViewMut<'a> {
     data: &'a mut [u8],
 }
@@ -178,6 +196,10 @@ impl GameState {
 
     pub fn set_high_ram_byte(&mut self, addr: usize, value: u8) {
         self.high_ram[addr] = value;
+    }
+
+    pub fn battle_mon(&self) -> BattleMonView<'_> {
+        BattleMonView::new(&self.data[0x1013..])
     }
 
     pub fn battle_mon_mut(&mut self) -> BattleMonViewMut<'_> {

@@ -4,6 +4,7 @@ use crate::{
         constants::{
             battle_constants::{MAX_LEVEL, NUM_STATS, TRANSFORMED},
             misc_constants::FLAG_SET,
+            music_constants::SFX_HEAL_HP,
             pikachu_emotion_constants::PIKAHAPPY_LEVELUP,
             serial_constants::LINK_STATE_BATTLING,
         },
@@ -149,6 +150,8 @@ pub fn gain_experience(cpu: &mut Cpu) {
         cpu.write_byte(wram::W_MON_DATA_LOCATION, 0);
         cpu.call(0x1132); // LoadMonData
 
+        animate_exp_bar(cpu);
+
         cpu.set_hl(mon_start + 0x21); // This HL is unused?
         macros::farcall::farcall(cpu, 0x16, 0x4d99); // CalcLevelFromExperience
         let calculated_level = cpu.d;
@@ -163,6 +166,8 @@ pub fn gain_experience(cpu: &mut Cpu) {
             pokemon.level,
             calculated_level
         );
+
+        keep_exp_bar_full(cpu);
 
         let saved_enemy_level = cpu.read_byte(wram::W_CUR_ENEMY_LEVEL);
 
@@ -260,6 +265,8 @@ pub fn gain_experience(cpu: &mut Cpu) {
         cpu.write_byte(wram::W_MON_DATA_LOCATION, 0); // PLAYER_PARTY_DATA
         cpu.call(0x1132); // LoadMonData
 
+        animate_exp_bar_again(cpu);
+
         cpu.d = 0x1;
         macros::farcall::callfar(cpu, 0x04, 0x568a); // PrintStatsBox
 
@@ -318,4 +325,90 @@ fn divide_exp_data_by_num_mons_gaining_exp(cpu: &mut Cpu) {
 
         cpu.write_byte(addr, output);
     }
+}
+
+fn animate_exp_bar_again(cpu: &mut Cpu) {
+    if !is_current_mon_battle_mon(cpu) {
+        return;
+    }
+
+    cpu.write_byte(wram::W_EXP_BAR_PIXEL_LENGTH, 0);
+
+    let addr = macros::coords::coord!(17, 11);
+
+    for i in 0..8 {
+        cpu.write_byte(addr - i, 0xc0);
+    }
+
+    animate_exp_bar(cpu);
+}
+
+fn animate_exp_bar(cpu: &mut Cpu) {
+    if !is_current_mon_battle_mon(cpu) {
+        return;
+    }
+
+    cpu.a = SFX_HEAL_HP;
+    cpu.call(0x3736); // PlaySoundWaitForCurrent
+
+    let new_pixel_length = super::core::calc_exp_bar_pixel_length(cpu);
+    let prev_pixel_length = cpu.read_byte(wram::W_EXP_BAR_PIXEL_LENGTH);
+
+    cpu.write_byte(wram::W_EXP_BAR_PIXEL_LENGTH, cpu.a);
+
+    if new_pixel_length == prev_pixel_length {
+        return animate_expbar_done(cpu);
+    }
+
+    cpu.b = new_pixel_length.wrapping_sub(prev_pixel_length);
+    cpu.c = 0x08;
+
+    cpu.set_hl(macros::coords::coord!(17, 11));
+
+    loop {
+        cpu.a = cpu.read_byte(cpu.hl());
+
+        if cpu.a != 0xc8 {
+            cpu.a += 1;
+            cpu.write_byte(cpu.hl(), cpu.a);
+
+            cpu.call(0x1e64); // DelayFrame
+
+            cpu.b -= 1;
+
+            if cpu.b == 0 {
+                return animate_expbar_done(cpu);
+            }
+        } else {
+            cpu.set_hl(cpu.hl().wrapping_sub(1));
+            cpu.c -= 1;
+
+            if cpu.c == 0 {
+                return animate_expbar_done(cpu);
+            }
+        }
+    }
+}
+
+fn animate_expbar_done(cpu: &mut Cpu) {
+    cpu.set_bc(0x08);
+    cpu.set_hl(macros::coords::coord!(10, 11));
+    cpu.set_de(wram::W_TILE_MAP_BACKUP + 10 + 11 * 20);
+    cpu.call(0x00b1); // CopyData
+
+    cpu.c = 0x20;
+    cpu.call(0x372f); // DelayFrames
+}
+
+fn keep_exp_bar_full(cpu: &mut Cpu) {
+    if !is_current_mon_battle_mon(cpu) {
+        return;
+    }
+
+    let value = cpu.read_byte(wram::W_EXP_BAR_KEEP_FULL_FLAG);
+    cpu.write_byte(wram::W_EXP_BAR_KEEP_FULL_FLAG, value | 1);
+}
+
+fn is_current_mon_battle_mon(cpu: &mut Cpu) -> bool {
+    cpu.borrow_wram().player_mon_number() == cpu.read_byte(wram::W_WHICH_POKEMON)
 }

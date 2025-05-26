@@ -163,6 +163,10 @@ pub const W_LOW_HEALTH_ALARM_DISABLED: u16 = 0xccf6;
 
 pub const W_PLAYER_MON_MINIMIZED: u16 = 0xccf7;
 
+// EXP Bar state tracking
+pub const W_EXP_BAR_PIXEL_LENGTH: u16 = 0xccfa;
+pub const W_EXP_BAR_KEEP_FULL_FLAG: u16 = 0xcd04;
+
 /// Number of hits by enemy in attacks like Double Slap, etc.
 pub const W_ENEMY_NUM_HITS: u16 = 0xcd05;
 

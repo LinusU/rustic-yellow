@@ -34,6 +34,8 @@ pub fn draw_player_hud_and_hp_bar(cpu: &mut Cpu) {
     cpu.call(0x4f61); // CenterMonName
     cpu.call(0x1723); // PlaceString
 
+    print_exp_bar(cpu);
+
     cpu.set_hl(wram::W_BATTLE_MON_SPECIES);
     cpu.set_de(wram::W_LOADED_MON);
     cpu.set_bc(wram::W_BATTLE_MON_DVS - wram::W_BATTLE_MON_SPECIES);
@@ -163,4 +165,83 @@ pub fn load_hud_tile_patterns(cpu: &mut Cpu) {
     }
 
     cpu.pc = cpu.stack_pop(); // ret
+}
+
+fn print_exp_bar(cpu: &mut Cpu) {
+    let pixel_length = calc_exp_bar_pixel_length(cpu);
+
+    cpu.write_byte(wram::W_EXP_BAR_PIXEL_LENGTH, pixel_length);
+
+    let addr = macros::coords::coord!(17, 11);
+    let mut pixels_left = pixel_length;
+
+    for i in 0..8 {
+        if pixels_left > 8 {
+            cpu.write_byte(addr - i, 0xc8);
+            pixels_left -= 8;
+        } else {
+            cpu.write_byte(addr - i, 0xc0 + pixels_left);
+            pixels_left = 0;
+        }
+    }
+}
+
+pub fn calc_exp_bar_pixel_length(cpu: &mut Cpu) -> u8 {
+    cpu.set_hl(wram::W_EXP_BAR_KEEP_FULL_FLAG);
+
+    let keep_full = cpu.read_byte(wram::W_EXP_BAR_KEEP_FULL_FLAG);
+    dbg!(keep_full);
+
+    if (keep_full & 1) != 0 {
+        cpu.write_byte(wram::W_EXP_BAR_KEEP_FULL_FLAG, keep_full & !1);
+        return 0x40;
+    }
+
+    // get the base exp needed for the current level
+    let status = cpu.read_byte(wram::W_PLAYER_BATTLE_STATUS3);
+
+    let species = if (status & (1 << 3)) == 0 {
+        cpu.borrow_wram().battle_mon().species()
+    } else {
+        let n = cpu.borrow_wram().player_mon_number() as usize;
+        Some(cpu.borrow_wram().party().get(n).unwrap().species)
+    };
+
+    cpu.a = species.map_or(0, |s| s.into_index());
+    cpu.write_byte(wram::W_CUR_SPECIES, cpu.a);
+    cpu.call(0x132f); // GetMonHeader
+
+    cpu.d = cpu.borrow_wram().battle_mon().level();
+    macros::farcall::farcall(cpu, 0x16, 0x4dc0); // CalcExperience
+
+    let base_exp = u32::from_be_bytes([
+        0,
+        cpu.read_byte(hram::H_EXPERIENCE),
+        cpu.read_byte(hram::H_EXPERIENCE + 1),
+        cpu.read_byte(hram::H_EXPERIENCE + 2),
+    ]);
+
+    // get the exp needed to gain a level
+    cpu.d = cpu.borrow_wram().battle_mon().level() + 1;
+    macros::farcall::farcall(cpu, 0x16, 0x4dc0); // CalcExperience
+
+    let needed_exp = u32::from_be_bytes([
+        0,
+        cpu.read_byte(hram::H_EXPERIENCE),
+        cpu.read_byte(hram::H_EXPERIENCE + 1),
+        cpu.read_byte(hram::H_EXPERIENCE + 2),
+    ]);
+
+    let current_exp = {
+        let n = cpu.borrow_wram().player_mon_number() as usize;
+        cpu.borrow_wram().party().get(n).unwrap().exp
+    };
+
+    log::trace!("base = {base_exp}, current = {current_exp}, needed = {needed_exp}");
+
+    if current_exp >= needed_exp {
+        return 0x40;
+    }
+
+    ((current_exp - base_exp) * 0x40 / (needed_exp - base_exp)) as u8
 }

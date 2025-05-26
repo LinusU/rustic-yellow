@@ -15,7 +15,7 @@ use crate::{
             sgb::sgb_packets::{PAL_PACKET_EMPTY, PAL_PACKET_POKEDEX},
         },
         macros,
-        ram::{hram, wram},
+        ram::{hram, vram, wram},
     },
     PokemonSpecies,
 };
@@ -106,6 +106,22 @@ fn set_pal_battle(cpu: &mut Cpu) {
     cpu.write_byte(wram::W_DEFAULT_PALETTE_COMMAND, SET_PAL_BATTLE);
 
     send_sgb_packets(cpu, wram::W_PAL_PACKET, 0x6621); // _, BlkPacket_Battle
+
+    cpu.gpu_set_bg_palette_color(4, 0, [31, 31, 30]);
+    cpu.gpu_set_bg_palette_color(4, 1, [31, 31, 19]);
+    cpu.gpu_set_bg_palette_color(4, 2, [4, 17, 31]); // exp bar blue
+    cpu.gpu_set_bg_palette_color(4, 3, [6, 6, 6]);
+
+    cpu.write_byte(0xff4f, 1);
+
+    let offset = crate::game::constants::gfx_constants::BG_MAP_WIDTH as u16 * 11 + 17;
+
+    for i in 0..8 {
+        cpu.write_byte(vram::V_BG_MAP0 + offset - i, 4);
+        cpu.write_byte(vram::V_BG_MAP1 + offset - i, 4);
+    }
+
+    cpu.write_byte(0xff4f, 0);
 }
 
 fn set_pal_town_map(cpu: &mut Cpu) {
@@ -470,6 +486,12 @@ pub fn update_cgbpal_bgp(cpu: &mut Cpu) {
     }
 
     cpu.call(0x64ba); // TransferBGPPals
+
+    // Reset the fifth palette, only used by our Rust code
+    cpu.gpu_set_bg_palette_color(4, 0, [31, 31, 31]);
+    cpu.gpu_set_bg_palette_color(4, 1, [31, 31, 31]);
+    cpu.gpu_set_bg_palette_color(4, 2, [31, 31, 31]);
+    cpu.gpu_set_bg_palette_color(4, 3, [31, 31, 31]);
 
     cpu.pc = cpu.stack_pop(); // ret
 }
