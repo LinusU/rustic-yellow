@@ -498,6 +498,7 @@ fn new_battle(cpu: &mut Cpu) -> bool {
         return false;
     }
 
+    cpu.set_flag(CpuFlag::C, false);
     macros::farcall::farcall(cpu, 0x3d, 0x5ff2); // InitBattle
     cpu.flag(CpuFlag::C)
 }
