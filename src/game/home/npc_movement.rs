@@ -11,7 +11,7 @@ pub fn is_player_character_being_controlled_by_game(cpu: &mut Cpu) -> bool {
     }
 
     // currently stepping down from door bit
-    if (cpu.read_byte(wram::W_D736) & 1) != 0 {
+    if (cpu.read_byte(wram::W_D736) & (1 << 1)) != 0 {
         return true;
     }
 
