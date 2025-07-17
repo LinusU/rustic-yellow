@@ -190,7 +190,6 @@ pub fn calc_exp_bar_pixel_length(cpu: &mut Cpu) -> u8 {
     cpu.set_hl(wram::W_EXP_BAR_KEEP_FULL_FLAG);
 
     let keep_full = cpu.read_byte(wram::W_EXP_BAR_KEEP_FULL_FLAG);
-    dbg!(keep_full);
 
     if (keep_full & 1) != 0 {
         cpu.write_byte(wram::W_EXP_BAR_KEEP_FULL_FLAG, keep_full & !1);
