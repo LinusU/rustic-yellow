@@ -353,36 +353,35 @@ fn animate_exp_bar(cpu: &mut Cpu) {
     let new_pixel_length = super::core::calc_exp_bar_pixel_length(cpu);
     let prev_pixel_length = cpu.read_byte(wram::W_EXP_BAR_PIXEL_LENGTH);
 
-    cpu.write_byte(wram::W_EXP_BAR_PIXEL_LENGTH, cpu.a);
+    cpu.write_byte(wram::W_EXP_BAR_PIXEL_LENGTH, new_pixel_length);
 
-    if new_pixel_length == prev_pixel_length {
+    if new_pixel_length <= prev_pixel_length {
         return animate_expbar_done(cpu);
     }
 
-    cpu.b = new_pixel_length.wrapping_sub(prev_pixel_length);
-    cpu.c = 0x08;
+    let mut pixels_left = new_pixel_length - prev_pixel_length;
+    let mut steps_left = 0x08;
 
-    cpu.set_hl(macros::coords::coord!(17, 11));
+    let mut coords = macros::coords::coord!(17, 11);
 
     loop {
-        cpu.a = cpu.read_byte(cpu.hl());
+        let frame = cpu.read_byte(coords);
 
-        if cpu.a != 0xc8 {
-            cpu.a += 1;
-            cpu.write_byte(cpu.hl(), cpu.a);
+        if frame != 0xc8 {
+            cpu.write_byte(coords, frame + 1);
 
             cpu.call(0x1e64); // DelayFrame
 
-            cpu.b -= 1;
+            pixels_left -= 1;
 
-            if cpu.b == 0 {
+            if pixels_left == 0 {
                 return animate_expbar_done(cpu);
             }
         } else {
-            cpu.set_hl(cpu.hl().wrapping_sub(1));
-            cpu.c -= 1;
+            coords -= 1;
+            steps_left -= 1;
 
-            if cpu.c == 0 {
+            if steps_left == 0 {
                 return animate_expbar_done(cpu);
             }
         }
@@ -392,13 +391,14 @@ fn animate_exp_bar(cpu: &mut Cpu) {
 fn animate_expbar_done(cpu: &mut Cpu) {
     cpu.stop_sfx();
 
-    cpu.set_bc(0x08);
-    cpu.set_hl(macros::coords::coord!(10, 11));
-    cpu.set_de(wram::W_TILE_MAP_BACKUP + 10 + 11 * 20);
-    cpu.call(0x00b1); // CopyData
+    for i in 0..8 {
+        let value = cpu.read_byte(macros::coords::coord!(10, 11) + i);
+        cpu.write_byte(wram::W_TILE_MAP_BACKUP + 10 + 11 * 20 + i, value);
+    }
 
-    cpu.c = 0x20;
-    cpu.call(0x372f); // DelayFrames
+    for _ in 0..32 {
+        cpu.call(0x1e64); // DelayFrame
+    }
 }
 
 fn keep_exp_bar_full(cpu: &mut Cpu) {
