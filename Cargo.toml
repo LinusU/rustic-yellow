@@ -15,6 +15,7 @@ glium = { version = "0.32.1", default-features = false, features = ["glutin"] }
 image = { version = "0.25.6", default-features = false, features = ["png"] }
 image-gameboy = "0.1.0"
 log = "0.4.17"
+nix = { version = "0.30.1", features = ["fs"] }
 pokemon-sprite-compression = "0.1.2"
 pokemon-synthesizer = "0.2.2"
 rodio = { version = "0.17.1", default-features = false, features = ["flac"] }

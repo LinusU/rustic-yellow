@@ -5,7 +5,7 @@ use crate::{
     gpu::Gpu,
     keypad::{KeyboardEvent, Keypad},
     mbc5::MBC5,
-    serial::Serial,
+    serial::{Serial, SerialCallback},
     sound::Sound,
     sound2::Sound2,
     timer::Timer,
@@ -24,12 +24,12 @@ pub enum GbSpeed {
     Double,
 }
 
-pub struct Mmu {
+pub struct Mmu<'a> {
     wram: GameState,
     hdma: [u8; 4],
     pub inte: u8,
     pub intf: u8,
-    pub serial: Serial,
+    pub serial: Serial<'a>,
     pub timer: Timer,
     pub keypad: Keypad,
     pub gpu: Gpu,
@@ -45,14 +45,18 @@ pub struct Mmu {
     speed_switch_req: bool,
 }
 
-impl Mmu {
-    pub fn new(update_screen: SyncSender<Vec<u8>>, keypad_events: Receiver<KeyboardEvent>) -> Mmu {
+impl<'a> Mmu<'a> {
+    pub fn new(
+        serial_callback: SerialCallback<'a>,
+        update_screen: SyncSender<Vec<u8>>,
+        keypad_events: Receiver<KeyboardEvent>,
+    ) -> Mmu<'a> {
         let mut mmu = Mmu {
             wram: GameState::new(),
             hdma: [0; 4],
             inte: 0,
             intf: 0,
-            serial: Serial::new(),
+            serial: Serial::new_with_callback(serial_callback),
             timer: Timer::new(),
             keypad: Keypad::new(keypad_events),
             gpu: Gpu::new(update_screen),

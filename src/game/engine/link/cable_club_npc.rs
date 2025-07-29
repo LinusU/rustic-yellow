@@ -223,6 +223,7 @@ fn cable_club_npc_establish_connection_loop(cpu: &mut Cpu) {
     // vc_hook Link_fake_connection_status
     // vc_assert hSerialConnectionStatus == $ffaa, "hSerialConnectionStatus is no longer located at 00:ffaa"
     // vc_assert USING_INTERNAL_CLOCK == $02, "USING_INTERNAL_CLOCK is no longer equal to $02."
+    cpu.write_byte(0xffaa, 0x02);
 
     // ldh [rSC], a
     cpu.write_byte(hardware_constants::R_SC, cpu.a);

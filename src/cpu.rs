@@ -10,6 +10,7 @@ use crate::{
     keypad::{KeyboardEvent, KeypadKey, TextEvent},
     mmu::Mmu,
     save_state::SaveState,
+    serial::SerialCallback,
     sound2::{Music, Sfx},
     PokemonSpecies,
 };
@@ -23,7 +24,7 @@ pub enum CpuFlag {
     Z = 0b10000000,
 }
 
-pub struct Cpu {
+pub struct Cpu<'a> {
     pub(crate) a: u8,
     pub(crate) b: u8,
     pub(crate) c: u8,
@@ -40,17 +41,18 @@ pub struct Cpu {
     pub(crate) setdi: u32,
     pub(crate) setei: u32,
 
-    pub(crate) mmu: Mmu,
+    pub(crate) mmu: Mmu<'a>,
 
     pub(crate) starter: PokemonSpecies,
 }
 
-impl Cpu {
+impl<'a> Cpu<'a> {
     pub fn new(
+        serial_callback: SerialCallback<'a>,
         update_screen: SyncSender<Vec<u8>>,
         keyboard_events: Receiver<KeyboardEvent>,
         starter: PokemonSpecies,
-    ) -> Cpu {
+    ) -> Cpu<'a> {
         Cpu {
             a: 0x11,
             f: 0xB0,
@@ -68,7 +70,7 @@ impl Cpu {
             setdi: 0,
             setei: 0,
 
-            mmu: Mmu::new(update_screen, keyboard_events),
+            mmu: Mmu::new(serial_callback, update_screen, keyboard_events),
 
             starter,
         }

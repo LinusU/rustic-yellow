@@ -1,14 +1,18 @@
-pub struct Serial {
+pub type SerialCallback<'a> = Box<dyn FnMut(u8) -> Option<u8> + Send + 'a>;
+
+pub struct Serial<'a> {
     data: u8,
     control: u8,
+    callback: SerialCallback<'a>,
     pub interrupt: u8,
 }
 
-impl Serial {
-    pub fn new() -> Serial {
+impl<'a> Serial<'a> {
+    pub fn new_with_callback(cb: SerialCallback<'a>) -> Serial<'a> {
         Serial {
             data: 0,
             control: 0,
+            callback: cb,
             interrupt: 0,
         }
     }
@@ -18,9 +22,11 @@ impl Serial {
             0xFF01 => self.data = v,
             0xFF02 => {
                 self.control = v;
-
-                if v == 0x81 {
-                    // TODO: Send data somewhere?
+                if v & 0x81 == 0x81 {
+                    if let Some(v) = (self.callback)(self.data) {
+                        self.data = v;
+                        self.interrupt = 0x8
+                    }
                 }
             }
             _ => panic!("Serial does not handle address {:4X} (write)", a),

@@ -3,7 +3,7 @@ use std::{
     sync::mpsc::{Receiver, SyncSender},
 };
 
-use crate::{cpu::Cpu, keypad::KeyboardEvent, rom::ROM, PokemonSpecies};
+use crate::{cpu::Cpu, keypad::KeyboardEvent, rom::ROM, serial::SerialCallback, PokemonSpecies};
 
 pub mod audio;
 pub mod constants;
@@ -31,12 +31,13 @@ pub fn resources_root() -> Option<PathBuf> {
     None
 }
 
-pub struct Game {
-    cpu: Cpu,
+pub struct Game<'a> {
+    cpu: Cpu<'a>,
 }
 
-impl Game {
+impl<'a> Game<'a> {
     pub fn new(
+        serial_callback: SerialCallback<'a>,
         update_screen: SyncSender<Vec<u8>>,
         keyboard_events: Receiver<KeyboardEvent>,
         starter: PokemonSpecies,
@@ -46,7 +47,7 @@ impl Game {
         assert_eq!(ROM[0x149], 0x03);
 
         Self {
-            cpu: Cpu::new(update_screen, keyboard_events, starter),
+            cpu: Cpu::new(serial_callback, update_screen, keyboard_events, starter),
         }
     }
 

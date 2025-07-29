@@ -1,9 +1,64 @@
 use clap::Parser;
 use glium::glutin::platform::run_return::EventLoopExtRunReturn;
 use rustic_yellow::{Game, KeyboardEvent, PokemonSpecies};
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Write};
+use std::path::Path;
 use std::sync::mpsc::{self, Receiver, SyncSender};
 use std::sync::{atomic::AtomicU64, Arc};
 use std::thread;
+
+pub struct SerialLink {
+    reader: File,
+    writer: File,
+}
+
+impl SerialLink {
+    pub fn connect() -> std::io::Result<Self> {
+        let path1 = "/tmp/pokelink_pipe_1";
+        let path2 = "/tmp/pokelink_pipe_2";
+
+        if !Path::new(path1).exists() {
+            // First instance: create the pipes
+            nix::unistd::mkfifo(path1, nix::sys::stat::Mode::S_IRWXU)?;
+            nix::unistd::mkfifo(path2, nix::sys::stat::Mode::S_IRWXU)?;
+
+            let reader = OpenOptions::new().read(true).open(path1)?;
+            let writer = OpenOptions::new().write(true).open(path2)?;
+
+            log::info!("Serial link created with pipes: {path1} and {path2}");
+
+            Ok(Self { reader, writer })
+        } else {
+            // Second instance
+            let writer = OpenOptions::new().write(true).open(path1)?;
+            let reader = OpenOptions::new().read(true).open(path2)?;
+
+            nix::unistd::unlink(path1)?;
+            nix::unistd::unlink(path2)?;
+
+            log::info!("Serial link connected to existing pipes: {path1} and {path2}");
+
+            Ok(Self { reader, writer })
+        }
+    }
+
+    pub fn send(&mut self, byte: u8) -> std::io::Result<u8> {
+        log::debug!("Sending byte: {byte:#04x}");
+        self.writer.write_all(&[byte])?;
+        let mut buf = [0u8; 1];
+        self.reader.read_exact(&mut buf)?;
+        log::debug!("Received byte: {:#04x}", buf[0]);
+        Ok(buf[0])
+    }
+}
+
+impl Drop for SerialLink {
+    fn drop(&mut self) {
+        let _ = nix::unistd::unlink("/tmp/pokelink_pipe_1");
+        let _ = nix::unistd::unlink("/tmp/pokelink_pipe_2");
+    }
+}
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -210,7 +265,17 @@ fn run_game(
     receiver: Receiver<KeyboardEvent>,
     starter: PokemonSpecies,
 ) {
-    Game::new(sender, receiver, starter).boot();
+    let mut serial_link = SerialLink::connect().unwrap();
+
+    let serial_callback = Box::new(move |byte: u8| match serial_link.send(byte) {
+        Ok(response) => Some(response),
+        Err(err) => {
+            log::error!("Serial communication error: {err}");
+            None
+        }
+    });
+
+    Game::new(serial_callback, sender, receiver, starter).boot();
 }
 
 fn timer_periodic(delay: Arc<AtomicU64>) -> Receiver<()> {
