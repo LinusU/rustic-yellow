@@ -1,44 +1,4 @@
-use crate::{game::constants::pokemon_data_constants::GrowthRate, rom::ROM};
-
 use super::{BoxedPokemon, DeterminantValues, PokeString, PokemonSpecies};
-
-trait PokemonSpeciesStats {
-    fn base_hp(&self) -> u8;
-    fn base_attack(&self) -> u8;
-    fn base_defense(&self) -> u8;
-    fn base_speed(&self) -> u8;
-    fn base_special(&self) -> u8;
-    fn growth_rate(&self) -> GrowthRate;
-}
-
-const BASE_STATS: usize = 0x0383de;
-const BASE_DATA_SIZE: usize = 28;
-
-impl PokemonSpeciesStats for PokemonSpecies {
-    fn base_hp(&self) -> u8 {
-        ROM[BASE_STATS + (BASE_DATA_SIZE * (*self as usize - 1)) + 1]
-    }
-
-    fn base_attack(&self) -> u8 {
-        ROM[BASE_STATS + (BASE_DATA_SIZE * (*self as usize - 1)) + 2]
-    }
-
-    fn base_defense(&self) -> u8 {
-        ROM[BASE_STATS + (BASE_DATA_SIZE * (*self as usize - 1)) + 3]
-    }
-
-    fn base_speed(&self) -> u8 {
-        ROM[BASE_STATS + (BASE_DATA_SIZE * (*self as usize - 1)) + 4]
-    }
-
-    fn base_special(&self) -> u8 {
-        ROM[BASE_STATS + (BASE_DATA_SIZE * (*self as usize - 1)) + 5]
-    }
-
-    fn growth_rate(&self) -> GrowthRate {
-        ROM[BASE_STATS + (BASE_DATA_SIZE * (*self as usize - 1)) + 19].into()
-    }
-}
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct PartyPokemon {
