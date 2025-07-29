@@ -24,14 +24,16 @@ pub fn gain_experience(cpu: &mut Cpu) {
 
     divide_exp_data_by_num_mons_gaining_exp(cpu);
 
-    cpu.set_hl(wram::W_PARTY_MON1);
-    cpu.write_byte(wram::W_WHICH_POKEMON, 0);
-
     let party_len = cpu.borrow_wram().party().len();
 
     // loop over each mon and add gained exp
     for party_pokemon_index in 0..party_len {
+        const PARTY_MON_SIZE: u16 = wram::W_PARTY_MON2 - wram::W_PARTY_MON1;
+        let mon_start = wram::W_PARTY_MON1 + (party_pokemon_index as u16 * PARTY_MON_SIZE);
+
+        cpu.set_hl(mon_start);
         cpu.write_byte(wram::W_WHICH_POKEMON, party_pokemon_index as u8);
+
         let pokemon = cpu.borrow_wram().party().get(party_pokemon_index).unwrap();
 
         if pokemon.hp == 0 {
@@ -51,8 +53,6 @@ pub fn gain_experience(cpu: &mut Cpu) {
             party_pokemon_index,
             pokemon.nickname.unwrap_or(pokemon.species.name())
         );
-
-        let mon_start = cpu.hl();
 
         for i in 0..(NUM_STATS as u16) {
             let enemy_mon_base_stat = cpu.read_byte(wram::W_ENEMY_MON_BASE_STATS + i);
