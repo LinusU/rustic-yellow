@@ -357,6 +357,10 @@ impl Cpu {
         self.mmu.sound2.play_sfx(sfx)
     }
 
+    pub fn stop_sfx(&mut self) {
+        self.mmu.sound2.stop_sfx();
+    }
+
     fn fetch_byte(&mut self) -> u8 {
         let b = self.mmu.rb(self.pc);
         self.pc = self.pc.wrapping_add(1);

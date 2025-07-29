@@ -1,10 +1,10 @@
 use crate::{
     cpu::Cpu,
     game::{
+        audio::crystal::sfx::EXP_BAR,
         constants::{
             battle_constants::{MAX_LEVEL, NUM_STATS, TRANSFORMED},
             misc_constants::FLAG_SET,
-            music_constants::SFX_HEAL_HP,
             pikachu_emotion_constants::PIKAHAPPY_LEVELUP,
             serial_constants::LINK_STATE_BATTLING,
         },
@@ -348,8 +348,7 @@ fn animate_exp_bar(cpu: &mut Cpu) {
         return;
     }
 
-    cpu.a = SFX_HEAL_HP;
-    cpu.call(0x3736); // PlaySoundWaitForCurrent
+    cpu.play_sfx(EXP_BAR);
 
     let new_pixel_length = super::core::calc_exp_bar_pixel_length(cpu);
     let prev_pixel_length = cpu.read_byte(wram::W_EXP_BAR_PIXEL_LENGTH);
@@ -391,6 +390,8 @@ fn animate_exp_bar(cpu: &mut Cpu) {
 }
 
 fn animate_expbar_done(cpu: &mut Cpu) {
+    cpu.stop_sfx();
+
     cpu.set_bc(0x08);
     cpu.set_hl(macros::coords::coord!(10, 11));
     cpu.set_de(wram::W_TILE_MAP_BACKUP + 10 + 11 * 20);
