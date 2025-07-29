@@ -22,7 +22,7 @@ pub enum MusicSfx {
 }
 
 impl MusicSfx {
-    pub fn from_bank_and_id(bank: u8, id: u8, pitch: u8, length: i8) -> Option<MusicSfx> {
+    pub fn from_bank_and_id(bank: u8, id: u8, pitch: i8, length: u8) -> Option<MusicSfx> {
         match (bank, id, pitch, length) {
             (0x02, 134, _, _) => Some(MusicSfx::ObtainedItem), // SFX_Get_Item1_1
             (0x02, 137, _, _) => Some(MusicSfx::PokemonEvolved), // SFX_Get_Item2_1
@@ -40,7 +40,7 @@ impl MusicSfx {
             (0x20, 137, _, _) => Some(MusicSfx::PokemonEvolved), // SFX_Get_Item2_4
             (0x20, 150, _, _) => Some(MusicSfx::PokemonEvolved), // SFX_Get_Item2_4_2
 
-            (0x08, 228, 0x00, -128) => Some(MusicSfx::Battle35_00_80), // SING
+            (0x08, 228, 0x00, 0x80) => Some(MusicSfx::Battle35_00_80), // SING
             (0x08, 228, 0x11, 0x18) => Some(MusicSfx::Battle35_11_18), // HYPNOSIS
             (0x08, 228, 0x42, 0x01) => Some(MusicSfx::Battle35_42_01), // DREAM_EATER
 

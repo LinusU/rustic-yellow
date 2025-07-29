@@ -1,4 +1,4 @@
-use pokemon_synthesizer::SoundIterator;
+use pokemon_synthesizer::gen1::SoundIterator;
 use rodio::Source;
 
 use crate::{rom::ROM, sound2::Sfx as SfxTrait};
@@ -49,8 +49,8 @@ pub const CRY_25: Sfx = Sfx::new(0x02, 0x4189);
 pub struct Sfx {
     bank: u8,
     addr: u16,
-    pitch: u8,
-    length: i8,
+    pitch: i8,
+    length: u8,
 }
 
 impl Sfx {
@@ -59,7 +59,7 @@ impl Sfx {
             bank,
             addr,
             pitch: 0,
-            length: 0,
+            length: 0x80,
         }
     }
 
@@ -339,16 +339,16 @@ impl Sfx {
         (BATTLE_SFX_START..BATTLE_SFX_END).contains(&self.addr)
     }
 
-    pub fn tweak(&mut self, pitch: u8, length: i8) {
+    pub fn tweak(&mut self, pitch: i8, length: u8) {
         self.pitch = pitch;
         self.length = length;
     }
 
-    pub fn tweaked(&self, pitch: u8, length: i8) -> Self {
+    pub fn tweaked(&self, pitch: u8, length: u8) -> Self {
         Self {
             bank: self.bank,
             addr: self.addr,
-            pitch,
+            pitch: pitch as i8,
             length,
         }
     }
@@ -357,7 +357,7 @@ impl Sfx {
 pub struct SynthesizerSource<'a>(SoundIterator<'a>);
 
 impl<'a> SynthesizerSource<'a> {
-    fn new(source: SoundIterator<'a>) -> SynthesizerSource<'a> {
+    pub fn new(source: SoundIterator<'a>) -> SynthesizerSource<'a> {
         SynthesizerSource(source)
     }
 }
@@ -391,8 +391,14 @@ impl Source for SynthesizerSource<'_> {
 impl SfxTrait<SynthesizerSource<'static>> for Sfx {
     fn open(self) -> SynthesizerSource<'static> {
         SynthesizerSource::new(
-            pokemon_synthesizer::synthesis(ROM, self.bank, self.addr, self.pitch, self.length)
-                .iter(),
+            pokemon_synthesizer::gen1::synthesis(
+                ROM,
+                self.bank,
+                self.addr,
+                self.pitch,
+                self.length,
+            )
+            .iter(),
         )
     }
 }

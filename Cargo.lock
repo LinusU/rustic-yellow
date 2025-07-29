@@ -1371,9 +1371,9 @@ checksum = "aa2d9dab6179438c09664ebcb3d1d7abdd22b036def56b324b01ffa907c4a653"
 
 [[package]]
 name = "pokemon-synthesizer"
-version = "0.1.0"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e98e7117f74d4b38b32bdc22c80a4d6b7fdd40e1328d2afda4f07fb28554372c"
+checksum = "a0a13ec9b1af1cc02e7167ffbc5599447c33aa53971b320c2d2750497223879e"
 
 [[package]]
 name = "proc-macro-crate"
