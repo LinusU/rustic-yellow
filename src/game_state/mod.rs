@@ -836,6 +836,14 @@ impl GameState {
         self.data[0x1430] = value;
     }
 
+    pub fn pikachu_happiness(&self) -> u8 {
+        self.data[0x146f]
+    }
+
+    pub fn pikachu_mood(&self) -> u8 {
+        self.data[0x1470]
+    }
+
     /// Number of signs in the current map (up to 16)
     pub fn num_signs(&self) -> u8 {
         self.data[0x14af]

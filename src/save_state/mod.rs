@@ -126,6 +126,14 @@ impl SaveState {
         PokeString::from_bytes(&self.data[0x2598..], 11)
     }
 
+    pub fn set_pikachu_happiness(&mut self, value: u8) {
+        self.data[0x271c] = value;
+    }
+
+    pub fn set_pikachu_mood(&mut self, value: u8) {
+        self.data[0x271d] = value;
+    }
+
     pub fn count_badges(&self) -> u32 {
         self.data[0x2602].count_ones()
     }
