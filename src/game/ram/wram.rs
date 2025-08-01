@@ -434,6 +434,8 @@ pub const W_WARP_ENTRIES: u16 = 0xd3ae;
 pub const W_D435: u16 = 0xd434;
 pub const W_D436: u16 = 0xd435;
 
+pub const W_PIKACHU_HAPPINESS: u16 = 0xd46f;
+
 pub const W_D472: u16 = 0xd471;
 pub const W_D473: u16 = 0xd472;
 

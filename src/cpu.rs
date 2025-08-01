@@ -227,6 +227,7 @@ impl Cpu {
                 (0x1c, 0x6524) => crate::game::engine::gfx::palettes::update_cgbpal_bgp(self),
                 (0x1c, 0x656c) => crate::game::engine::gfx::palettes::update_cgbpal_obp(self),
                 (0x1c, 0x65be) => panic!("translate_pal_packet_to_bg_map_attributes should only be called from Rust"),
+                (0x1c, 0x7b56) => crate::game::engine::menus::save::save_sav_to_sram2(self),
                 (0x1c, 0x7b91) => crate::game::engine::menus::save::save_sav_to_sram(self),
                 (0x1e, 0x522c) => crate::game::engine::battle::animations::animation_flash_screen(self),
                 (0x1e, 0x5273) => crate::game::engine::battle::animations::set_animation_bg_palette(self),

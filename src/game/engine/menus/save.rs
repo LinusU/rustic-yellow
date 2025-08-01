@@ -1,7 +1,8 @@
 use crate::{
     cpu::Cpu,
     game::{
-        constants, home,
+        constants::{self, hardware_constants},
+        home,
         ram::{hram, sram, wram},
     },
     save_state::{PokeString, SaveState},
@@ -84,6 +85,151 @@ pub fn load_sav(cpu: &mut Cpu) {
 
     disable_sram_and_prepare_clock_data(cpu);
     cpu.write_byte(wram::W_SAVE_FILE_STATUS, 2);
+}
+
+pub fn save_sav_to_sram2(cpu: &mut Cpu) {
+    cpu.pc = 0x7b56;
+
+    // call EnableSRAM
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.cycle(24);
+        cpu.call(0x7e9f); // EnableSRAM
+        cpu.pc = pc;
+    }
+
+    // ld a, BANK("Save Data")
+    cpu.a = 0x1; // BANK("Save Data")
+    cpu.pc += 2;
+    cpu.cycle(8);
+
+    // ld [MBC1SRamBank], a
+    cpu.write_byte(hardware_constants::MBC1_SRAM_BANK, cpu.a);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // ld hl, wPartyDataStart
+    cpu.set_hl(wram::W_PARTY_DATA_START);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // ld de, sPartyData
+    cpu.set_de(sram::S_PARTY_DATA);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // ld bc, wPartyDataEnd - wPartyDataStart
+    cpu.set_bc(wram::W_PARTY_DATA_END - wram::W_PARTY_DATA_START);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // call CopyData
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.cycle(24);
+        cpu.call(0x00b1); // CopyData
+        cpu.pc = pc;
+    }
+
+    // pokédex only
+    // ld hl, wPokedexOwned
+    cpu.set_hl(wram::W_POKEDEX_OWNED);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // ld de, sMainData
+    cpu.set_de(sram::S_MAIN_DATA);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // ld bc, wPokedexSeenEnd - wPokedexOwned
+    cpu.set_bc(wram::W_POKEDEX_SEEN_END - wram::W_POKEDEX_OWNED);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // call CopyData
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.cycle(24);
+        cpu.call(0x00b1); // CopyData
+        cpu.pc = pc;
+    }
+
+    // ld hl, wPikachuHappiness
+    cpu.set_hl(wram::W_PIKACHU_HAPPINESS);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // ld de, sMainData + $179
+    cpu.set_de(sram::S_MAIN_DATA + 0x179);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // ld a, [hli]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.set_hl(cpu.hl() + 1);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld [de], a
+    cpu.write_byte(cpu.de(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // inc de
+    cpu.set_de(cpu.de().wrapping_add(1));
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld a, [hl]
+    cpu.a = cpu.read_byte(cpu.hl());
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld [de], a
+    cpu.write_byte(cpu.de(), cpu.a);
+    cpu.pc += 1;
+    cpu.cycle(8);
+
+    // ld hl, sGameData
+    cpu.set_hl(sram::S_GAME_DATA);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // ld bc, sGameDataEnd - sGameData
+    cpu.set_bc(sram::S_GAME_DATA_END - sram::S_GAME_DATA);
+    cpu.pc += 3;
+    cpu.cycle(12);
+
+    // call SAVCheckSum
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.cycle(24);
+        cpu.call(0x7b9f); // SAVCheckSum
+        cpu.pc = pc;
+    }
+
+    // ld [sMainDataCheckSum], a
+    cpu.write_byte(sram::S_MAIN_DATA_CHECK_SUM, cpu.a);
+    cpu.pc += 3;
+    cpu.cycle(16);
+
+    // call DisableSRAM
+    {
+        cpu.pc += 3;
+        let pc = cpu.pc;
+        cpu.cycle(24);
+        cpu.call(0x7eaa); // DisableSRAM
+        cpu.pc = pc;
+    }
+
+    // ret
+    cpu.pc = cpu.stack_pop();
+    cpu.cycle(16);
 }
 
 pub fn save_sav_to_sram(cpu: &mut Cpu) {
