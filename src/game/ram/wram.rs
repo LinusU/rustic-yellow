@@ -75,6 +75,8 @@ pub const W_MENU_JOYPAD_POLL_COUNT: u16 = 0xcc34;
 /// if non-zero, skip waiting for a button press after displaying text in DisplayTextID
 pub const W_DO_NOT_WAIT_FOR_BUTTON_PRESS_AFTER_DISPLAYING_TEXT: u16 = 0xcc3c;
 
+pub const W_UNKNOWN_SERIAL_COUNTER: u16 = 0xcc47;
+
 pub const W_PREDEF_HL: u16 = 0xcc4f;
 pub const W_PREDEF_DE: u16 = 0xcc51;
 pub const W_PREDEF_BC: u16 = 0xcc53;
@@ -487,6 +489,8 @@ pub const W_D72C: u16 = 0xd72b;
 /// and bit 7 is reset after trainer battles (but it's only set before trainer
 /// battles anyway).
 pub const W_D72D: u16 = 0xd72c;
+
+pub const W_STATUS_FLAGS_4: u16 = 0xd72d;
 
 /// bit 0: NPC sprite being moved by script \
 /// bit 5: ignore joypad input \

@@ -485,8 +485,24 @@ impl GameState {
         self.data[0x1032] as u16 | ((self.data[0x1033] as u16) << 8)
     }
 
+    pub fn current_menu_item(&self) -> u8 {
+        self.data[0x0c26]
+    }
+
+    pub fn set_menu_joypad_poll_count(&mut self, value: u8) {
+        self.data[0x0c34] = value;
+    }
+
+    pub fn set_serial_exchange_nybble_send_data(&mut self, value: u8) {
+        self.data[0x0c42] = value;
+    }
+
     pub fn entering_cable_club(&self) -> bool {
         self.data[0x0c47] != 0
+    }
+
+    pub fn link_timeout_counter(&self) -> u8 {
+        self.data[0x0c47]
     }
 
     pub fn set_link_timeout_counter(&mut self, value: u8) {

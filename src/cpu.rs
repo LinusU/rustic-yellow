@@ -180,6 +180,7 @@ impl Cpu {
                 (0x01, 0x581e) => crate::game::engine::link::cable_club::return_to_cable_club_room(self),
                 (0x01, 0x5ba6) => panic!("main_menu should only be called from Rust"),
                 (0x01, 0x5dfb) => panic!("check_for_player_name_in_sram should only be called from Rust"),
+                (0x01, 0x7035) => crate::game::engine::link::cable_club_npc::cable_club_npc(self),
                 (0x02, 0x5064) => crate::game::audio::play_battle_music::play_battle_music(self),
                 (0x03, 0x407c) => panic!("clear_variables_on_enter_map should only be called from Rust"),
                 (0x03, 0x44f4) => crate::game::engine::overworld::tilesets::load_tileset_header(self),

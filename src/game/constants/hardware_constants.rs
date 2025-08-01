@@ -7,7 +7,16 @@ pub const MBC1_SRAM_BANKING_MODE: u16 = 0x6000;
 pub const SRAM_DISABLE: u8 = 0x00;
 pub const SRAM_ENABLE: u8 = 0x0a;
 
+// Serial
+pub const START_TRANSFER_EXTERNAL_CLOCK: u8 = 0x80;
+pub const START_TRANSFER_INTERNAL_CLOCK: u8 = 0x81;
+
 // Hardware registers
+/// Serial Transfer Data (R/W)
+pub const R_SB: u16 = 0xff01;
+/// Serial Transfer Control (R/W)
+pub const R_SC: u16 = 0xff02;
+
 /// LCD Control (R/W)
 pub const R_LCDC: u16 = 0xff40;
 pub const R_LCDC_ENABLE: u8 = 7;

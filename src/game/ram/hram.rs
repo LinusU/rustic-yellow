@@ -11,6 +11,11 @@ pub const H_MULTIPLICAND: u16 = 0xff96;
 pub const H_DIVISOR: u16 = 0xff99;
 pub const H_MULTIPLIER: u16 = 0xff99;
 
+pub const H_SERIAL_RECEIVED_NEW_DATA: u16 = 0xffa9;
+pub const H_SERIAL_CONNECTION_STATUS: u16 = 0xffaa;
+pub const H_SERIAL_SEND_DATA: u16 = 0xffac;
+pub const H_SERIAL_RECEIVE_DATA: u16 = 0xffad;
+
 // these values are copied to rSCX, rSCY, and rWY during V-blank
 pub const H_SCX: u16 = 0xffae;
 pub const H_SCY: u16 = 0xffaf;
