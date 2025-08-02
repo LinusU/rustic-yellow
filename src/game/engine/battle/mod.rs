@@ -1,3 +1,4 @@
+pub mod animations;
 pub mod core;
 pub mod decrement_pp;
 pub mod experience;
