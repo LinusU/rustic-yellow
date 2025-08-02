@@ -2,7 +2,7 @@ use crate::{
     cpu::Cpu,
     game::{
         constants::{
-            gfx_constants::{CONVERT_BGP, CONVERT_OBP0, CONVERT_OBP1},
+            gfx_constants::ConvertPal,
             hardware_constants,
             map_constants::*,
             palette_constants::*,
@@ -339,7 +339,7 @@ pub fn yellow_intro_palette_action(cpu: &mut Cpu) {
     cpu.write_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2), cpu.e);
     cpu.write_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2) + 1, cpu.d);
 
-    cpu.a = CONVERT_BGP;
+    cpu.a = ConvertPal::BGP.into();
     cpu.call(0x640f); // DMGPalToCGBPal
 
     cpu.a = index;
@@ -404,21 +404,21 @@ pub fn init_cgb_palettes(cpu: &mut Cpu) {
             (base >> 8) as u8,
         );
 
-        cpu.a = CONVERT_BGP;
+        cpu.a = ConvertPal::BGP.into();
         cpu.set_de(base);
         cpu.call(0x640f); // DMGPalToCGBPal
 
         cpu.a = index;
         cpu.call(0x6470); // TransferCurBGPData
 
-        cpu.a = CONVERT_OBP0;
+        cpu.a = ConvertPal::OBP0.into();
         cpu.set_de(base);
         cpu.call(0x640f); // DMGPalToCGBPal
 
         cpu.a = index;
         cpu.call(0x64df); // TransferCurOBPData
 
-        cpu.a = CONVERT_OBP1;
+        cpu.a = ConvertPal::OBP1.into();
         cpu.set_de(base);
         cpu.call(0x640f); // DMGPalToCGBPal
 
@@ -478,7 +478,7 @@ pub fn update_cgbpal_bgp(cpu: &mut Cpu) {
         cpu.e = cpu.read_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2));
         cpu.d = cpu.read_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2) + 1);
 
-        cpu.a = CONVERT_BGP;
+        cpu.a = ConvertPal::BGP.into();
         cpu.call(0x640f); // DMGPalToCGBPal
 
         cpu.a = index;
@@ -506,10 +506,10 @@ pub fn update_cgbpal_obp(cpu: &mut Cpu) {
         cpu.a = cpu.c;
         cpu.call(0x640f); // DMGPalToCGBPal
 
-        cpu.a = match cpu.c {
-            CONVERT_OBP0 => index,
-            CONVERT_OBP1 => 4 + index,
-            n => panic!("Invalid conversion type: {n}"),
+        cpu.a = match ConvertPal::from(cpu.c) {
+            ConvertPal::OBP0 => index,
+            ConvertPal::OBP1 => 4 + index,
+            n => panic!("Invalid conversion type: {n:?}"),
         };
 
         cpu.call(0x64df); // TransferCurOBPData
