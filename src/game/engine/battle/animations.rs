@@ -26,3 +26,12 @@ pub fn animation_flash_screen(cpu: &mut Cpu) {
 
     cpu.pc = cpu.stack_pop(); // ret
 }
+
+pub fn set_animation_bg_palette(cpu: &mut Cpu) {
+    cpu.write_byte(hardware_constants::R_BGP, cpu.c);
+    cpu.call(0x3021); // UpdateCGBPal_BGP
+
+    cpu.a = cpu.c;
+
+    cpu.pc = cpu.stack_pop(); // ret
+}
