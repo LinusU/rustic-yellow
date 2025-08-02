@@ -220,6 +220,7 @@ impl Cpu {
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
                 (0x1c, 0x6328) => panic!("send_sgb_packets should only be called from Rust"),
                 (0x1c, 0x6346) => crate::game::engine::gfx::palettes::init_cgb_palettes(self),
+                (0x1c, 0x640f) => panic!("dmgpal_to_cgbpal should only be called from Rust"),
                 (0x1c, 0x6470) => crate::game::engine::gfx::palettes::transfer_cur_bgp_data(self),
                 (0x1c, 0x6511) => crate::game::engine::gfx::palettes::transfer_pal_color_lcd_enabled(self),
                 (0x1c, 0x651b) => crate::game::engine::gfx::palettes::transfer_pal_color_lcd_disabled(self),

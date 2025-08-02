@@ -20,8 +20,6 @@ use crate::{
     PokemonSpecies,
 };
 
-const CGB_BASE_PAL_POINTERS: u16 = 0xdee1;
-
 pub fn run_palette_command(cpu: &mut Cpu) {
     cpu.call(0x3ed7); // GetPredefRegisters
 
@@ -333,14 +331,14 @@ pub fn yellow_intro_palette_action(cpu: &mut Cpu) {
     cpu.a = cpu.read_byte(0x67e1 + 1); // PalPacket_Generic + 1
     cpu.set_hl(0x67e1 + 2); // PalPacket_Generic
     cpu.call(0x63fe); // GetCGBBasePalAddress
+    let base_pal = cpu.de();
 
     let index = 1;
 
-    cpu.write_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2), cpu.e);
-    cpu.write_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2) + 1, cpu.d);
+    cpu.borrow_wram_mut()
+        .set_cgb_base_pal_pointer(index as usize, base_pal);
 
-    cpu.a = ConvertPal::BGP.into();
-    cpu.call(0x640f); // DMGPalToCGBPal
+    dmgpal_to_cgbpal(cpu, ConvertPal::BGP, base_pal);
 
     cpu.a = index;
     cpu.call(0x6470); // TransferCurBGPData
@@ -396,37 +394,65 @@ pub fn init_cgb_palettes(cpu: &mut Cpu) {
     for index in 0..NUM_ACTIVE_PALS {
         cpu.a = cpu.read_byte(packet + 1 + (index as u16 * 2));
         cpu.call(0x63fe); // GetCGBBasePalAddress
-        let base = cpu.de();
+        let base_pal = cpu.de();
 
-        cpu.write_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2), base as u8);
-        cpu.write_byte(
-            CGB_BASE_PAL_POINTERS + (index as u16 * 2) + 1,
-            (base >> 8) as u8,
-        );
+        cpu.borrow_wram_mut()
+            .set_cgb_base_pal_pointer(index as usize, base_pal);
 
-        cpu.a = ConvertPal::BGP.into();
-        cpu.set_de(base);
-        cpu.call(0x640f); // DMGPalToCGBPal
+        dmgpal_to_cgbpal(cpu, ConvertPal::BGP, base_pal);
 
         cpu.a = index;
         cpu.call(0x6470); // TransferCurBGPData
 
-        cpu.a = ConvertPal::OBP0.into();
-        cpu.set_de(base);
-        cpu.call(0x640f); // DMGPalToCGBPal
+        dmgpal_to_cgbpal(cpu, ConvertPal::OBP0, base_pal);
 
         cpu.a = index;
         cpu.call(0x64df); // TransferCurOBPData
 
-        cpu.a = ConvertPal::OBP1.into();
-        cpu.set_de(base);
-        cpu.call(0x640f); // DMGPalToCGBPal
+        dmgpal_to_cgbpal(cpu, ConvertPal::OBP1, base_pal);
 
         cpu.a = index + 4;
         cpu.call(0x64df); // TransferCurOBPData
     }
 
     cpu.pc = cpu.stack_pop(); // ret
+}
+
+/// Populate wCGBPal with colors from a base palette, selected using one of the DMG palette registers.
+///
+/// * `reg` - which DMG palette register
+/// * `base_pal` - address of CGB base palette
+pub fn dmgpal_to_cgbpal(cpu: &mut Cpu, reg: ConvertPal, base_pal: u16) {
+    let value = match reg {
+        ConvertPal::BGP => {
+            let value = cpu.read_byte(hardware_constants::R_BGP);
+            cpu.borrow_wram_mut().set_last_bgp(value);
+            value
+        }
+
+        ConvertPal::OBP0 => {
+            let value = cpu.read_byte(hardware_constants::R_OBP0);
+            cpu.borrow_wram_mut().set_last_obp0(value);
+            value
+        }
+
+        _ => {
+            let value = cpu.read_byte(hardware_constants::R_OBP1);
+            cpu.borrow_wram_mut().set_last_obp1(value);
+            value
+        }
+    };
+
+    for i in 0..NUM_PAL_COLORS {
+        let pal_idx = (value >> (i * 2)) & 0b11;
+        let offset = base_pal + (pal_idx * 2) as u16;
+
+        let byte = cpu.read_byte(offset);
+        cpu.write_byte(wram::W_CGB_PAL + (i as u16 * 2), byte);
+
+        let byte = cpu.read_byte(offset + 1);
+        cpu.write_byte(wram::W_CGB_PAL + (i as u16 * 2) + 1, byte);
+    }
 }
 
 pub fn transfer_cur_bgp_data(cpu: &mut Cpu) {
@@ -475,11 +501,9 @@ pub fn update_cgbpal_bgp(cpu: &mut Cpu) {
     log::debug!("update_cgbpal_bgp()");
 
     for index in 0..NUM_ACTIVE_PALS {
-        cpu.e = cpu.read_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2));
-        cpu.d = cpu.read_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2) + 1);
+        let base_pal = cpu.borrow_wram().cgb_base_pal_pointer(index as usize);
 
-        cpu.a = ConvertPal::BGP.into();
-        cpu.call(0x640f); // DMGPalToCGBPal
+        dmgpal_to_cgbpal(cpu, ConvertPal::BGP, base_pal);
 
         cpu.a = index;
         cpu.call(0x64a2); // BufferBGPPal
@@ -499,14 +523,14 @@ pub fn update_cgbpal_bgp(cpu: &mut Cpu) {
 pub fn update_cgbpal_obp(cpu: &mut Cpu) {
     log::debug!("update_cgbpal_obp({})", cpu.c);
 
+    let reg = ConvertPal::from(cpu.c);
+
     for index in 0..NUM_ACTIVE_PALS {
-        cpu.e = cpu.read_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2));
-        cpu.d = cpu.read_byte(CGB_BASE_PAL_POINTERS + (index as u16 * 2) + 1);
+        let base_pal = cpu.borrow_wram().cgb_base_pal_pointer(index as usize);
 
-        cpu.a = cpu.c;
-        cpu.call(0x640f); // DMGPalToCGBPal
+        dmgpal_to_cgbpal(cpu, reg, base_pal);
 
-        cpu.a = match ConvertPal::from(cpu.c) {
+        cpu.a = match reg {
             ConvertPal::OBP0 => index,
             ConvertPal::OBP1 => 4 + index,
             n => panic!("Invalid conversion type: {n:?}"),

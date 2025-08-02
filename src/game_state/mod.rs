@@ -1029,6 +1029,28 @@ impl GameState {
         self.data[0x1a45]
     }
 
+    pub fn cgb_base_pal_pointer(&self, index: usize) -> u16 {
+        u16::from_le_bytes([self.data[0x1ee1 + index * 2], self.data[0x1ee2 + index * 2]])
+    }
+
+    pub fn set_cgb_base_pal_pointer(&mut self, index: usize, value: u16) {
+        let bytes = value.to_le_bytes();
+        self.data[0x1ee1 + index * 2] = bytes[0];
+        self.data[0x1ee2 + index * 2] = bytes[1];
+    }
+
+    pub fn set_last_bgp(&mut self, value: u8) {
+        self.data[0x1ef1] = value;
+    }
+
+    pub fn set_last_obp0(&mut self, value: u8) {
+        self.data[0x1ef2] = value;
+    }
+
+    pub fn set_last_obp1(&mut self, value: u8) {
+        self.data[0x1ef3] = value;
+    }
+
     pub fn warp_destination_map(&self) -> u8 {
         self.high_ram[0x0b]
     }
