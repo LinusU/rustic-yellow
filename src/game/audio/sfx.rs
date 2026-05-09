@@ -1,4 +1,4 @@
-use pokemon_synthesizer::SoundIterator;
+use pokemon_synthesizer::gen1::SoundIterator;
 use rodio::Source;
 
 use crate::{rom::ROM, sound2::Sfx as SfxTrait};
@@ -49,8 +49,8 @@ pub const CRY_25: Sfx = Sfx::new(0x02, 0x4189);
 pub struct Sfx {
     bank: u8,
     addr: u16,
-    pitch: u8,
-    length: i8,
+    pitch: i8,
+    length: u8,
 }
 
 impl Sfx {
@@ -59,7 +59,7 @@ impl Sfx {
             bank,
             addr,
             pitch: 0,
-            length: 0,
+            length: 0x80,
         }
     }
 
@@ -265,44 +265,6 @@ impl Sfx {
             (0x1f, 194) => Some(Sfx::new(0x1f, 0x4246)), // SFX_Shooting_Star
 
             // Bank 20
-            (0x20, 20) => Some(Sfx::new(0x20, 0x403c)), // SFX_Cry00_4
-            (0x20, 23) => Some(Sfx::new(0x20, 0x4045)), // SFX_Cry01_4
-            (0x20, 26) => Some(Sfx::new(0x20, 0x404e)), // SFX_Cry02_4
-            (0x20, 29) => Some(Sfx::new(0x20, 0x4057)), // SFX_Cry03_4
-            (0x20, 32) => Some(Sfx::new(0x20, 0x4060)), // SFX_Cry04_4
-            (0x20, 35) => Some(Sfx::new(0x20, 0x4069)), // SFX_Cry05_4
-            (0x20, 38) => Some(Sfx::new(0x20, 0x4072)), // SFX_Cry06_4
-            (0x20, 41) => Some(Sfx::new(0x20, 0x407b)), // SFX_Cry07_4
-            (0x20, 44) => Some(Sfx::new(0x20, 0x4084)), // SFX_Cry08_4
-            (0x20, 47) => Some(Sfx::new(0x20, 0x408d)), // SFX_Cry09_4
-            (0x20, 50) => Some(Sfx::new(0x20, 0x4096)), // SFX_Cry0A_4
-            (0x20, 53) => Some(Sfx::new(0x20, 0x409f)), // SFX_Cry0B_4
-            (0x20, 56) => Some(Sfx::new(0x20, 0x40a8)), // SFX_Cry0C_4
-            (0x20, 59) => Some(Sfx::new(0x20, 0x40b1)), // SFX_Cry0D_4
-            (0x20, 62) => Some(Sfx::new(0x20, 0x40ba)), // SFX_Cry0E_4
-            (0x20, 65) => Some(Sfx::new(0x20, 0x40c3)), // SFX_Cry0F_4
-            (0x20, 68) => Some(Sfx::new(0x20, 0x40cc)), // SFX_Cry10_4
-            (0x20, 71) => Some(Sfx::new(0x20, 0x40d5)), // SFX_Cry11_4
-            (0x20, 74) => Some(Sfx::new(0x20, 0x40de)), // SFX_Cry12_4
-            (0x20, 77) => Some(Sfx::new(0x20, 0x40e7)), // SFX_Cry13_4
-            (0x20, 80) => Some(Sfx::new(0x20, 0x40f0)), // SFX_Cry14_4
-            (0x20, 83) => Some(Sfx::new(0x20, 0x40f9)), // SFX_Cry15_4
-            (0x20, 86) => Some(Sfx::new(0x20, 0x4102)), // SFX_Cry16_4
-            (0x20, 89) => Some(Sfx::new(0x20, 0x410b)), // SFX_Cry17_4
-            (0x20, 92) => Some(Sfx::new(0x20, 0x4114)), // SFX_Cry18_4
-            (0x20, 95) => Some(Sfx::new(0x20, 0x411d)), // SFX_Cry19_4
-            (0x20, 98) => Some(Sfx::new(0x20, 0x4126)), // SFX_Cry1A_4
-            (0x20, 101) => Some(Sfx::new(0x20, 0x412f)), // SFX_Cry1B_4
-            (0x20, 104) => Some(Sfx::new(0x20, 0x4138)), // SFX_Cry1C_4
-            (0x20, 107) => Some(Sfx::new(0x20, 0x4141)), // SFX_Cry1D_4
-            (0x20, 110) => Some(Sfx::new(0x20, 0x414a)), // SFX_Cry1E_4
-            (0x20, 113) => Some(Sfx::new(0x20, 0x4153)), // SFX_Cry1F_4
-            (0x20, 116) => Some(Sfx::new(0x20, 0x415c)), // SFX_Cry20_4
-            (0x20, 119) => Some(Sfx::new(0x20, 0x4165)), // SFX_Cry21_4
-            (0x20, 122) => Some(Sfx::new(0x20, 0x416e)), // SFX_Cry22_4
-            (0x20, 125) => Some(Sfx::new(0x20, 0x4177)), // SFX_Cry23_4
-            (0x20, 128) => Some(Sfx::new(0x20, 0x4180)), // SFX_Cry24_4
-            (0x20, 131) => Some(Sfx::new(0x20, 0x4189)), // SFX_Cry25_4
             (0x20, 134) => { log::error!("Missing sound: SFX_Get_Item1_4"); None },
             (0x20, 137) => { log::error!("Missing sound: SFX_Get_Item2_4"); None },
             (0x20, 140) => Some(Sfx::new(0x20, 0x41a4)), // SFX_Tink_4
@@ -339,16 +301,16 @@ impl Sfx {
         (BATTLE_SFX_START..BATTLE_SFX_END).contains(&self.addr)
     }
 
-    pub fn tweak(&mut self, pitch: u8, length: i8) {
+    pub fn tweak(&mut self, pitch: i8, length: u8) {
         self.pitch = pitch;
         self.length = length;
     }
 
-    pub fn tweaked(&self, pitch: u8, length: i8) -> Self {
+    pub fn tweaked(&self, pitch: u8, length: u8) -> Self {
         Self {
             bank: self.bank,
             addr: self.addr,
-            pitch,
+            pitch: pitch as i8,
             length,
         }
     }
@@ -357,7 +319,7 @@ impl Sfx {
 pub struct SynthesizerSource<'a>(SoundIterator<'a>);
 
 impl<'a> SynthesizerSource<'a> {
-    fn new(source: SoundIterator<'a>) -> SynthesizerSource<'a> {
+    pub fn new(source: SoundIterator<'a>) -> SynthesizerSource<'a> {
         SynthesizerSource(source)
     }
 }
@@ -391,8 +353,14 @@ impl Source for SynthesizerSource<'_> {
 impl SfxTrait<SynthesizerSource<'static>> for Sfx {
     fn open(self) -> SynthesizerSource<'static> {
         SynthesizerSource::new(
-            pokemon_synthesizer::synthesis(ROM, self.bank, self.addr, self.pitch, self.length)
-                .iter(),
+            pokemon_synthesizer::gen1::synthesis(
+                ROM,
+                self.bank,
+                self.addr,
+                self.pitch,
+                self.length,
+            )
+            .iter(),
         )
     }
 }

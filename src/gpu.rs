@@ -168,7 +168,7 @@ impl Gpu {
             update_screen,
             layers: vec![],
             atlas_box_border: load_png(include_bytes!("../gfx/box_border.png")),
-            atlas_font: load_png(include_bytes!("../gfx/font.png")),
+            atlas_font: load_png(include_bytes!("../gfx/font/font.png")),
             atlas_pokemon_icons: load_png(include_bytes!("../gfx/pokemon_icons.png")),
         }
     }
@@ -436,6 +436,15 @@ impl Gpu {
             }
             _ => panic!("GPU does not handle write {:04X}", a),
         }
+    }
+
+    pub fn set_bg_palette_color(&mut self, palnum: usize, colnum: usize, color: [u8; 3]) {
+        assert!(palnum < 8);
+        assert!(colnum < 4);
+        assert!(color[0] < 32);
+        assert!(color[1] < 32);
+        assert!(color[2] < 32);
+        self.cbgpal[palnum][colnum] = color;
     }
 
     fn clear_screen(&mut self) {

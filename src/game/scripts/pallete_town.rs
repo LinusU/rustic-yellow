@@ -17,7 +17,7 @@ pub fn pallet_town_script4(cpu: &mut Cpu) {
     cpu.borrow_wram_mut().set_list_scroll_offset(0);
     cpu.write_byte(wram::W_BATTLE_TYPE, battle_constants::BATTLE_TYPE_PIKACHU);
     cpu.borrow_wram_mut().set_cur_opponent(starter_index);
-    cpu.write_byte(wram::W_CUR_ENEMY_LVL, 5);
+    cpu.write_byte(wram::W_CUR_ENEMY_LEVEL, 5);
 
     // trigger the next script
     cpu.write_byte(wram::W_PALLET_TOWN_CUR_SCRIPT, 5);

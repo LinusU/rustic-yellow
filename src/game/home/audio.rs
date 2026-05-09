@@ -12,8 +12,8 @@ pub fn play_sound(cpu: &mut Cpu) {
     // W_AUDIO_ROM_BANK, but if we don't we sometimes play the wrong audio...
     let bank = cpu.read_byte(wram::W_AUDIO_SAVED_ROM_BANK);
 
-    let pitch = cpu.read_byte(wram::W_FREQUENCY_MODIFIER);
-    let length = cpu.read_byte(wram::W_TEMPO_MODIFIER) as i8;
+    let pitch = cpu.read_byte(wram::W_FREQUENCY_MODIFIER) as i8;
+    let length = cpu.read_byte(wram::W_TEMPO_MODIFIER);
 
     if cpu.a == 0xff {
         // Stop all sounds?

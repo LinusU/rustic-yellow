@@ -61,6 +61,24 @@ pub enum CriticalHitOrOhko {
     FailedOhko = 0xff,
 }
 
+pub struct BattleMonView<'a> {
+    data: &'a [u8],
+}
+
+impl BattleMonView<'_> {
+    pub fn new(data: &[u8]) -> BattleMonView<'_> {
+        BattleMonView { data }
+    }
+
+    pub fn species(&self) -> Option<PokemonSpecies> {
+        PokemonSpecies::from_index(self.data[0])
+    }
+
+    pub fn level(&self) -> u8 {
+        self.data[0xe]
+    }
+}
+
 pub struct BattleMonViewMut<'a> {
     data: &'a mut [u8],
 }
@@ -178,6 +196,10 @@ impl GameState {
 
     pub fn set_high_ram_byte(&mut self, addr: usize, value: u8) {
         self.high_ram[addr] = value;
+    }
+
+    pub fn battle_mon(&self) -> BattleMonView<'_> {
+        BattleMonView::new(&self.data[0x1013..])
     }
 
     pub fn battle_mon_mut(&mut self) -> BattleMonViewMut<'_> {
@@ -338,6 +360,10 @@ impl GameState {
 
     pub fn set_letter_printing_delay_flags(&mut self, value: u8) {
         self.data[0x1357] = value;
+    }
+
+    pub fn player_id(&self) -> u16 {
+        u16::from_be_bytes([self.data[0x1358], self.data[0x1359]])
     }
 
     pub fn player_move_list_index(&self) -> u8 {
@@ -566,8 +592,16 @@ impl GameState {
         self.data[0x0f12]
     }
 
+    pub fn player_hp_bar_color(&self) -> u8 {
+        self.data[0x0f1c]
+    }
+
     pub fn set_player_hp_bar_color(&mut self, value: u8) {
         self.data[0x0f1c] = value;
+    }
+
+    pub fn enemy_hp_bar_color(&self) -> u8 {
+        self.data[0x0f1d]
     }
 
     pub fn set_enemy_hp_bar_color(&mut self, value: u8) {

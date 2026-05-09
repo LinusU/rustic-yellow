@@ -1,10 +1,19 @@
 const TILE_WIDTH: u8 = 8;
+pub const LEN_2BPP_TILE: u8 = 2 * TILE_WIDTH;
 
 pub const SCREEN_WIDTH: u8 = 20;
 pub const SCREEN_HEIGHT: u8 = 18;
 pub const SCREEN_HEIGHT_PX: u8 = SCREEN_HEIGHT * TILE_WIDTH;
 
 pub const BG_MAP_WIDTH: u8 = 32;
+
+// DMGPalToCGBPal
+pub const CONVERT_BGP: u8 = 0;
+pub const CONVERT_OBP0: u8 = 1;
+pub const CONVERT_OBP1: u8 = 2;
+
+// HP bar
+pub const HP_BAR_RED: u8 = 2;
 
 // hRedrawRowOrColumnMode
 pub const REDRAW_COL: u8 = 1;

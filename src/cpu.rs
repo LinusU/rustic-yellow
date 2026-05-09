@@ -4,6 +4,7 @@ use std::{
 };
 
 use crate::{
+    game::constants::hardware_constants,
     game_state::GameState,
     gpu::GpuLayer,
     keypad::{KeyboardEvent, KeypadKey, TextEvent},
@@ -172,6 +173,7 @@ impl Cpu {
                 (_, 0x30ae) => panic!("run_npc_movement_script should only be called from Rust"),
                 (_, 0x3422) => crate::game::home::map_objects::is_item_in_bag(self),
                 (_, 0x342a) => panic!("is_surfing_pikachu_in_party should only be called from Rust"),
+                (_, 0x36c3) => crate::game::home::load_font::load_hp_bar_and_status_tile_patterns(self),
                 (_, 0x3ed7) => crate::game::home::predef::get_predef_registers(self),
                 (_, 0x3ef9) => panic!("check_for_hidden_object_or_bookshelf_or_card_key_door should only be called from Rust"),
                 (0x01, 0x42bf) => crate::game::engine::movie::title::display_title_screen_go_to_main_menu(self),
@@ -189,8 +191,41 @@ impl Cpu {
                 (0x06, 0x4f0a) => crate::game::scripts::pallete_town::pallet_town_script4(self),
                 (0x07, 0x4b40) => crate::game::scripts::oaks_lab::oaks_lab_player_received_mon_text(self),
                 (0x08, 0x5495) => crate::game::engine::pokemon::bills_pc::bills_pc_menu(self),
+                (0x0f, 0x4e25) => crate::game::engine::battle::core::draw_player_hud_and_hp_bar(self),
                 (0x0f, 0x59ac) => crate::game::engine::battle::core::is_ghost_battle(self),
+                (0x0f, 0x6fe7) => crate::game::engine::battle::core::load_hud_tile_patterns(self),
+                (0x15, 0x525f) => crate::game::engine::battle::experience::gain_experience(self),
+                (0x15, 0x547b) => panic!("divide_exp_data_by_num_mons_gaining_exp should only be called from Rust"),
+                (0x15, 0x54ae) => panic!("boost_exp should only be called from Rust"),
+                (0x1c, 0x5eb3) => crate::game::engine::gfx::palettes::run_palette_command(self),
+                (0x1c, 0x5ed3) => panic!("set_pal_battle_black should only be called from Rust"),
+                (0x1c, 0x5eda) => panic!("set_pal_battle should only be called from Rust"),
+                (0x1c, 0x5f26) => panic!("set_pal_town_map should only be called from Rust"),
+                (0x1c, 0x5f2d) => panic!("set_pal_status_screen should only be called from Rust"),
+                (0x1c, 0x5f59) => panic!("set_pal_party_menu should only be called from Rust"),
+                (0x1c, 0x5f60) => panic!("set_pal_pokedex should only be called from Rust"),
+                (0x1c, 0x5f7d) => panic!("set_pal_slots should only be called from Rust"),
+                (0x1c, 0x5f84) => panic!("set_pal_title_screen should only be called from Rust"),
+                (0x1c, 0x5f8b) => panic!("set_pal_generic should only be called from Rust"),
+                (0x1c, 0x5fa5) => panic!("set_pal_overworld should only be called from Rust"),
+                (0x1c, 0x5f92) => panic!("set_pal_nidorino_intro should only be called from Rust"),
+                (0x1c, 0x5f99) => panic!("set_pal_game_freak_intro should only be called from Rust"),
+                (0x1c, 0x6001) => panic!("set_pal_pokemon_whole_screen should only be called from Rust"),
+                (0x1c, 0x6025) => panic!("set_pal_trainer_card should only be called from Rust"),
+                (0x1c, 0x605d) => panic!("set_pal_pikachus_beach should only be called from Rust"),
+                (0x1c, 0x6064) => panic!("set_pal_pikachus_beach_title should only be called from Rust"),
+                (0x1c, 0x6093) => panic!("determine_palette_id should only be called from Rust"),
+                (0x1c, 0x6094) => panic!("determine_palette_id_out_of_battle should only be called from Rust"),
+                (0x1c, 0x60ad) => crate::game::engine::gfx::palettes::yellow_intro_palette_action(self),
                 (0x1c, 0x61f8) => crate::game::engine::gfx::palettes::load_sgb(self),
+                (0x1c, 0x6328) => panic!("send_sgb_packets should only be called from Rust"),
+                (0x1c, 0x6346) => crate::game::engine::gfx::palettes::init_cgb_palettes(self),
+                (0x1c, 0x6470) => crate::game::engine::gfx::palettes::transfer_cur_bgp_data(self),
+                (0x1c, 0x6511) => crate::game::engine::gfx::palettes::transfer_pal_color_lcd_enabled(self),
+                (0x1c, 0x651b) => crate::game::engine::gfx::palettes::transfer_pal_color_lcd_disabled(self),
+                (0x1c, 0x6524) => crate::game::engine::gfx::palettes::update_cgbpal_bgp(self),
+                (0x1c, 0x656c) => crate::game::engine::gfx::palettes::update_cgbpal_obp(self),
+                (0x1c, 0x65be) => panic!("translate_pal_packet_to_bg_map_attributes should only be called from Rust"),
                 (0x1c, 0x7b91) => crate::game::engine::menus::save::save_sav_to_sram(self),
                 (0x3c, 0x4000) => crate::game::engine::pikachu::pikachu_pcm::play_pikachu_sound_clip(self),
                 (0x3c, 0x4274) => crate::game::engine::events::black_out::reset_status_and_halve_money_on_blackout(self),
@@ -279,12 +314,27 @@ impl Cpu {
         self.mmu.gpu.update_screen();
     }
 
+    pub fn gpu_set_bg_palette_color(&mut self, palnum: usize, colnum: usize, color: [u8; 3]) {
+        self.mmu.gpu.set_bg_palette_color(palnum, colnum, color);
+    }
+
     pub fn keypad_wait(&mut self) -> KeypadKey {
         self.mmu.keypad.wait()
     }
 
     pub fn keyboard_text(&mut self) -> TextEvent {
         self.mmu.keypad.text()
+    }
+
+    pub fn wait_for_blank(&mut self) {
+        const LCDC_MASK: u8 = 1 << hardware_constants::R_LCDC_ENABLE;
+        const STAT_MASK: u8 = 0b10; // mask for non-V-blank/non-H-blank STAT mode
+
+        if (self.read_byte(hardware_constants::R_LCDC) & LCDC_MASK) != 0 {
+            while self.read_byte(hardware_constants::R_STAT) & STAT_MASK != 0 {
+                self.cycle(4);
+            }
+        }
     }
 
     pub fn start_music<T, TSource>(&mut self, music: T)
@@ -305,6 +355,10 @@ impl Cpu {
         TSource::Item: rodio::Sample + Send,
     {
         self.mmu.sound2.play_sfx(sfx)
+    }
+
+    pub fn stop_sfx(&mut self) {
+        self.mmu.sound2.stop_sfx();
     }
 
     fn fetch_byte(&mut self) -> u8 {

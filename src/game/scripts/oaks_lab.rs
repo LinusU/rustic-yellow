@@ -34,7 +34,7 @@ pub fn oaks_lab_player_received_mon_text(cpu: &mut Cpu) {
     cpu.call(0x3c36);
 
     cpu.write_byte(wram::W_MON_DATA_LOCATION, 0);
-    cpu.write_byte(wram::W_CUR_ENEMY_LVL, 5);
+    cpu.write_byte(wram::W_CUR_ENEMY_LEVEL, 5);
 
     // ld [wPokedexNum], STARTER_PIKACHU
     cpu.write_byte(wram::W_POKEDEX_NUM, cpu.starter.into_index());

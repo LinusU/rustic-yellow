@@ -1,4 +1,2 @@
-// wOptions
-pub const TEXT_DELAY_FAST: u8 = 0b001; // 1
-pub const TEXT_DELAY_MEDIUM: u8 = 0b011; // 3
-pub const TEXT_DELAY_SLOW: u8 = 0b101; // 5
+pub const FLAG_SET: u8 = 1;
+pub const FLAG_TEST: u8 = 2;

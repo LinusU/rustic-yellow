@@ -1,44 +1,4 @@
-use crate::rom::ROM;
-
 use super::{BoxedPokemon, DeterminantValues, PokeString, PokemonSpecies};
-
-trait PokemonSpeciesStats {
-    fn base_hp(&self) -> u8;
-    fn base_attack(&self) -> u8;
-    fn base_defense(&self) -> u8;
-    fn base_speed(&self) -> u8;
-    fn base_special(&self) -> u8;
-    fn growth_rate(&self) -> u8;
-}
-
-const BASE_STATS: usize = 0x0383de;
-const BASE_DATA_SIZE: usize = 28;
-
-impl PokemonSpeciesStats for PokemonSpecies {
-    fn base_hp(&self) -> u8 {
-        ROM[BASE_STATS + (BASE_DATA_SIZE * (*self as usize - 1)) + 1]
-    }
-
-    fn base_attack(&self) -> u8 {
-        ROM[BASE_STATS + (BASE_DATA_SIZE * (*self as usize - 1)) + 2]
-    }
-
-    fn base_defense(&self) -> u8 {
-        ROM[BASE_STATS + (BASE_DATA_SIZE * (*self as usize - 1)) + 3]
-    }
-
-    fn base_speed(&self) -> u8 {
-        ROM[BASE_STATS + (BASE_DATA_SIZE * (*self as usize - 1)) + 4]
-    }
-
-    fn base_special(&self) -> u8 {
-        ROM[BASE_STATS + (BASE_DATA_SIZE * (*self as usize - 1)) + 5]
-    }
-
-    fn growth_rate(&self) -> u8 {
-        ROM[BASE_STATS + (BASE_DATA_SIZE * (*self as usize - 1)) + 19]
-    }
-}
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct PartyPokemon {
@@ -75,23 +35,7 @@ impl From<BoxedPokemon> for PartyPokemon {
         loop {
             level += 1;
 
-            let exp_req = match pokemon.species.growth_rate() {
-                // GROWTH_MEDIUM_FAST
-                0 => level * level * level,
-                // GROWTH_SLIGHTLY_FAST
-                1 => unimplemented!(),
-                // GROWTH_SLIGHTLY_SLOW
-                2 => unimplemented!(),
-                // GROWTH_MEDIUM_SLOW
-                3 => (6 * level * level * level / 5) + (100 * level) - (15 * level * level) - 140,
-                // GROWTH_FAST
-                4 => 4 * level * level * level / 5,
-                // GROWTH_SLOW
-                5 => 5 * level * level * level / 4,
-                _ => unreachable!(),
-            };
-
-            if exp_req > pokemon.exp {
+            if pokemon.species.growth_rate().exp_at_level(level) > pokemon.exp {
                 level -= 1;
                 break;
             }
@@ -100,8 +44,6 @@ impl From<BoxedPokemon> for PartyPokemon {
                 break;
             }
         }
-
-        let level = level as u8;
 
         // HP: (((Base + IV) * 2 + ceil(Sqrt(stat exp)) / 4) * Level) / 100 + Level + 10
         let max_hp = (((pokemon.species.base_hp() as u16 + pokemon.dvs.hp() as u16) * 2

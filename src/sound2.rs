@@ -33,6 +33,12 @@ impl Sound2 {
         }
     }
 
+    pub fn stop_sfx(&mut self) {
+        if let Some(sink) = self.sfx.take() {
+            sink.stop();
+        }
+    }
+
     fn is_playing_music(&self, id: u32) -> bool {
         if let Some((playing, _)) = self.music.as_ref() {
             *playing == id
